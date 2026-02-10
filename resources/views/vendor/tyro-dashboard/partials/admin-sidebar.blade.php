@@ -105,42 +105,6 @@
                 </svg>
                 Privileges
             </a>
-            <a href="{{ route('dashboard.audit-logs') }}" class="sidebar-link {{ request()->routeIs('dashboard.audit-logs') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Audit Logs
-            </a>
-            <a href="{{ route('dashboard.meetings') }}" class="sidebar-link {{ request()->routeIs('dashboard.meetings') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Meetings
-            </a>
-            <a href="{{ route('dashboard.delivery-logs') }}" class="sidebar-link {{ request()->routeIs('dashboard.delivery-logs') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Delivery Logs
-            </a>
-            <a href="{{ route('dashboard.plans-quotas') }}" class="sidebar-link {{ request()->routeIs('dashboard.plans-quotas') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Plans & Quotas
-            </a>
-            <a href="{{ route('dashboard.system-usage') }}" class="sidebar-link {{ request()->routeIs('dashboard.system-usage') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                System Usage
-            </a>
-            <a href="{{ route('dashboard.organizations') }}" class="sidebar-link {{ request()->routeIs('dashboard.organizations') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Organizations
-            </a>
             @if(config('tyro-dashboard.features.invitation_system', true))
             <a href="{{ route('tyro-dashboard.invitations.admin.index') }}" class="sidebar-link {{ request()->routeIs('tyro-dashboard.invitations.admin.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

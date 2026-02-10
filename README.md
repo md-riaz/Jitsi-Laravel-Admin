@@ -92,11 +92,7 @@ php artisan migrate --seed
 
 Demo credentials: `admin@example.com` / `password`
 
-5. **Configure Jitsi** (edit `.env`):
-```env
-JITSI_DOMAIN=meet.example.com
-JITSI_JWT_SECRET=your-secret-key
-```
+5. **Configure Jitsi Integration** (see detailed guide below)
 
 6. **Build and run**
 ```bash
@@ -105,6 +101,129 @@ php artisan serve
 ```
 
 Visit: http://localhost:8000
+
+---
+
+## 🔗 Jitsi Integration Setup (Beginner's Guide)
+
+This platform integrates with Jitsi Meet to provide secure video conferencing. You can use either a self-hosted Jitsi instance or the public Jitsi.org service.
+
+### Option 1: Using Public Jitsi (Easiest - No JWT Required)
+
+For development or testing, you can use the public Jitsi service without authentication:
+
+```env
+JITSI_DOMAIN=meet.jit.si
+JITSI_JWT_SECRET=
+JITSI_JWT_ISSUER=
+JITSI_JWT_AUDIENCE=
+JITSI_JWT_SUB=
+```
+
+**Note:** Without JWT tokens, meetings are not secured. Anyone with the meeting room name can join.
+
+### Option 2: Self-Hosted Jitsi with JWT Authentication (Recommended for Production)
+
+For production use, set up your own Jitsi Meet instance with JWT authentication enabled.
+
+#### Step 1: Install Jitsi Meet
+
+Follow the official Jitsi Meet installation guide: https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart
+
+#### Step 2: Enable JWT Authentication on Jitsi
+
+1. **Install JWT module:**
+```bash
+apt-get install libapache2-mod-auth-openidc liblua5.2-dev
+cd /usr/share/jitsi-meet/prosody-plugins/
+wget https://raw.githubusercontent.com/jitsi-contrib/prosody-plugins/main/token_verification/token_verification.lib.lua
+```
+
+2. **Generate a secret key:**
+```bash
+openssl rand -hex 32
+```
+Save this output - you'll need it for both Jitsi and Laravel.
+
+3. **Configure Prosody** (`/etc/prosody/conf.avail/your-domain.cfg.lua`):
+```lua
+VirtualHost "your-domain.com"
+    authentication = "token"
+    app_id = "your-app"                    -- This is your JWT issuer
+    app_secret = "YOUR_SECRET_FROM_STEP_2" -- Secret from step 2
+    allow_empty_token = false
+```
+
+4. **Update Jitsi Meet config** (`/etc/jitsi/meet/your-domain-config.js`):
+```javascript
+// Add inside the config object:
+enableUserRolesBasedOnToken: true,
+```
+
+5. **Restart Jitsi services:**
+```bash
+systemctl restart prosody
+systemctl restart jicofo
+systemctl restart jitsi-videobridge2
+```
+
+#### Step 3: Configure Laravel Environment
+
+Update your `.env` file with your Jitsi instance details:
+
+```env
+# Your Jitsi domain (without https://)
+JITSI_DOMAIN=meet.yourdomain.com
+
+# The secret key from Step 2 above
+JITSI_JWT_SECRET=YOUR_SECRET_FROM_STEP_2
+
+# Must match app_id in Prosody config (default: your-app)
+JITSI_JWT_ISSUER=your-app
+
+# Usually "jitsi" (default audience)
+JITSI_JWT_AUDIENCE=jitsi
+
+# Usually same as JITSI_DOMAIN or "*"
+JITSI_JWT_SUB=meet.yourdomain.com
+```
+
+#### Environment Variables Explained
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `JITSI_DOMAIN` | Your Jitsi Meet server domain (no protocol) | `meet.example.com` |
+| `JITSI_JWT_SECRET` | Shared secret key for JWT signing (must match Jitsi) | `abc123def456...` |
+| `JITSI_JWT_ISSUER` | Application identifier (must match Jitsi `app_id`) | `your-app` |
+| `JITSI_JWT_AUDIENCE` | JWT audience claim (usually "jitsi") | `jitsi` |
+| `JITSI_JWT_SUB` | JWT subject (usually same as domain or "*") | `meet.example.com` |
+
+### Testing Your Integration
+
+1. **Create a test meeting** in the dashboard
+2. **Click "Join Meeting"** - you should be redirected to your Jitsi instance
+3. **Verify the URL** includes a JWT token parameter: `?jwt=eyJ...`
+4. **Check meeting access** - only invited users should be able to join
+
+### Troubleshooting
+
+**Problem:** "Failed to create a room" error
+- Verify `JITSI_DOMAIN` doesn't include `https://` or trailing slashes
+- Check that your Jitsi instance is accessible from your server
+
+**Problem:** "Authentication failed" or stuck at lobby
+- Verify `JITSI_JWT_SECRET` matches exactly between Laravel and Jitsi config
+- Check that `JITSI_JWT_ISSUER` matches the `app_id` in Prosody config
+- Ensure JWT authentication is properly enabled in Prosody
+
+**Problem:** Anyone can join meetings
+- JWT authentication may not be enabled on Jitsi
+- Check Prosody logs: `journalctl -u prosody -f`
+- Verify `authentication = "token"` in Prosody config
+
+**Problem:** JWT token expires too quickly
+- Token expiration is set to 2 hours by default in `JitsiJwtService.php`
+- Adjust the expiration time if needed: `$exp = $now + (2 * 60 * 60);`
 
 ## 📖 Key Concepts
 
@@ -130,23 +249,313 @@ Visit: http://localhost:8000
 
 ## 🛠️ Production Deployment
 
-### Docker-first deployment (GitHub URL compatible)
+### Quick Start with Docker
 
-This repository now includes a portable `Dockerfile`, so most Docker-native platforms can deploy directly from the GitHub repo URL.
+The easiest way to deploy this application in production is using Docker. The included `Dockerfile` builds a production-ready image.
 
-1. Point your platform to this GitHub repository.
-2. Let it detect and build the root `Dockerfile`.
-3. Set required environment variables (`APP_KEY`, DB settings, mail settings, Jitsi settings, etc.).
-4. Set `RUN_MIGRATIONS=true` only when you want startup migrations executed by the container.
-5. Expose container port `8090` (or provide platform `PORT`).
+#### 1. Local Docker Testing
 
-Local Docker smoke test:
+Test the Docker setup locally:
 
 ```bash
 docker compose up --build
 ```
 
-App URL: `http://localhost:8090`
+Access the application at: http://localhost:8090
+
+#### 2. Production Docker Deployment
+
+For production, you have several options:
+
+**Option A: Docker Compose (Recommended for single-server deployments)**
+
+Create a `docker-compose.production.yml`:
+
+```yaml
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      # App Configuration
+      APP_NAME: "Jitsi Admin"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: "base64:YOUR_APP_KEY_HERE"  # Generate with: php artisan key:generate --show
+      APP_URL: https://your-domain.com
+      
+      # Database Configuration (SQLite - single file database)
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/html/database/database.sqlite
+      
+      # Run migrations on container start (set to "false" after first run)
+      RUN_MIGRATIONS: "true"
+      
+      # Mail Configuration (required for invitations)
+      MAIL_MAILER: smtp
+      MAIL_HOST: smtp.your-provider.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: your-email@domain.com
+      MAIL_PASSWORD: your-password
+      MAIL_ENCRYPTION: tls
+      MAIL_FROM_ADDRESS: noreply@your-domain.com
+      MAIL_FROM_NAME: "Jitsi Admin"
+      
+      # Jitsi Integration (see Jitsi Integration Setup section above)
+      JITSI_DOMAIN: meet.your-domain.com
+      JITSI_JWT_SECRET: your-shared-secret-key
+      JITSI_JWT_ISSUER: your-app
+      JITSI_JWT_AUDIENCE: jitsi
+      JITSI_JWT_SUB: meet.your-domain.com
+      
+      # Queue & Cache (database-based, no Redis needed)
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      
+      # Server Port
+      PORT: 8090
+      
+    volumes:
+      # Persist database and storage across container restarts
+      - ./database:/var/www/html/database
+      - ./storage:/var/www/html/storage
+    
+    restart: unless-stopped
+    
+    # Optional: Run queue worker in same container
+    command: >
+      sh -c "php artisan serve --host=0.0.0.0 --port=8090 &
+             php artisan queue:work database --tries=3 --sleep=3 --max-time=3600"
+```
+
+Deploy with:
+
+```bash
+docker compose -f docker-compose.production.yml up -d
+```
+
+**Option B: Docker with PostgreSQL (For larger deployments)**
+
+```yaml
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      APP_NAME: "Jitsi Admin"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: "base64:YOUR_APP_KEY_HERE"
+      APP_URL: https://your-domain.com
+      
+      # PostgreSQL Configuration
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: jitsi_admin
+      DB_USERNAME: jitsi_user
+      DB_PASSWORD: secure_password_here
+      
+      RUN_MIGRATIONS: "true"
+      
+      # Mail settings...
+      MAIL_MAILER: smtp
+      MAIL_HOST: smtp.your-provider.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: your-email@domain.com
+      MAIL_PASSWORD: your-password
+      MAIL_ENCRYPTION: tls
+      MAIL_FROM_ADDRESS: noreply@your-domain.com
+      MAIL_FROM_NAME: "Jitsi Admin"
+      
+      # Jitsi settings...
+      JITSI_DOMAIN: meet.your-domain.com
+      JITSI_JWT_SECRET: your-shared-secret-key
+      JITSI_JWT_ISSUER: your-app
+      JITSI_JWT_AUDIENCE: jitsi
+      JITSI_JWT_SUB: meet.your-domain.com
+      
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      PORT: 8090
+      
+    depends_on:
+      - db
+    restart: unless-stopped
+    
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: jitsi_admin
+      POSTGRES_USER: jitsi_user
+      POSTGRES_PASSWORD: secure_password_here
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+```
+
+**Option C: Platform-as-a-Service (Heroku, Railway, Render, etc.)**
+
+Most platforms can deploy directly from GitHub:
+
+1. Connect your GitHub repository
+2. Platform auto-detects the `Dockerfile`
+3. Set environment variables in the platform's dashboard:
+   - `APP_KEY` (generate with `php artisan key:generate --show`)
+   - `APP_ENV=production`
+   - `APP_DEBUG=false`
+   - `APP_URL` (your app's URL)
+   - Database credentials (if using platform's database)
+   - Mail settings (SMTP or platform's email service)
+   - Jitsi settings
+   - `RUN_MIGRATIONS=true` (for first deployment)
+4. Deploy!
+
+### Environment Variables for Docker Production
+
+**Essential Variables (Must be set):**
+
+```env
+APP_KEY=base64:YOUR_GENERATED_KEY_HERE
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+```
+
+**Database Variables:**
+
+For SQLite (easiest, perfect for small-medium deployments):
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
+```
+
+For PostgreSQL (recommended for larger deployments):
+```env
+DB_CONNECTION=pgsql
+DB_HOST=your-postgres-host
+DB_PORT=5432
+DB_DATABASE=your-database-name
+DB_USERNAME=your-username
+DB_PASSWORD=your-password
+```
+
+**Mail Variables (Required for invitations):**
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.your-provider.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@domain.com
+MAIL_PASSWORD=your-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@your-domain.com
+MAIL_FROM_NAME="Jitsi Admin"
+```
+
+**Jitsi Variables:**
+
+```env
+JITSI_DOMAIN=meet.your-domain.com
+JITSI_JWT_SECRET=your-shared-secret
+JITSI_JWT_ISSUER=your-app
+JITSI_JWT_AUDIENCE=jitsi
+JITSI_JWT_SUB=meet.your-domain.com
+```
+
+**Queue & Session Variables:**
+
+```env
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+SESSION_DRIVER=database
+```
+
+**Optional Variables:**
+
+```env
+PORT=8090                    # Container port (default: 8090)
+RUN_MIGRATIONS=true         # Run migrations on startup (set false after initial run)
+LOG_CHANNEL=stack           # Logging configuration
+LOG_LEVEL=info              # Log verbosity (debug, info, warning, error)
+```
+
+### Docker Health Checks & Best Practices
+
+#### Health Check
+
+Add health check to your docker-compose.yml:
+
+```yaml
+services:
+  app:
+    # ... other config ...
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+#### Volume Permissions
+
+If you encounter permission issues:
+
+```bash
+# On host machine
+chmod -R 777 storage database
+```
+
+Or in Dockerfile (already included):
+```dockerfile
+RUN chown -R www-data:www-data storage bootstrap/cache
+```
+
+#### Queue Worker
+
+For production, run a dedicated queue worker:
+
+```bash
+# Option 1: Inside the same container
+docker exec -d your-container-name php artisan queue:work database --tries=3
+
+# Option 2: Separate service in docker-compose.yml
+services:
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: php artisan queue:work database --tries=3 --sleep=3
+    environment:
+      # Same env vars as app service
+    depends_on:
+      - app
+```
+
+#### Logs
+
+View application logs:
+
+```bash
+docker logs -f container-name                    # Follow logs
+docker exec container-name tail -f storage/logs/laravel.log
+```
+
+### Manual Production Deployment (Non-Docker)
+
+If deploying without Docker:
 
 1. **Optimize**
 ```bash
