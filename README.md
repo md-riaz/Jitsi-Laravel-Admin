@@ -57,3 +57,27 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Browser Screenshot Troubleshooting (Agent/CI Containers)
+
+If automated browser captures show a plain `Not Found` page while local checks pass, validate whether the request is actually reaching Laravel.
+
+### Verification steps
+
+1. Start Laravel server in one terminal:
+
+   ```bash
+   php artisan serve --host=0.0.0.0 --port=8000
+   ```
+
+2. In another terminal, confirm app health directly from the same container:
+
+   ```bash
+   curl -I http://127.0.0.1:8000/
+   ```
+
+3. Run browser screenshot tooling.
+
+4. Compare evidence:
+   - If browser artifacts show `Not Found` **and** `php artisan serve` logs no request for `/`, the browser tool did not reach the Laravel process (forwarding/network issue), not a Blade routing issue.
+   - If Laravel logs the request and returns 404/500, then debug routes/views/app errors normally.

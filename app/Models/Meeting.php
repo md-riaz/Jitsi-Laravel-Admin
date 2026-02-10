@@ -42,6 +42,12 @@ class Meeting extends Model
                 $meeting->room_name = sprintf('mtg_%s', Str::lower(Str::random(12)));
             }
         });
+
+        static::updating(function (Meeting $meeting): void {
+            if ($meeting->isDirty('room_name')) {
+                $meeting->room_name = $meeting->getOriginal('room_name');
+            }
+        });
     }
 
     public function organization(): BelongsTo
