@@ -25,3 +25,6 @@ Route::view('dashboard/my-meetings', 'dashboard.my-meetings')->middleware(['auth
 Route::view('dashboard/create-meeting', 'dashboard.create-meeting')->middleware(['auth'])->name('dashboard.create-meeting');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
+
+// Meeting join page (public)
+Route::get('/meet/{meeting}', [\App\Http\Controllers\Web\MeetingPageController::class, 'show'])->name('meeting.show');

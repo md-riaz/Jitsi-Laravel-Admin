@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'jitsi' => [
+        'domain' => env('JITSI_DOMAIN', 'meet.example.com'),
+        'issuer' => env('JITSI_JWT_ISSUER', 'your-app'),
+        'audience' => env('JITSI_JWT_AUDIENCE', 'jitsi'),
+        'secret' => env('JITSI_JWT_SECRET', ''),
+        'sub' => env('JITSI_JWT_SUB', env('JITSI_DOMAIN', 'meet.example.com')),
+    ],
+
 ];
