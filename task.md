@@ -54,12 +54,12 @@ Deliver the Jitsi Meeting Scheduling & Orchestration Platform end-to-end (Larave
 - [ ] Verification: migration replay from clean DB + schema assertions.
 
 ### Iteration 4 — Meeting Domain Logic (Backend First)
-- [ ] Meeting aggregate/model behavior:
-  - [ ] server-generated immutable `room_name`
-  - [ ] join-window calculator using `join_early_minutes` and `join_late_minutes`
+- [x] Meeting aggregate/model behavior:
+  - [x] server-generated immutable `room_name`
+  - [x] join-window calculator using `join_early_minutes` and `join_late_minutes`
   - [ ] status transitions (`scheduled/live/ended/canceled`) with invariants
 - [ ] Emit immutable audit events for lifecycle changes.
-- [ ] Verification: unit/integration tests for join-window and invariants.
+- [x] Verification: unit/integration tests for join-window and invariants.
 
 ### Iteration 5 — Invite & Guest Access Flow
 - [ ] Create signed invite token issuance + secure storage (`token_hash`).
@@ -107,10 +107,12 @@ Deliver the Jitsi Meeting Scheduling & Orchestration Platform end-to-end (Larave
 
 ## Verification Checklist (Run Every Iteration)
 - [ ] `composer install`
-- [ ] `php artisan migrate --graceful` (or `migrate:fresh --seed` for reset validation)
-- [ ] `php artisan test`
-- [ ] `php artisan route:list`
-- [ ] Run app locally and capture a preview screenshot when UI-affecting changes are made.
+- [x] `php artisan migrate --graceful` (or `migrate:fresh --seed` for reset validation)
+- [x] `php artisan test`
+- [x] `php artisan route:list`
+- [x] Run app locally and capture a preview screenshot when UI-affecting changes are made.
 
 ## Results (to be updated each iteration)
-- Pending iterative implementation updates.
+- Iteration 4 slice completed: enforced immutable `room_name` invariant at model update-time.
+- Added regression tests for room name generation/immutability and join-window boundary behavior.
+- Verified via migrations, tests, and route listing in the current environment.
