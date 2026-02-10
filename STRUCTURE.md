@@ -25,3 +25,7 @@ resources/
 routes/
 ├── web.php
 └── api.php
+
+Rules:
+Dashboard views ONLY under resources/views/dashboard
+Meeting join pages are NOT dashboard pages
