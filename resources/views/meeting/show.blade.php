@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $meeting->title }} - Jitsi Meeting</title>
-    <script src="https://{{ config('services.jitsi.domain') }}/external_api.js"></script>
+    <script src="https://{{ config('services.jitsi.domain') }}/external_api.js" defer></script>
     <style>
         * {
             margin: 0;
@@ -321,6 +321,13 @@
         @endif
 
         async function joinMeeting() {
+            // Check if Jitsi API is loaded
+            if (typeof JitsiMeetExternalAPI === 'undefined') {
+                alert('Jitsi Meet API failed to load. Please check your internet connection and try again.');
+                console.error('JitsiMeetExternalAPI is not defined. Script may have failed to load from {{ config("services.jitsi.domain") }}');
+                return;
+            }
+
             const button = document.getElementById('join-button');
             button.disabled = true;
             button.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" stroke-opacity="0.25"></circle><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path></svg> Joining...';
