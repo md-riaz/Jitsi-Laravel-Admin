@@ -28,3 +28,7 @@ Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->nam
 
 // Meeting join page (public)
 Route::get('/meet/{meeting}', [\App\Http\Controllers\Web\MeetingPageController::class, 'show'])->name('meeting.show');
+
+// Guest invite routes
+Route::get('/invite/{token}', [\App\Http\Controllers\Web\InviteController::class, 'show'])->name('invite.show');
+Route::post('/invite/{token}/accept', [\App\Http\Controllers\Web\InviteController::class, 'accept'])->name('invite.accept');
