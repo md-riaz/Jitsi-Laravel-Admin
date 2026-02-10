@@ -158,7 +158,7 @@
                         Cancel
                     </a>
                     <button type="submit" 
-                            style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            style="padding: 10px 24px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         <span id="submit_text">Create Instant Meeting</span>
                     </button>
                 </div>

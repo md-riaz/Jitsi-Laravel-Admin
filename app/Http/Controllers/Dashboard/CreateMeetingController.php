@@ -42,7 +42,7 @@ class CreateMeetingController extends Controller
             'description' => 'nullable|string',
             'organization_id' => 'required|exists:organizations,id',
             'meeting_type' => 'required|in:instant,scheduled',
-            'start_at' => 'required_if:meeting_type,scheduled|nullable|date|after_or_equal:now',
+            'start_at' => 'required_if:meeting_type,scheduled|nullable|date',
             'end_at' => 'required_if:meeting_type,scheduled|nullable|date|after:start_at',
             'timezone' => 'required|string',
             'visibility' => 'required|in:invite_only,link_anyone,org_only',
