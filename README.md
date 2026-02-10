@@ -27,6 +27,33 @@ A production-ready, enterprise-grade meeting management platform built on Larave
 - **Meeting Management** - Full CRUD operations with participant tracking
 - **Audit Logs** - Detailed event logs for compliance and monitoring
 
+## 📸 Preview
+
+### Landing Page
+Professional landing page with clear feature presentation and call-to-action buttons.
+
+![Landing Page](docs/screenshots/01-landing-page.png)
+
+### Login Interface
+Clean and simple login interface with dark mode toggle.
+
+![Login Page](docs/screenshots/02-login-page.png)
+
+### Dashboard
+Comprehensive admin dashboard with statistics, recent users, and role distribution.
+
+![Dashboard](docs/screenshots/05-dashboard-home.png)
+
+### My Meetings
+View all your upcoming and past meetings with real-time status indicators.
+
+![My Meetings](docs/screenshots/06-my-meetings.png)
+
+### Meeting Page
+Public meeting page with live status and join button.
+
+![Meeting Page](docs/screenshots/08-meeting-page-live.png)
+
 ## 📋 Requirements
 
 - PHP 8.3 or higher
