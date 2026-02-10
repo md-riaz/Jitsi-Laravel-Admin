@@ -34,6 +34,14 @@ class Meeting extends Model
         'end_at' => 'immutable_datetime',
     ];
 
+    protected $attributes = [
+        'timezone' => 'UTC',
+        'join_early_minutes' => 10,
+        'join_late_minutes' => 60,
+        'visibility' => 'invite_only',
+        'status' => 'scheduled',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (Meeting $meeting): void {
@@ -76,9 +84,19 @@ class Meeting extends Model
 
     public function canJoinAt(CarbonInterface $now): bool
     {
+        // Instant meetings (no start/end time) can always be joined if status is live
+        if ($this->start_at === null || $this->end_at === null) {
+            return $this->status === 'live';
+        }
+
         $opensAt = $this->start_at->subMinutes($this->join_early_minutes);
         $closesAt = $this->end_at->addMinutes($this->join_late_minutes);
 
         return $now->betweenIncluded($opensAt, $closesAt);
+    }
+
+    public function isInstantMeeting(): bool
+    {
+        return $this->start_at === null || $this->end_at === null;
     }
 }
