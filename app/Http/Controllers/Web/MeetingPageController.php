@@ -15,6 +15,18 @@ class MeetingPageController extends Controller
         $now = Carbon::now();
         $canJoin = $meeting->canJoinAt($now);
         
+        // Handle instant meetings (no fixed start/end times)
+        if ($meeting->isInstantMeeting()) {
+            return view('meeting.show', [
+                'meeting' => $meeting,
+                'canJoin' => $meeting->status === 'live',
+                'status' => $meeting->status === 'live' ? 'live' : 'ended',
+                'opensAt' => $now,
+                'closesAt' => $now,
+                'now' => $now,
+            ]);
+        }
+        
         $opensAt = $meeting->start_at->copy()->subMinutes($meeting->join_early_minutes);
         $closesAt = $meeting->end_at->copy()->addMinutes($meeting->join_late_minutes);
         

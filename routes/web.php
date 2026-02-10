@@ -8,7 +8,8 @@ Route::get('/', function () {
 
 Route::get('dashboard/my-meetings', [\App\Http\Controllers\Dashboard\MyMeetingsController::class, 'index'])->middleware(['auth'])->name('dashboard.my-meetings');
 
-Route::view('dashboard/create-meeting', 'dashboard.create-meeting')->middleware(['auth'])->name('dashboard.create-meeting');
+Route::get('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'create'])->middleware(['auth'])->name('dashboard.create-meeting');
+Route::post('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'store'])->middleware(['auth'])->name('dashboard.create-meeting.store');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
 
