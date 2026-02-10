@@ -20,7 +20,6 @@ class Meeting extends Model
         'created_by',
         'title',
         'description',
-        'room_name',
         'start_at',
         'end_at',
         'timezone',

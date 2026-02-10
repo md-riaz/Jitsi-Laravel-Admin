@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use HasinHayder\Tyro\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
 {
@@ -41,55 +42,61 @@ class DemoDataSeeder extends Seeder
         // Create meetings with different statuses
         
         // 1. Meeting starting soon (in 5 minutes)
-        $meetingSoon = Meeting::firstOrCreate(
-            ['title' => 'Team Standup - Starting Soon'],
-            [
-                'organization_id' => $organization->id,
-                'created_by' => $user->id,
-                'description' => 'Daily team standup meeting to discuss progress and blockers.',
-                'start_at' => Carbon::now()->addMinutes(5),
-                'end_at' => Carbon::now()->addMinutes(35),
-                'timezone' => 'UTC',
-                'join_early_minutes' => 10,
-                'join_late_minutes' => 60,
-                'visibility' => 'org_only',
-                'status' => 'scheduled',
-            ]
-        );
+        $meetingSoon = Meeting::where('title', 'Team Standup - Starting Soon')->first();
+        if (!$meetingSoon) {
+            $meetingSoon = new Meeting();
+            $meetingSoon->organization_id = $organization->id;
+            $meetingSoon->created_by = $user->id;
+            $meetingSoon->title = 'Team Standup - Starting Soon';
+            $meetingSoon->description = 'Daily team standup meeting to discuss progress and blockers.';
+            $meetingSoon->room_name = 'mtg_' . Str::lower(Str::random(12));
+            $meetingSoon->start_at = Carbon::now()->addMinutes(5);
+            $meetingSoon->end_at = Carbon::now()->addMinutes(35);
+            $meetingSoon->timezone = 'UTC';
+            $meetingSoon->join_early_minutes = 10;
+            $meetingSoon->join_late_minutes = 60;
+            $meetingSoon->visibility = 'org_only';
+            $meetingSoon->status = 'scheduled';
+            $meetingSoon->save();
+        }
 
         // 2. Meeting happening now
-        $meetingNow = Meeting::firstOrCreate(
-            ['title' => 'Product Review - Live Now'],
-            [
-                'organization_id' => $organization->id,
-                'created_by' => $user->id,
-                'description' => 'Review of new product features and roadmap discussion.',
-                'start_at' => Carbon::now()->subMinutes(5),
-                'end_at' => Carbon::now()->addMinutes(55),
-                'timezone' => 'UTC',
-                'join_early_minutes' => 10,
-                'join_late_minutes' => 60,
-                'visibility' => 'link_anyone',
-                'status' => 'live',
-            ]
-        );
+        $meetingNow = Meeting::where('title', 'Product Review - Live Now')->first();
+        if (!$meetingNow) {
+            $meetingNow = new Meeting();
+            $meetingNow->organization_id = $organization->id;
+            $meetingNow->created_by = $user->id;
+            $meetingNow->title = 'Product Review - Live Now';
+            $meetingNow->description = 'Review of new product features and roadmap discussion.';
+            $meetingNow->room_name = 'mtg_' . Str::lower(Str::random(12));
+            $meetingNow->start_at = Carbon::now()->subMinutes(5);
+            $meetingNow->end_at = Carbon::now()->addMinutes(55);
+            $meetingNow->timezone = 'UTC';
+            $meetingNow->join_early_minutes = 10;
+            $meetingNow->join_late_minutes = 60;
+            $meetingNow->visibility = 'link_anyone';
+            $meetingNow->status = 'live';
+            $meetingNow->save();
+        }
 
         // 3. Meeting in the future (tomorrow)
-        $meetingFuture = Meeting::firstOrCreate(
-            ['title' => 'Weekly Planning - Tomorrow'],
-            [
-                'organization_id' => $organization->id,
-                'created_by' => $user->id,
-                'description' => 'Weekly planning session for the upcoming sprint.',
-                'start_at' => Carbon::now()->addDay()->setTime(14, 0),
-                'end_at' => Carbon::now()->addDay()->setTime(15, 0),
-                'timezone' => 'UTC',
-                'join_early_minutes' => 10,
-                'join_late_minutes' => 60,
-                'visibility' => 'invite_only',
-                'status' => 'scheduled',
-            ]
-        );
+        $meetingFuture = Meeting::where('title', 'Weekly Planning - Tomorrow')->first();
+        if (!$meetingFuture) {
+            $meetingFuture = new Meeting();
+            $meetingFuture->organization_id = $organization->id;
+            $meetingFuture->created_by = $user->id;
+            $meetingFuture->title = 'Weekly Planning - Tomorrow';
+            $meetingFuture->description = 'Weekly planning session for the upcoming sprint.';
+            $meetingFuture->room_name = 'mtg_' . Str::lower(Str::random(12));
+            $meetingFuture->start_at = Carbon::now()->addDay()->setTime(14, 0);
+            $meetingFuture->end_at = Carbon::now()->addDay()->setTime(15, 0);
+            $meetingFuture->timezone = 'UTC';
+            $meetingFuture->join_early_minutes = 10;
+            $meetingFuture->join_late_minutes = 60;
+            $meetingFuture->visibility = 'invite_only';
+            $meetingFuture->status = 'scheduled';
+            $meetingFuture->save();
+        }
 
         // Add participants
         foreach ([$meetingSoon, $meetingNow, $meetingFuture] as $meeting) {
