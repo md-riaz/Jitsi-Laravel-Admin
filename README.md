@@ -103,6 +103,24 @@ Visit: http://localhost:8000
 
 ## 🛠️ Production Deployment
 
+### Docker-first deployment (GitHub URL compatible)
+
+This repository now includes a portable `Dockerfile`, so most Docker-native platforms can deploy directly from the GitHub repo URL.
+
+1. Point your platform to this GitHub repository.
+2. Let it detect and build the root `Dockerfile`.
+3. Set required environment variables (`APP_KEY`, DB settings, mail settings, Jitsi settings, etc.).
+4. Set `RUN_MIGRATIONS=true` only when you want startup migrations executed by the container.
+5. Expose container port `8090` (or provide platform `PORT`).
+
+Local Docker smoke test:
+
+```bash
+docker compose up --build
+```
+
+App URL: `http://localhost:8090`
+
 1. **Optimize**
 ```bash
 composer install --optimize-autoloader --no-dev
