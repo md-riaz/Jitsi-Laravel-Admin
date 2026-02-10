@@ -8,7 +8,6 @@ This guide covers deploying Jitsi Admin to production environments.
 - [ ] Web server (Nginx/Apache)
 - [ ] PHP 8.3+ with required extensions
 - [ ] Database (PostgreSQL/MySQL/SQLite)
-- [ ] Redis (for queues and caching)
 - [ ] Mail server (SMTP/SES/Mailgun)
 - [ ] Jitsi Meet instance
 - [ ] SSL certificate
@@ -21,8 +20,9 @@ This guide covers deploying Jitsi Admin to production environments.
 - [ ] Database credentials configured
 - [ ] Mail credentials configured
 - [ ] Jitsi credentials configured
-- [ ] Queue driver set to redis
-- [ ] Cache driver set to redis
+- [ ] Queue driver set to database
+- [ ] Cache driver set to database
+- [ ] Session driver set to database
 
 ## Step-by-Step Deployment
 
@@ -35,7 +35,7 @@ sudo apt update && sudo apt upgrade -y
 # Install PHP 8.3 and extensions
 sudo add-apt-repository ppa:ondrej/php
 sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql \
-    php8.3-pgsql php8.3-sqlite3 php8.3-redis php8.3-curl \
+    php8.3-pgsql php8.3-sqlite3 php8.3-curl \
     php8.3-mbstring php8.3-xml php8.3-zip php8.3-gd
 
 # Install Composer
@@ -45,11 +45,6 @@ sudo mv composer.phar /usr/local/bin/composer
 # Install Node.js
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
-
-# Install Redis
-sudo apt install -y redis-server
-sudo systemctl enable redis-server
-sudo systemctl start redis-server
 
 # Install Nginx
 sudo apt install -y nginx
@@ -186,7 +181,7 @@ Create `/etc/supervisor/conf.d/jitsi-admin-worker.conf`:
 ```ini
 [program:jitsi-admin-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/Jitsi-Laravel-Admin/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+command=php /var/www/Jitsi-Laravel-Admin/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -240,15 +235,11 @@ DB_USERNAME=jitsi_admin_user
 DB_PASSWORD=secure_password_here
 
 BROADCAST_DRIVER=log
-CACHE_DRIVER=redis
+CACHE_STORE=database
 FILESYSTEM_DISK=local
-QUEUE_CONNECTION=redis
-SESSION_DRIVER=redis
+QUEUE_CONNECTION=database
+SESSION_DRIVER=database
 SESSION_LIFETIME=120
-
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
 
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.mailtrap.io
@@ -280,18 +271,18 @@ sudo supervisorctl status
 # Check logs
 tail -f /var/www/Jitsi-Laravel-Admin/storage/logs/laravel.log
 
-# Check Redis
-redis-cli ping
-
 # Check database connection
 php artisan tinker
 >>> DB::connection()->getPdo();
+
+# Check queue jobs
+php artisan queue:monitor
 ```
 
 ### Monitoring
 
 #### Application Monitoring
-- Set up Laravel Horizon for queue monitoring
+- Monitor queue jobs with `php artisan queue:monitor`
 - Configure error tracking (Sentry, Bugsnag)
 - Set up uptime monitoring (UptimeRobot, Pingdom)
 
@@ -418,16 +409,16 @@ sudo ufw enable
 1. **Load Balancer**: Use Nginx or HAProxy
 2. **Multiple App Servers**: Deploy app to multiple servers
 3. **Shared Storage**: Use S3 or shared filesystem for uploads
-4. **Centralized Redis**: Single Redis instance for sessions/cache
+4. **Centralized Database**: Single database instance for all app servers (with replication for reads)
 5. **Database Replication**: Master-slave setup for reads
 
 ### Vertical Scaling
 
 - Increase server resources (CPU, RAM)
 - Optimize PHP-FPM workers
-- Tune database parameters
+- Tune database parameters (increase memory, connections)
 - Enable OPcache
-- Use Redis for sessions
+- Use database connection pooling
 
 ### Performance Optimization
 

@@ -116,12 +116,14 @@ npm run build
 ```env
 APP_ENV=production
 APP_DEBUG=false
-QUEUE_CONNECTION=redis
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+SESSION_DRIVER=database
 ```
 
 3. **Queue Worker** (use Supervisor)
 ```bash
-php artisan queue:work --tries=3
+php artisan queue:work database --tries=3
 ```
 
 4. **Permissions**
