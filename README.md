@@ -1,83 +1,178 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Jitsi Admin - Professional Meeting Management Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Laravel](https://img.shields.io/badge/Laravel-12-red.svg)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3+-purple.svg)](https://php.net)
 
-## About Laravel
+A production-ready, enterprise-grade meeting management platform built on Laravel 12 and Jitsi Meet. Provides comprehensive scheduling, access control, invitations, and notifications for professional video conferencing.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Core Functionality
+- **Smart Scheduling** - Single and recurring meetings with timezone support
+- **Time-Based Access Control** - Configurable join windows and participant validation
+- **JWT Authentication** - Secure, token-based access to Jitsi meetings
+- **Multi-Tenant Architecture** - Organization-based separation with role management
+- **Complete Audit Trail** - Full visibility into meeting lifecycle and participant actions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Communication
+- **Email Invitations** - Automated invitation emails with calendar attachments (.ics)
+- **Meeting Reminders** - Configurable reminder notifications before meetings
+- **Status Updates** - Automatic notifications for meeting updates and cancellations
+- **Guest Access** - Secure invite links for external participants
 
-## Learning Laravel
+### Administration
+- **Dashboard** - Comprehensive admin interface powered by Tyro Dashboard
+- **User Management** - Role-based access control (super-admin, org-admin, host, member)
+- **Meeting Management** - Full CRUD operations with participant tracking
+- **Audit Logs** - Detailed event logs for compliance and monitoring
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 📋 Requirements
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.3 or higher
+- Composer
+- Node.js & NPM (for asset compilation)
+- SQLite/PostgreSQL/MySQL database
+- A Jitsi Meet instance (self-hosted or Jitsi.org)
 
-## Laravel Sponsors
+## 🚀 Quick Start
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Installation
 
-### Premium Partners
+1. **Clone the repository**
+```bash
+git clone https://github.com/md-riaz/Jitsi-Laravel-Admin.git
+cd Jitsi-Laravel-Admin
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+2. **Install dependencies**
+```bash
+composer install
+npm install
+```
 
-## Contributing
+3. **Configure environment**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. **Set up database**
+```bash
+touch database/database.sqlite
+php artisan migrate --seed
+```
 
-## Code of Conduct
+Demo credentials: `admin@example.com` / `password`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+5. **Configure Jitsi** (edit `.env`):
+```env
+JITSI_DOMAIN=meet.example.com
+JITSI_JWT_SECRET=your-secret-key
+```
 
-## Security Vulnerabilities
+6. **Build and run**
+```bash
+npm run build
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Visit: http://localhost:8000
 
-## License
+## 📖 Key Concepts
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Meeting Workflow
+1. Create meeting with participants
+2. System sends email invitations with .ics files
+3. Guests accept via secure link
+4. Join during allowed time window
+5. Backend issues JWT for Jitsi access
+6. All actions logged for audit
 
-## Browser Screenshot Troubleshooting (Agent/CI Containers)
+### Email Notifications
+- **Invitation** - Sent when invited (includes calendar file)
+- **Reminder** - 10 minutes before start
+- **Updated** - When meeting details change
+- **Cancelled** - When meeting is cancelled
 
-If automated browser captures show a plain `Not Found` page while local checks pass, validate whether the request is actually reaching Laravel.
+### Access Control
+- Join windows prevent early/late access
+- JWT tokens validate participants
+- Role-based permissions (Tyro RBAC)
+- Meeting visibility controls
 
-### Verification steps
+## 🛠️ Production Deployment
 
-1. Start Laravel server in one terminal:
+1. **Optimize**
+```bash
+composer install --optimize-autoloader --no-dev
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+npm run build
+```
 
-   ```bash
-   php artisan serve --host=0.0.0.0 --port=8000
-   ```
+2. **Environment**
+```env
+APP_ENV=production
+APP_DEBUG=false
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+SESSION_DRIVER=database
+```
 
-2. In another terminal, confirm app health directly from the same container:
+3. **Queue Worker** (use Supervisor)
+```bash
+php artisan queue:work database --tries=3
+```
 
-   ```bash
-   curl -I http://127.0.0.1:8000/
-   ```
+4. **Permissions**
+```bash
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+```
 
-3. Run browser screenshot tooling.
+See [SETUP.md](SETUP.md) for detailed deployment guide.
 
-4. Compare evidence:
-   - If browser artifacts show `Not Found` **and** `php artisan serve` logs no request for `/`, the browser tool did not reach the Laravel process (forwarding/network issue), not a Blade routing issue.
-   - If Laravel logs the request and returns 404/500, then debug routes/views/app errors normally.
+## 📚 Documentation
+
+- **[Setup Guide](SETUP.md)** - Detailed installation instructions
+- **[Project Spec](PROJECT_SPEC.md)** - Complete feature specifications
+- **[Architecture](ARCHITECTURE.md)** - System design and patterns
+- **[Domain Rules](DOMAIN_RULES.md)** - Business logic and constraints
+
+## 🔧 Development
+
+```bash
+# Run tests
+php artisan test
+
+# Watch assets
+npm run dev -- --watch
+
+# Check logs
+tail -f storage/logs/laravel.log
+
+# View failed queue jobs
+php artisan queue:failed
+```
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push and open Pull Request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file
+
+## 🙏 Credits
+
+Built with [Laravel](https://laravel.com), [Jitsi Meet](https://jitsi.org), and [Tyro](https://github.com/hasinhayder/tyro)
+
+---
+
+**Professional Meeting Management Made Simple**

@@ -20,8 +20,15 @@ Route::view('dashboard/invitations', 'dashboard.invitations')->middleware(['auth
 
 Route::view('dashboard/audit-logs', 'dashboard.audit-logs')->middleware(['auth', 'tyro-dashboard.admin'])->name('dashboard.audit-logs');
 
-Route::view('dashboard/my-meetings', 'dashboard.my-meetings')->middleware(['auth'])->name('dashboard.my-meetings');
+Route::get('dashboard/my-meetings', [\App\Http\Controllers\Dashboard\MyMeetingsController::class, 'index'])->middleware(['auth'])->name('dashboard.my-meetings');
 
 Route::view('dashboard/create-meeting', 'dashboard.create-meeting')->middleware(['auth'])->name('dashboard.create-meeting');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
+
+// Meeting join page (public)
+Route::get('/meet/{meeting}', [\App\Http\Controllers\Web\MeetingPageController::class, 'show'])->name('meeting.show');
+
+// Guest invite routes
+Route::get('/invite/{token}', [\App\Http\Controllers\Web\InviteController::class, 'show'])->name('invite.show');
+Route::post('/invite/{token}/accept', [\App\Http\Controllers\Web\InviteController::class, 'accept'])->name('invite.accept');
