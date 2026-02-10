@@ -26,6 +26,22 @@ This guide covers deploying Jitsi Admin to production environments.
 
 ## Step-by-Step Deployment
 
+## Docker Deployment (GitHub URL)
+
+Use this option on platforms that deploy directly from a repository URL.
+
+1. Connect this GitHub repository in your Docker-capable host.
+2. Build from the root `Dockerfile`.
+3. Configure runtime env vars (`APP_KEY`, database credentials, mail, queue, Jitsi vars, etc.).
+4. Set `RUN_MIGRATIONS=true` only when startup migrations are desired.
+5. Publish port `8090` (or pass `PORT` from your platform).
+
+Example local validation:
+
+```bash
+docker compose up --build
+```
+
 ### 1. Server Preparation
 
 ```bash
