@@ -34,7 +34,7 @@
                 </svg>
                 Dashboard
             </a>
-            <a href="{{ route('tyro-dashboard.profile') }}" class="sidebar-link {{ request()->routeIs('tyro-dashboard.profile*') ? 'active' : '' }}">
+            <a href="{{ route('dashboard.profile') }}" class="sidebar-link {{ request()->routeIs('dashboard.profile*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -52,14 +52,14 @@
                 </svg>
                 My Meetings
             </a>
-            @if(config('tyro-dashboard.features.invitation_system', true))
+            {{-- @if(config('tyro-dashboard.features.invitation_system', true))
             <a href="{{ route('tyro-dashboard.invitations.index') }}" class="sidebar-link {{ request()->routeIs('tyro-dashboard.invitations.index') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
                 My Invitation Link
             </a>
-            @endif
+            @endif --}}
 
             @if(!empty($commonMenuItems))
                 @foreach($commonMenuItems as $item)
