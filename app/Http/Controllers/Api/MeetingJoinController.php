@@ -23,8 +23,8 @@ class MeetingJoinController extends Controller
             return response()->json([
                 'message' => 'Meeting is not available for joining at this time.',
                 'can_join' => false,
-                'opens_at' => $meeting->start_at->subMinutes($meeting->join_early_minutes),
-                'closes_at' => $meeting->end_at->addMinutes($meeting->join_late_minutes),
+                'opens_at' => $meeting->start_at->copy()->subMinutes($meeting->join_early_minutes),
+                'closes_at' => $meeting->end_at->copy()->addMinutes($meeting->join_late_minutes),
             ], 403);
         }
 

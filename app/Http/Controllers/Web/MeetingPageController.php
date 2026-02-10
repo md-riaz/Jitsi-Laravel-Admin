@@ -15,8 +15,8 @@ class MeetingPageController extends Controller
         $now = Carbon::now();
         $canJoin = $meeting->canJoinAt($now);
         
-        $opensAt = $meeting->start_at->subMinutes($meeting->join_early_minutes);
-        $closesAt = $meeting->end_at->addMinutes($meeting->join_late_minutes);
+        $opensAt = $meeting->start_at->copy()->subMinutes($meeting->join_early_minutes);
+        $closesAt = $meeting->end_at->copy()->addMinutes($meeting->join_late_minutes);
         
         $status = 'ended';
         if ($now->lt($opensAt)) {

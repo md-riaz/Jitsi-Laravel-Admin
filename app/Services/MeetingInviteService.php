@@ -11,17 +11,21 @@ use Illuminate\Support\Str;
 
 class MeetingInviteService
 {
-    public function createInvite(Meeting $meeting, string $email): MeetingInvite
+    public function createInvite(Meeting $meeting, string $email): array
     {
-        $token = Str::random(64);
+        $plainToken = Str::random(64);
 
-        return MeetingInvite::create([
+        $invite = MeetingInvite::create([
             'meeting_id' => $meeting->id,
             'email' => $email,
-            'token_hash' => Hash::make($token),
+            'token_hash' => Hash::make($plainToken),
             'expires_at' => $meeting->end_at->addDay(),
-            'plain_token' => $token, // We'll use this temporarily
         ]);
+
+        return [
+            'invite' => $invite,
+            'token' => $plainToken,
+        ];
     }
 
     public function validateInvite(string $token): ?MeetingInvite
