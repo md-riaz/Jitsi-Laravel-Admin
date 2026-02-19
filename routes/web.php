@@ -15,6 +15,14 @@ Route::get('dashboard/my-meetings', [\App\Http\Controllers\Dashboard\MyMeetingsC
 Route::get('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'create'])->middleware(['auth'])->name('dashboard.create-meeting');
 Route::post('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'store'])->middleware(['auth'])->name('dashboard.create-meeting.store');
 
+// Team Management Routes (for organization admins)
+Route::get('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::class, 'index'])->middleware(['auth'])->name('dashboard.team.index');
+Route::get('dashboard/team/create', [\App\Http\Controllers\Dashboard\TeamController::class, 'create'])->middleware(['auth'])->name('dashboard.team.create');
+Route::post('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::class, 'store'])->middleware(['auth'])->name('dashboard.team.store');
+Route::get('dashboard/team/{id}/edit', [\App\Http\Controllers\Dashboard\TeamController::class, 'edit'])->middleware(['auth'])->name('dashboard.team.edit');
+Route::put('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'update'])->middleware(['auth'])->name('dashboard.team.update');
+Route::delete('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'destroy'])->middleware(['auth'])->name('dashboard.team.destroy');
+
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
 
 // Meeting join page (public)
