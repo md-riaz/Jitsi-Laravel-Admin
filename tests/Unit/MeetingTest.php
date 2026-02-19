@@ -50,6 +50,45 @@ class MeetingTest extends TestCase
         $this->assertFalse($meeting->canJoinAt($end->addMinutes(61)));
     }
 
+    public function test_can_create_meeting_without_organization(): void
+    {
+        $creator = User::factory()->create();
+
+        $meeting = Meeting::create([
+            'organization_id' => null,
+            'created_by' => $creator->id,
+            'title' => 'Personal Meeting',
+            'description' => 'My personal meeting',
+            'start_at' => CarbonImmutable::parse('2026-02-10 10:00:00', 'UTC'),
+            'end_at' => CarbonImmutable::parse('2026-02-10 11:00:00', 'UTC'),
+            'timezone' => 'UTC',
+            'visibility' => 'invite_only',
+            'status' => 'scheduled',
+        ]);
+
+        $this->assertNull($meeting->organization_id);
+        $this->assertNotNull($meeting->room_name);
+        $this->assertEquals('Personal Meeting', $meeting->title);
+    }
+
+    public function test_organization_relationship_handles_null(): void
+    {
+        $creator = User::factory()->create();
+
+        $meeting = Meeting::create([
+            'organization_id' => null,
+            'created_by' => $creator->id,
+            'title' => 'Personal Meeting',
+            'start_at' => CarbonImmutable::parse('2026-02-10 10:00:00', 'UTC'),
+            'end_at' => CarbonImmutable::parse('2026-02-10 11:00:00', 'UTC'),
+            'timezone' => 'UTC',
+        ]);
+
+        // Should not throw error when accessing organization relationship
+        $this->assertNotNull($meeting->organization);
+        $this->assertInstanceOf(Organization::class, $meeting->organization);
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

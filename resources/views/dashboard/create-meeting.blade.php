@@ -74,16 +74,17 @@
 
                 <!-- Organization -->
                 <div>
-                    <label for="organization_id" style="display: block; margin-bottom: 8px; font-weight: 500;">Organization *</label>
-                    <select id="organization_id" name="organization_id" required
+                    <label for="organization_id" style="display: block; margin-bottom: 8px; font-weight: 500;">Organization (Optional)</label>
+                    <select id="organization_id" name="organization_id"
                             style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        <option value="">Select Organization</option>
+                        <option value="">Personal Meeting (No Organization)</option>
                         @foreach($organizations as $org)
                             <option value="{{ $org->id }}" {{ old('organization_id') == $org->id ? 'selected' : '' }}>
                                 {{ $org->name }}
                             </option>
                         @endforeach
                     </select>
+                    <small style="color: #6b7280;">Leave unselected to create a personal meeting, or select an organization to create an organization meeting</small>
                 </div>
 
                 <!-- Scheduled Meeting Fields -->

@@ -206,7 +206,7 @@ return [
                 'timezone' => ['type' => 'select', 'label' => 'Timezone', 'options' => ['UTC' => 'UTC', 'America/New_York' => 'Eastern Time', 'America/Chicago' => 'Central Time', 'America/Denver' => 'Mountain Time', 'America/Los_Angeles' => 'Pacific Time', 'Europe/London' => 'London', 'Europe/Paris' => 'Paris', 'Asia/Tokyo' => 'Tokyo', 'Asia/Shanghai' => 'Shanghai', 'Australia/Sydney' => 'Sydney'], 'rules' => 'required|string'],
                 'status' => ['type' => 'select', 'label' => 'Status', 'options' => ['scheduled' => 'Scheduled', 'live' => 'Live', 'ended' => 'Ended', 'canceled' => 'Canceled'], 'searchable' => true],
                 'visibility' => ['type' => 'select', 'label' => 'Visibility', 'options' => ['invite_only' => 'Invite Only', 'link_anyone' => 'Anyone with Link', 'org_only' => 'Organization Only']],
-                'organization_id' => ['type' => 'select', 'label' => 'Organization', 'relationship' => 'organization', 'rules' => 'required|exists:organizations,id', 'searchable' => true],
+                'organization_id' => ['type' => 'select', 'label' => 'Organization (Optional)', 'relationship' => 'organization', 'rules' => 'nullable|exists:organizations,id', 'searchable' => true],
                 'join_early_minutes' => ['type' => 'number', 'label' => 'Join Early (minutes)', 'rules' => 'nullable|integer|min:0|max:120', 'default' => 10],
                 'join_late_minutes' => ['type' => 'number', 'label' => 'Join Late (minutes)', 'rules' => 'nullable|integer|min:0|max:240', 'default' => 60],
             ],

@@ -40,7 +40,7 @@ class CreateMeetingController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'organization_id' => 'required|exists:organizations,id',
+            'organization_id' => 'nullable|exists:organizations,id',
             'meeting_type' => 'required|in:instant,scheduled',
             'start_at' => 'required_if:meeting_type,scheduled|nullable|date',
             'end_at' => 'required_if:meeting_type,scheduled|nullable|date|after:start_at',
@@ -57,7 +57,7 @@ class CreateMeetingController extends Controller
         }
 
         $data = $validator->validated();
-        
+
         // For instant meetings, set status to live and clear start/end times
         if ($data['meeting_type'] === 'instant') {
             $data['status'] = 'live';
@@ -66,7 +66,7 @@ class CreateMeetingController extends Controller
         } else {
             $data['status'] = 'scheduled';
         }
-        
+
         unset($data['meeting_type']);
         $data['created_by'] = Auth::id();
 
