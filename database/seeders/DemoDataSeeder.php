@@ -22,6 +22,7 @@ class DemoDataSeeder extends Seeder
             [
                 'name' => 'Admin User',
                 'password' => Hash::make('password'),
+                'account_type' => 'organization',
             ]
         );
 
@@ -38,6 +39,17 @@ class DemoDataSeeder extends Seeder
                 'name' => 'Demo Organization',
             ]
         );
+
+        // Link user to organization if not already linked
+        if (!$user->organization_id) {
+            $user->organization_id = $organization->id;
+            $user->save();
+        }
+
+        // Add user to organization pivot table if not already added
+        if (!$organization->users()->where('user_id', $user->id)->exists()) {
+            $organization->users()->attach($user->id, ['role' => 'admin']);
+        }
 
         // Create meetings with different statuses
         

@@ -329,7 +329,7 @@
                     <a href="{{ url('/dashboard/create-meeting') }}" class="btn btn-primary">New Meeting</a>
                 @else
                     <a href="{{ route('tyro-login.login') }}">Login</a>
-                    <a href="{{ route('tyro-login.register') }}" class="btn btn-primary">Get Started</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
                 @endauth
             </div>
         </div>
@@ -344,7 +344,7 @@
                 <a href="{{ url('/dashboard/create-meeting') }}" class="btn btn-primary">Create Meeting</a>
                 <a href="{{ url('/dashboard/my-meetings') }}" class="btn btn-secondary">View Meetings</a>
             @else
-                <a href="{{ route('tyro-login.register') }}" class="btn btn-primary">Start Free Trial</a>
+                <a href="{{ route('register') }}" class="btn btn-primary">Start Free Trial</a>
                 <a href="{{ route('tyro-login.login') }}" class="btn btn-secondary">Sign In</a>
             @endauth
         </div>

@@ -13,7 +13,16 @@ class CreateMeetingController extends Controller
 {
     public function create()
     {
-        $organizations = Organization::orderBy('name')->get();
+        $user = Auth::user();
+
+        // For organization users, get their organization
+        // For single users, get all organizations (for optional selection)
+        if ($user->isOrganizationUser() && $user->organization_id) {
+            $organizations = Organization::where('id', $user->organization_id)->orderBy('name')->get();
+        } else {
+            $organizations = Organization::orderBy('name')->get();
+        }
+
         $timezones = [
             'UTC' => 'UTC',
             'America/New_York' => 'Eastern Time (US)',

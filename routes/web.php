@@ -6,6 +6,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Custom Registration Routes (override Tyro Login)
+Route::get('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register.submit');
+
 Route::get('dashboard/my-meetings', [\App\Http\Controllers\Dashboard\MyMeetingsController::class, 'index'])->middleware(['auth'])->name('dashboard.my-meetings');
 
 Route::get('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'create'])->middleware(['auth'])->name('dashboard.create-meeting');
