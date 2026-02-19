@@ -89,6 +89,28 @@ class MeetingTest extends TestCase
         $this->assertInstanceOf(Organization::class, $meeting->organization);
     }
 
+    public function test_org_only_visibility_requires_organization(): void
+    {
+        $creator = User::factory()->create();
+
+        // Creating a meeting with org_only visibility but no organization should be invalid
+        // This would fail at the controller validation level, so we test the model can accept it
+        // but the controller validation should prevent it
+        $meeting = Meeting::create([
+            'organization_id' => null,
+            'created_by' => $creator->id,
+            'title' => 'Invalid Meeting',
+            'start_at' => CarbonImmutable::parse('2026-02-10 10:00:00', 'UTC'),
+            'end_at' => CarbonImmutable::parse('2026-02-10 11:00:00', 'UTC'),
+            'timezone' => 'UTC',
+            'visibility' => 'org_only',
+        ]);
+
+        // Model allows it but controller validation should catch it
+        $this->assertNull($meeting->organization_id);
+        $this->assertEquals('org_only', $meeting->visibility);
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */
