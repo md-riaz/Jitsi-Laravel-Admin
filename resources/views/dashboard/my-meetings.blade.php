@@ -15,7 +15,13 @@
             <h1 class="page-title">My Meetings</h1>
             <p class="page-description" style="font-size: 1rem;">View and manage your upcoming and past meetings.</p>
         </div>
-        <div>
+        <div style="display: flex; gap: 12px;">
+            <a href="{{ route('dashboard.calendar') }}" class="btn btn-secondary">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline-block; margin-right: 8px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Calendar View
+            </a>
             <a href="{{ route('dashboard.create-meeting') }}" class="btn btn-primary">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline-block; margin-right: 8px;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>

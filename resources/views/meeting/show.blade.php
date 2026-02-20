@@ -93,6 +93,29 @@
             background: #f1f5f9;
             color: #475569;
         }
+        .calendar-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        .calendar-button:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .calendar-button svg {
+            width: 16px;
+            height: 16px;
+        }
         .countdown {
             text-align: center;
             padding: 48px;
@@ -229,6 +252,16 @@
                     @endif
                 </div>
             </div>
+            @if(!$meeting->isInstantMeeting())
+                <div style="margin-top: 16px;">
+                    <a href="{{ route('meeting.download-ics', $meeting->id) }}" class="calendar-button">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Add to Calendar
+                    </a>
+                </div>
+            @endif
         </div>
 
         <div class="content">
