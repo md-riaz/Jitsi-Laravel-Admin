@@ -275,6 +275,127 @@ JITSI_JWT_SUB=meet.yourdomain.com
 - Role-based permissions (Tyro RBAC)
 - Meeting visibility controls
 
+## 🎯 Product Tour
+
+Explore the platform's features through different user roles without installing anything. See how the interface adapts based on permissions and access levels.
+
+### 1. Landing Page & Authentication
+
+**Professional Landing Page**
+
+The platform features a modern, professional landing page with clear feature presentation and easy navigation.
+
+![Landing Page](docs/screenshots/tour-01-landing-page.png)
+
+**Secure Login Interface**
+
+Clean authentication interface with dark mode support and password recovery options.
+
+![Login Page](docs/screenshots/tour-02-login-page.png)
+
+---
+
+### 2. Super Administrator View
+
+The Super Admin role provides complete platform control for SaaS operations, system-wide user management, and organization oversight.
+
+**Super Admin Dashboard**
+
+Comprehensive platform-level statistics including total users, roles, privileges, organizations, and system health metrics. The dashboard provides quick access to all administrative functions.
+
+![Super Admin Dashboard](docs/screenshots/tour-03-superadmin-dashboard.png)
+
+**User Management**
+
+Full CRUD operations for all users across all organizations. Super Admins can create, edit, suspend, delete users, and even impersonate them for support purposes. Notice the "Login As" feature for troubleshooting.
+
+![User Management](docs/screenshots/tour-04-user-management.png)
+
+**Organization Management**
+
+Manage all organizations in the system with complete visibility and control. Create, view, edit, and delete organizations with their associated settings.
+
+![Organizations](docs/screenshots/tour-05-organizations.png)
+
+**Organization Creation Workflow**
+
+Simple and intuitive forms for creating new organizations with slug auto-generation and validation.
+
+![Create Organization](docs/screenshots/tour-06-create-organization.png)
+
+---
+
+### 3. Organization Admin View
+
+Organization Admins can manage their team members, create organization-wide meetings, and control team access within their organization boundaries.
+
+**Organization Admin Dashboard**
+
+Statistics focused on organization-level metrics including users, roles, and team distribution. Notice the "Administration" section in the sidebar with Users, Roles, and Privileges management.
+
+![Org Admin Dashboard](docs/screenshots/tour-09-orgadmin-dashboard.png)
+
+**Team Management**
+
+Manage team members within your organization. Add members, assign roles (Admin/Member), and control access. The interface clearly shows role differentiation and action permissions.
+
+![Team Management](docs/screenshots/tour-10-team-management.png)
+
+---
+
+### 4. Member View
+
+Members have access to core meeting functionality without administrative capabilities - focused on creating and joining meetings.
+
+**Member Dashboard**
+
+Simplified dashboard with personal account information and quick access to meeting features. Notice the absence of Administration and Resources sections - members see only what they need.
+
+![Member Dashboard](docs/screenshots/tour-11-member-dashboard.png)
+
+---
+
+### 5. Meeting Management (All Roles)
+
+**Create Meeting Interface**
+
+Comprehensive meeting creation form with:
+- **Meeting Type**: Instant or Scheduled meetings
+- **Organization Selection**: Create personal or organization meetings
+- **Timezone Support**: Full timezone selection for global teams
+- **Visibility Controls**: Invite Only, Anyone with Link, or Organization Only
+- **Advanced Options**: Moderator settings, waiting room, recording options
+
+![Create Meeting Form](docs/screenshots/tour-07-create-meeting-form.png)
+
+**Calendar View**
+
+Integrated calendar view for visualizing all your meetings at a glance. Switch between calendar and list views for different perspectives.
+
+![Calendar](docs/screenshots/tour-08-calendar.png)
+
+---
+
+### Role Comparison
+
+| Feature | Member | Org Admin | Super Admin |
+|---------|--------|-----------|-------------|
+| Create Meetings | ✅ Personal only | ✅ Personal + Org | ✅ All |
+| View Own Meetings | ✅ | ✅ | ✅ |
+| Manage Team Members | ❌ | ✅ Own org | ✅ All orgs |
+| User Management | ❌ | ✅ Own org | ✅ Platform-wide |
+| Organization Management | ❌ | ❌ | ✅ |
+| Role & Privilege Config | ❌ | ✅ Own org | ✅ System-wide |
+| User Impersonation | ❌ | ❌ | ✅ |
+| Meeting Resources | ❌ | ✅ Own org | ✅ All orgs |
+| Audit Events | ❌ | ✅ Own org | ✅ Platform-wide |
+
+---
+
+### Try It Yourself
+
+Want to explore these features hands-on? Follow the [Quick Start](#-quick-start) guide to set up the platform locally with demo data. You'll get access to all three user types with pre-seeded accounts.
+
 ## 🛠️ Production Deployment
 
 ### Quick Start with Docker
