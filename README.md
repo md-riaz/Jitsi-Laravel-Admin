@@ -23,6 +23,12 @@ A production-ready, enterprise-grade meeting management platform built on Larave
 
 ### Administration
 - **Dashboard** - Comprehensive admin interface powered by Tyro Dashboard
+- **Super Admin Panel** - Platform-level control for SaaS operations:
+  - **User Management** - Create, edit, suspend, and delete users across all organizations
+  - **Organization Management** - Full CRUD operations for organizations
+  - **Role & Privilege Management** - Configure roles and permissions system-wide
+  - **User Impersonation** - Login as any user for support and troubleshooting
+  - **System Analytics** - Platform-wide statistics and insights
 - **User Management** - Role-based access control (super-admin, org-admin, host, member)
 - **Meeting Management** - Full CRUD operations with participant tracking
 - **Audit Logs** - Detailed event logs for compliance and monitoring
@@ -91,7 +97,11 @@ php artisan migrate --seed
 ```
 
 **Demo credentials:**
-- Admin: `admin@example.com` / `password`
+
+| Account Type | Email | Password | Access Level |
+|-------------|-------|----------|--------------|
+| **Super Admin** | superadmin@jitsi-admin.com | password | Full platform control - manage all users, organizations, and system settings |
+| Demo Org Admin | admin@example.com | password | Manage Demo Organization |
 
 **Alpha Net Organization (https://www.alpha.net.bd/):**
 

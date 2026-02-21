@@ -16,7 +16,23 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create a test user
+        // Create Super Admin (for platform management)
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@jitsi-admin.com'],
+            [
+                'name' => 'Super Administrator',
+                'password' => Hash::make('password'),
+                'account_type' => 'single',
+            ]
+        );
+
+        // Assign super-admin role to Super Admin
+        $superAdminRole = Role::where('slug', 'super-admin')->first();
+        if ($superAdminRole && !$superAdmin->roles()->where('role_id', $superAdminRole->id)->exists()) {
+            $superAdmin->roles()->attach($superAdminRole->id);
+        }
+
+        // Create a demo organization admin user
         $user = User::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
@@ -26,10 +42,10 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // Assign super-admin role
-        $superAdminRole = Role::where('slug', 'super-admin')->first();
-        if ($superAdminRole && !$user->roles()->where('role_id', $superAdminRole->id)->exists()) {
-            $user->roles()->attach($superAdminRole->id);
+        // Assign org-admin role to demo admin
+        $orgAdminRole = Role::where('slug', 'org-admin')->first();
+        if ($orgAdminRole && !$user->roles()->where('role_id', $orgAdminRole->id)->exists()) {
+            $user->roles()->attach($orgAdminRole->id);
         }
 
         // Create Alpha Net organization
@@ -231,8 +247,16 @@ class DemoDataSeeder extends Seeder
 
         $this->command->info('Demo data created successfully!');
         $this->command->info('');
-        $this->command->info('=== Demo Account ===');
-        $this->command->info('Login credentials: admin@example.com / password');
+        $this->command->info('=== Super Admin (Platform Management) ===');
+        $this->command->info('Email: superadmin@jitsi-admin.com');
+        $this->command->info('Password: password');
+        $this->command->info('Role: Super Administrator');
+        $this->command->info('Access: Full platform control - manage all users, organizations, and system settings');
+        $this->command->info('');
+        $this->command->info('=== Demo Organization Admin ===');
+        $this->command->info('Email: admin@example.com');
+        $this->command->info('Password: password');
+        $this->command->info('Role: Organization Admin');
         $this->command->info('');
         $this->command->info('=== Alpha Net Organization ===');
         $this->command->info('Organization: Alpha Net (https://www.alpha.net.bd/)');
