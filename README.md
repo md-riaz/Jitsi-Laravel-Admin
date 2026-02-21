@@ -370,9 +370,9 @@ Comprehensive meeting creation form with:
 
 **Calendar View**
 
-Integrated calendar view for visualizing all your meetings at a glance. Switch between calendar and list views for different perspectives.
+Integrated calendar view for visualizing all your meetings at a glance. Switch between calendar and list views for different perspectives. Built with FullCalendar and bundled with the application for reliable offline-first functionality.
 
-![Calendar](docs/screenshots/tour-08-calendar.png)
+![Calendar](docs/screenshots/calendar-fixed.png)
 
 ---
 

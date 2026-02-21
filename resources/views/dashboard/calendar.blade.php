@@ -8,6 +8,10 @@
 <span>Calendar</span>
 @endsection
 
+@push('styles')
+@vite('resources/css/calendar.css')
+@endpush
+
 @section('content')
 <div class="page-header">
     <div class="page-header-row">
@@ -37,115 +41,12 @@
         <div id="calendar"></div>
     </div>
 </div>
-
-<link href='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/main.min.css' rel='stylesheet' />
-<link href='https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/main.min.css' rel='stylesheet' />
-<link href='https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.10/main.min.css' rel='stylesheet' />
-
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.10/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.10/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.10/index.global.min.js'></script>
-
-<style>
-    #calendar {
-        max-width: 100%;
-        margin: 0 auto;
-    }
-
-    .fc {
-        font-family: inherit;
-    }
-
-    .fc-toolbar-title {
-        font-size: 1.5rem !important;
-        font-weight: 600;
-    }
-
-    .fc-button {
-        background-color: #667eea !important;
-        border-color: #667eea !important;
-        text-transform: capitalize;
-    }
-
-    .fc-button:hover {
-        background-color: #5568d3 !important;
-        border-color: #5568d3 !important;
-    }
-
-    .fc-button-active {
-        background-color: #4c51bf !important;
-        border-color: #4c51bf !important;
-    }
-
-    .fc-event {
-        cursor: pointer;
-        border: none !important;
-    }
-
-    .fc-daygrid-event {
-        padding: 2px 4px;
-    }
-
-    .fc-event-title {
-        font-weight: 500;
-    }
-
-    .fc-list-event:hover td {
-        background-color: #f3f4f6;
-    }
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        },
-        buttonText: {
-            today: 'Today',
-            month: 'Month',
-            week: 'Week',
-            day: 'Day',
-            list: 'List'
-        },
-        height: 'auto',
-        navLinks: true,
-        editable: false,
-        dayMaxEvents: true,
-        eventTimeFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            meridiem: 'short'
-        },
-        events: {
-            url: '{{ route('dashboard.calendar.events') }}',
-            method: 'GET',
-            failure: function() {
-                alert('There was an error loading calendar events!');
-            }
-        },
-        eventClick: function(info) {
-            info.jsEvent.preventDefault();
-            if (info.event.url) {
-                window.open(info.event.url, '_blank');
-            }
-        },
-        eventDidMount: function(info) {
-            // Add tooltip with description
-            if (info.event.extendedProps.description) {
-                info.el.title = info.event.extendedProps.description;
-            }
-        }
-    });
-
-    calendar.render();
-});
-</script>
 @endsection
+
+@push('scripts')
+<script>
+    // Pass the calendar events URL to the calendar.js module
+    window.calendarEventsUrl = '{{ route('dashboard.calendar.events') }}';
+</script>
+@vite('resources/js/calendar.js')
+@endpush
