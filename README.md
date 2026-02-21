@@ -90,7 +90,25 @@ touch database/database.sqlite
 php artisan migrate --seed
 ```
 
-Demo credentials: `admin@example.com` / `password`
+**Demo credentials:**
+- Admin: `admin@example.com` / `password`
+
+**Alpha Net Organization (https://www.alpha.net.bd/):**
+
+All Alpha Net team members have password: `password`
+
+| Name | Email | Role | Designation |
+|------|-------|------|-------------|
+| Abu Sufian Haider | abu.haider@alpha.net.bd | Admin | Founder & Director |
+| Akramul Haider | akramul.haider@alpha.net.bd | Admin | Chief Executive Officer (CEO) |
+| Esham Haider | esham.haider@alpha.net.bd | Admin | Chief Technical Officer (CTO) |
+| Laboni Akter | laboni.akter@alpha.net.bd | Member | Chief Human Resources Officer (CHRO) |
+| Mahabur Rahman | mahabur.rahman@alpha.net.bd | Member | Dept. Head of Support |
+| Abdur Rahim | abdur.rahim@alpha.net.bd | Member | Dept. Head of Sales & Marketing |
+| Nur Nabi | nur.nabi@alpha.net.bd | Member | Dept. Head of Digital Marketing |
+| Nazmous Shakib | nazmous.shakib@alpha.net.bd | Member | Dept. Head of Training & Communication |
+| Mithun Sutradhar | mithun.sutradhar@alpha.net.bd | Member | Dept. Head of Web & Software Development |
+| Omar Faruk | omar.faruk@alpha.net.bd | Member | Dept. Head of Accounts & Finance |
 
 5. **Configure Jitsi Integration** (see detailed guide below)
 
