@@ -16,28 +16,161 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create a test user
+        // Create Super Admin (for platform management)
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@jitsi-admin.com'],
+            [
+                'name' => 'Super Administrator',
+                'password' => Hash::make('password'),
+                'account_type' => 'single',
+            ]
+        );
+
+        // Assign super-admin role to Super Admin
+        $superAdminRole = Role::where('slug', 'super-admin')->first();
+        if ($superAdminRole && !$superAdmin->roles()->where('role_id', $superAdminRole->id)->exists()) {
+            $superAdmin->roles()->attach($superAdminRole->id);
+        }
+
+        // Create a demo organization admin user
         $user = User::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Admin User',
                 'password' => Hash::make('password'),
+                'account_type' => 'organization',
             ]
         );
 
-        // Assign super-admin role
-        $superAdminRole = Role::where('slug', 'super-admin')->first();
-        if ($superAdminRole && !$user->roles()->where('role_id', $superAdminRole->id)->exists()) {
-            $user->roles()->attach($superAdminRole->id);
+        // Assign org-admin role to demo admin
+        $orgAdminRole = Role::where('slug', 'org-admin')->first();
+        if ($orgAdminRole && !$user->roles()->where('role_id', $orgAdminRole->id)->exists()) {
+            $user->roles()->attach($orgAdminRole->id);
         }
 
-        // Create organization
+        // Create Alpha Net organization
+        $alphaNet = Organization::firstOrCreate(
+            ['slug' => 'alpha-net'],
+            [
+                'name' => 'Alpha Net',
+            ]
+        );
+
+        // Create Alpha Net team members
+        $teamMembers = [
+            [
+                'name' => 'Abu Sufian Haider',
+                'email' => 'abu.haider@alpha.net.bd',
+                'role' => 'admin',
+                'designation' => 'Founder & Director',
+            ],
+            [
+                'name' => 'Akramul Haider',
+                'email' => 'akramul.haider@alpha.net.bd',
+                'role' => 'admin',
+                'designation' => 'Chief Executive Officer (CEO)',
+            ],
+            [
+                'name' => 'Esham Haider',
+                'email' => 'esham.haider@alpha.net.bd',
+                'role' => 'admin',
+                'designation' => 'Chief Technical Officer (CTO)',
+            ],
+            [
+                'name' => 'Laboni Akter',
+                'email' => 'laboni.akter@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Chief Human Resources Officer (CHRO)',
+            ],
+            [
+                'name' => 'Mahabur Rahman',
+                'email' => 'mahabur.rahman@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Dept. Head of Support',
+            ],
+            [
+                'name' => 'Abdur Rahim',
+                'email' => 'abdur.rahim@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Dept. Head of Sales & Marketing',
+            ],
+            [
+                'name' => 'Nur Nabi',
+                'email' => 'nur.nabi@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Dept. Head of Digital Marketing',
+            ],
+            [
+                'name' => 'Nazmous Shakib',
+                'email' => 'nazmous.shakib@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Dept. Head of Training & Communication',
+            ],
+            [
+                'name' => 'Mithun Sutradhar',
+                'email' => 'mithun.sutradhar@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Dept. Head of Web & Software Development',
+            ],
+            [
+                'name' => 'Omar Faruk',
+                'email' => 'omar.faruk@alpha.net.bd',
+                'role' => 'member',
+                'designation' => 'Dept. Head of Accounts & Finance',
+            ],
+        ];
+
+        $alphaNetUsers = [];
+        foreach ($teamMembers as $member) {
+            $alphaUser = User::firstOrCreate(
+                ['email' => $member['email']],
+                [
+                    'name' => $member['name'],
+                    'password' => Hash::make('password'),
+                    'account_type' => 'organization',
+                    'organization_id' => $alphaNet->id,
+                ]
+            );
+
+            // Assign appropriate role
+            if ($member['role'] === 'admin') {
+                $orgAdminRole = Role::where('slug', 'org-admin')->first();
+                if ($orgAdminRole && !$alphaUser->roles()->where('role_id', $orgAdminRole->id)->exists()) {
+                    $alphaUser->roles()->attach($orgAdminRole->id);
+                }
+            } else {
+                $memberRole = Role::where('slug', 'member')->first();
+                if ($memberRole && !$alphaUser->roles()->where('role_id', $memberRole->id)->exists()) {
+                    $alphaUser->roles()->attach($memberRole->id);
+                }
+            }
+
+            // Add to organization pivot table
+            if (!$alphaNet->users()->where('user_id', $alphaUser->id)->exists()) {
+                $alphaNet->users()->attach($alphaUser->id, ['role' => $member['role']]);
+            }
+
+            $alphaNetUsers[] = $alphaUser;
+        }
+
+        // Create Demo Organization (for compatibility with existing demo)
         $organization = Organization::firstOrCreate(
             ['slug' => 'demo-org'],
             [
                 'name' => 'Demo Organization',
             ]
         );
+
+        // Link user to organization if not already linked
+        if (!$user->organization_id) {
+            $user->organization_id = $organization->id;
+            $user->save();
+        }
+
+        // Add user to organization pivot table if not already added
+        if (!$organization->users()->where('user_id', $user->id)->exists()) {
+            $organization->users()->attach($user->id, ['role' => 'admin']);
+        }
 
         // Create meetings with different statuses
         
@@ -113,8 +246,27 @@ class DemoDataSeeder extends Seeder
         }
 
         $this->command->info('Demo data created successfully!');
-        $this->command->info('Login credentials: admin@example.com / password');
-        $this->command->info('Meetings created:');
+        $this->command->info('');
+        $this->command->info('=== Super Admin (Platform Management) ===');
+        $this->command->info('Email: superadmin@jitsi-admin.com');
+        $this->command->info('Password: password');
+        $this->command->info('Role: Super Administrator');
+        $this->command->info('Access: Full platform control - manage all users, organizations, and system settings');
+        $this->command->info('');
+        $this->command->info('=== Demo Organization Admin ===');
+        $this->command->info('Email: admin@example.com');
+        $this->command->info('Password: password');
+        $this->command->info('Role: Organization Admin');
+        $this->command->info('');
+        $this->command->info('=== Alpha Net Organization ===');
+        $this->command->info('Organization: Alpha Net (https://www.alpha.net.bd/)');
+        $this->command->info('All Alpha Net users have password: password');
+        $this->command->info('Team members created: ' . count($alphaNetUsers));
+        foreach ($teamMembers as $member) {
+            $this->command->info('  - ' . $member['name'] . ' (' . $member['email'] . ') - ' . $member['designation']);
+        }
+        $this->command->info('');
+        $this->command->info('=== Meetings Created ===');
         $this->command->info('- ' . $meetingSoon->title . ' (ID: ' . $meetingSoon->id . ')');
         $this->command->info('- ' . $meetingNow->title . ' (ID: ' . $meetingNow->id . ')');
         $this->command->info('- ' . $meetingFuture->title . ' (ID: ' . $meetingFuture->id . ')');

@@ -59,7 +59,7 @@ class Meeting extends Model
 
     public function organization(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Organization::class)->withDefault();
     }
 
     public function creator(): BelongsTo

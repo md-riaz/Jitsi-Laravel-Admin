@@ -165,7 +165,7 @@
             <div class="form-footer">
                 <p>
                     Don't have an account?
-                    <a href="{{ route('tyro-login.register') }}" class="form-link">Sign up</a>
+                    <a href="{{ route('register') }}" class="form-link">Sign up</a>
                 </p>
             </div>
             @endif

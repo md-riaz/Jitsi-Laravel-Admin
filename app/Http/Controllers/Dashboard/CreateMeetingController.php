@@ -13,7 +13,16 @@ class CreateMeetingController extends Controller
 {
     public function create()
     {
-        $organizations = Organization::orderBy('name')->get();
+        $user = Auth::user();
+
+        // For organization users, get their organization
+        // For single users, get all organizations (for optional selection)
+        if ($user->isOrganizationUser() && $user->organization_id) {
+            $organizations = Organization::where('id', $user->organization_id)->orderBy('name')->get();
+        } else {
+            $organizations = Organization::orderBy('name')->get();
+        }
+
         $timezones = [
             'UTC' => 'UTC',
             'America/New_York' => 'Eastern Time (US)',
@@ -40,7 +49,7 @@ class CreateMeetingController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'organization_id' => 'required|exists:organizations,id',
+            'organization_id' => 'required_if:visibility,org_only|nullable|exists:organizations,id',
             'meeting_type' => 'required|in:instant,scheduled',
             'start_at' => 'required_if:meeting_type,scheduled|nullable|date',
             'end_at' => 'required_if:meeting_type,scheduled|nullable|date|after:start_at',
@@ -48,6 +57,8 @@ class CreateMeetingController extends Controller
             'visibility' => 'required|in:invite_only,link_anyone,org_only',
             'join_early_minutes' => 'nullable|integer|min:0|max:120',
             'join_late_minutes' => 'nullable|integer|min:0|max:240',
+        ], [
+            'organization_id.required_if' => 'An organization must be selected when visibility is set to "Organization Only".',
         ]);
 
         if ($validator->fails()) {
@@ -57,7 +68,7 @@ class CreateMeetingController extends Controller
         }
 
         $data = $validator->validated();
-        
+
         // For instant meetings, set status to live and clear start/end times
         if ($data['meeting_type'] === 'instant') {
             $data['status'] = 'live';
@@ -66,7 +77,7 @@ class CreateMeetingController extends Controller
         } else {
             $data['status'] = 'scheduled';
         }
-        
+
         unset($data['meeting_type']);
         $data['created_by'] = Auth::id();
 

@@ -74,16 +74,22 @@
 
                 <!-- Organization -->
                 <div>
-                    <label for="organization_id" style="display: block; margin-bottom: 8px; font-weight: 500;">Organization *</label>
-                    <select id="organization_id" name="organization_id" required
+                    <label for="organization_id" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                        Organization
+                        <span id="org_required_indicator" style="color: #ef4444; display: none;">*</span>
+                        <span id="org_optional_indicator" style="color: #6b7280; font-weight: 400;">(Optional)</span>
+                    </label>
+                    <select id="organization_id" name="organization_id"
                             style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        <option value="">Select Organization</option>
+                        <option value="">Personal Meeting (No Organization)</option>
                         @foreach($organizations as $org)
                             <option value="{{ $org->id }}" {{ old('organization_id') == $org->id ? 'selected' : '' }}>
                                 {{ $org->name }}
                             </option>
                         @endforeach
                     </select>
+                    <small id="org_help_text" style="color: #6b7280;">Leave unselected to create a personal meeting, or select an organization to create an organization meeting</small>
+                    <small id="org_required_text" style="color: #ef4444; display: none;">An organization is required when visibility is set to "Organization Only"</small>
                 </div>
 
                 <!-- Scheduled Meeting Fields -->
@@ -174,7 +180,7 @@ function toggleMeetingType() {
     const submitText = document.getElementById('submit_text');
     const startInput = document.getElementById('start_at');
     const endInput = document.getElementById('end_at');
-    
+
     if (isInstant) {
         scheduledFields.style.display = 'none';
         submitText.textContent = 'Create Instant Meeting';
@@ -188,7 +194,36 @@ function toggleMeetingType() {
     }
 }
 
+function toggleOrganizationRequirement() {
+    const visibility = document.getElementById('visibility').value;
+    const orgSelect = document.getElementById('organization_id');
+    const orgRequiredIndicator = document.getElementById('org_required_indicator');
+    const orgOptionalIndicator = document.getElementById('org_optional_indicator');
+    const orgHelpText = document.getElementById('org_help_text');
+    const orgRequiredText = document.getElementById('org_required_text');
+
+    if (visibility === 'org_only') {
+        // Organization is required for org_only visibility
+        orgSelect.setAttribute('required', 'required');
+        orgRequiredIndicator.style.display = 'inline';
+        orgOptionalIndicator.style.display = 'none';
+        orgHelpText.style.display = 'none';
+        orgRequiredText.style.display = 'block';
+    } else {
+        // Organization is optional for other visibility options
+        orgSelect.removeAttribute('required');
+        orgRequiredIndicator.style.display = 'none';
+        orgOptionalIndicator.style.display = 'inline';
+        orgHelpText.style.display = 'block';
+        orgRequiredText.style.display = 'none';
+    }
+}
+
 // Initialize on page load
 toggleMeetingType();
+toggleOrganizationRequirement();
+
+// Add event listener for visibility changes
+document.getElementById('visibility').addEventListener('change', toggleOrganizationRequirement);
 </script>
 @endsection

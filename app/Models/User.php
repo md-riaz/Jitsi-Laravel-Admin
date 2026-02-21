@@ -29,6 +29,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'account_type',
+        'organization_id',
     ];
 
     /**
@@ -52,5 +54,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's organization
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Check if user has a single account type
+     */
+    public function isSingleUser(): bool
+    {
+        return $this->account_type === 'single';
+    }
+
+    /**
+     * Check if user has an organization account type
+     */
+    public function isOrganizationUser(): bool
+    {
+        return $this->account_type === 'organization';
     }
 }
