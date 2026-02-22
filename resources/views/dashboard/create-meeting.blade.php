@@ -139,19 +139,81 @@
                 <div>
                     <details style="border: 1px solid #d1d5db; border-radius: 6px; padding: 16px;">
                         <summary style="cursor: pointer; font-weight: 500; margin-bottom: 16px;">Advanced Options</summary>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
-                            <div>
-                                <label for="join_early_minutes" style="display: block; margin-bottom: 8px; font-weight: 500;">Join Early (minutes)</label>
-                                <input type="number" id="join_early_minutes" name="join_early_minutes" value="{{ old('join_early_minutes', 10) }}" min="0" max="120"
-                                       style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <small style="color: #6b7280;">How many minutes before start time can users join</small>
+                        <div style="display: grid; gap: 20px; margin-top: 16px;">
+                            <!-- Join Window Settings -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div>
+                                    <label for="join_early_minutes" style="display: block; margin-bottom: 8px; font-weight: 500;">Join Early (minutes)</label>
+                                    <input type="number" id="join_early_minutes" name="join_early_minutes" value="{{ old('join_early_minutes', 10) }}" min="0" max="120"
+                                           style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                    <small style="color: #6b7280;">How many minutes before start time can users join</small>
+                                </div>
+
+                                <div>
+                                    <label for="join_late_minutes" style="display: block; margin-bottom: 8px; font-weight: 500;">Join Late (minutes)</label>
+                                    <input type="number" id="join_late_minutes" name="join_late_minutes" value="{{ old('join_late_minutes', 60) }}" min="0" max="240"
+                                           style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                    <small style="color: #6b7280;">How many minutes after end time can users still join</small>
+                                </div>
                             </div>
 
-                            <div>
-                                <label for="join_late_minutes" style="display: block; margin-bottom: 8px; font-weight: 500;">Join Late (minutes)</label>
-                                <input type="number" id="join_late_minutes" name="join_late_minutes" value="{{ old('join_late_minutes', 60) }}" min="0" max="240"
-                                       style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <small style="color: #6b7280;">How many minutes after end time can users still join</small>
+                            <!-- Security Settings -->
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                                <h3 style="font-weight: 600; margin-bottom: 16px; color: #374151;">Security Settings</h3>
+
+                                <div style="display: grid; gap: 16px;">
+                                    <!-- Password -->
+                                    <div>
+                                        <label for="password" style="display: block; margin-bottom: 8px; font-weight: 500;">Meeting Password (Optional)</label>
+                                        <input type="password" id="password" name="password" value="{{ old('password') }}"
+                                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                                               placeholder="Leave blank for no password">
+                                        <small style="color: #6b7280;">Require participants to enter a password to join</small>
+                                    </div>
+
+                                    <!-- Lobby Enable/Disable -->
+                                    <div>
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                            <input type="checkbox" name="lobby_enabled" value="1" {{ old('lobby_enabled', true) ? 'checked' : '' }}
+                                                   style="width: 18px; height: 18px; cursor: pointer;">
+                                            <span style="font-weight: 500;">Enable Lobby (Waiting Room)</span>
+                                        </label>
+                                        <small style="color: #6b7280; margin-left: 26px; display: block;">Participants wait in a lobby until admitted by a moderator</small>
+                                    </div>
+
+                                    <!-- Allow Guests -->
+                                    <div>
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                            <input type="checkbox" name="allow_guests" value="1" {{ old('allow_guests', true) ? 'checked' : '' }}
+                                                   style="width: 18px; height: 18px; cursor: pointer;">
+                                            <span style="font-weight: 500;">Allow Guest Users</span>
+                                        </label>
+                                        <small style="color: #6b7280; margin-left: 26px; display: block;">Allow users without accounts to join the meeting</small>
+                                    </div>
+
+                                    <!-- Max Participants -->
+                                    <div>
+                                        <label for="max_participants" style="display: block; margin-bottom: 8px; font-weight: 500;">Maximum Participants (Optional)</label>
+                                        <input type="number" id="max_participants" name="max_participants" value="{{ old('max_participants') }}" min="2" max="1000"
+                                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                                               placeholder="Leave blank for unlimited">
+                                        <small style="color: #6b7280;">Limit the number of participants who can join</small>
+                                    </div>
+
+                                    <!-- IP Restriction -->
+                                    <div>
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
+                                            <input type="checkbox" name="ip_restriction_enabled" value="1" {{ old('ip_restriction_enabled', false) ? 'checked' : '' }}
+                                                   id="ip_restriction_enabled"
+                                                   style="width: 18px; height: 18px; cursor: pointer;">
+                                            <span style="font-weight: 500;">Enable IP Restriction</span>
+                                        </label>
+                                        <textarea id="allowed_ips" name="allowed_ips" rows="3"
+                                                  style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                                                  placeholder="Enter allowed IP addresses or CIDR ranges (one per line)&#10;Example:&#10;192.168.1.100&#10;10.0.0.0/8">{{ old('allowed_ips') }}</textarea>
+                                        <small style="color: #6b7280;">One IP address or CIDR range per line (e.g., 192.168.1.0/24)</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </details>

@@ -8,10 +8,21 @@ use Firebase\JWT\JWT;
 
 class JitsiJwtService
 {
-    public function generateToken(Meeting $meeting, ?User $user = null, ?string $guestName = null, bool $isModerator = false): string
+    public function generateToken(Meeting $meeting, ?User $user = null, ?string $guestName = null, bool $isModerator = false): ?string
     {
+        // Check if JWT is required
+        if (!$this->isJwtRequired($meeting)) {
+            return null;
+        }
+
+        // Get expiry from organization or default
+        $expiryMinutes = 120;
+        if ($meeting->organization_id && $meeting->organization) {
+            $expiryMinutes = $meeting->organization->jwt_expiry_minutes ?? 120;
+        }
+
         $now = time();
-        $exp = $now + (2 * 60 * 60); // 2 hours
+        $exp = $now + ($expiryMinutes * 60);
 
         $payload = [
             'aud' => config('services.jitsi.audience'),
@@ -33,5 +44,21 @@ class JitsiJwtService
         $secret = config('services.jitsi.secret');
 
         return JWT::encode($payload, $secret, 'HS256');
+    }
+
+    public function isJwtRequired(Meeting $meeting): bool
+    {
+        // If no secret configured, JWT is not possible
+        if (empty(config('services.jitsi.secret'))) {
+            return false;
+        }
+
+        // Check organization policy
+        if ($meeting->organization_id && $meeting->organization) {
+            return $meeting->organization->require_jwt;
+        }
+
+        // For personal meetings, JWT is optional but available
+        return true;
     }
 }

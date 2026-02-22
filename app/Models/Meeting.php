@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class Meeting extends Model
@@ -27,11 +29,20 @@ class Meeting extends Model
         'join_late_minutes',
         'visibility',
         'status',
+        'password',
+        'lobby_enabled',
+        'allow_guests',
+        'max_participants',
+        'allowed_ips',
+        'ip_restriction_enabled',
     ];
 
     protected $casts = [
         'start_at' => 'immutable_datetime',
         'end_at' => 'immutable_datetime',
+        'lobby_enabled' => 'boolean',
+        'allow_guests' => 'boolean',
+        'ip_restriction_enabled' => 'boolean',
     ];
 
     protected $attributes = [
@@ -40,6 +51,9 @@ class Meeting extends Model
         'join_late_minutes' => 60,
         'visibility' => 'invite_only',
         'status' => 'scheduled',
+        'lobby_enabled' => true,
+        'allow_guests' => true,
+        'ip_restriction_enabled' => false,
     ];
 
     protected static function booted(): void
@@ -48,11 +62,24 @@ class Meeting extends Model
             if (empty($meeting->room_name)) {
                 $meeting->room_name = sprintf('mtg_%s', Str::lower(Str::random(12)));
             }
+
+            // Hash password if provided
+            if (!empty($meeting->password)) {
+                $meeting->password = Hash::make($meeting->password);
+            }
         });
 
         static::updating(function (Meeting $meeting): void {
             if ($meeting->isDirty('room_name')) {
                 $meeting->room_name = $meeting->getOriginal('room_name');
+            }
+
+            // Hash password if changed and not already hashed
+            if ($meeting->isDirty('password') && !empty($meeting->password)) {
+                // Only hash if it doesn't look like a bcrypt hash already
+                if (!str_starts_with($meeting->password, '$2y$')) {
+                    $meeting->password = Hash::make($meeting->password);
+                }
             }
         });
     }
@@ -82,6 +109,11 @@ class Meeting extends Model
         return $this->hasMany(MeetingEvent::class);
     }
 
+    public function recurrenceRule(): HasOne
+    {
+        return $this->hasOne(RecurrenceRule::class);
+    }
+
     public function canJoinAt(CarbonInterface $now): bool
     {
         // Instant meetings (no start/end time) can always be joined if status is live
@@ -98,5 +130,63 @@ class Meeting extends Model
     public function isInstantMeeting(): bool
     {
         return $this->start_at === null || $this->end_at === null;
+    }
+
+    public function verifyPassword(?string $password): bool
+    {
+        if (empty($this->password)) {
+            return true; // No password required
+        }
+
+        if (empty($password)) {
+            return false; // Password required but not provided
+        }
+
+        return Hash::check($password, $this->password);
+    }
+
+    public function getAllowedIps(): array
+    {
+        if (empty($this->allowed_ips)) {
+            return [];
+        }
+
+        return array_filter(array_map('trim', explode("\n", $this->allowed_ips)));
+    }
+
+    public function isIpAllowed(string $ip): bool
+    {
+        if (!$this->ip_restriction_enabled) {
+            return true;
+        }
+
+        $allowedIps = $this->getAllowedIps();
+        if (empty($allowedIps)) {
+            return true;
+        }
+
+        foreach ($allowedIps as $allowedIp) {
+            if ($this->ipMatchesCidr($ip, $allowedIp)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function ipMatchesCidr(string $ip, string $cidr): bool
+    {
+        // If no CIDR notation, do exact match
+        if (!str_contains($cidr, '/')) {
+            return $ip === $cidr;
+        }
+
+        [$subnet, $bits] = explode('/', $cidr);
+        $ip = ip2long($ip);
+        $subnet = ip2long($subnet);
+        $mask = -1 << (32 - $bits);
+        $subnet &= $mask;
+
+        return ($ip & $mask) === $subnet;
     }
 }
