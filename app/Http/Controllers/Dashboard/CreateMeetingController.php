@@ -88,10 +88,11 @@ class CreateMeetingController extends Controller
         unset($data['meeting_type']);
         $data['created_by'] = Auth::id();
 
-        // Set defaults for boolean fields if not provided
-        $data['lobby_enabled'] = $request->input('lobby_enabled', true);
-        $data['allow_guests'] = $request->input('allow_guests', true);
-        $data['ip_restriction_enabled'] = $request->input('ip_restriction_enabled', false);
+        // Handle checkbox fields properly - unchecked boxes don't send values
+        // So we treat absence as false, not default to true
+        $data['lobby_enabled'] = $request->has('lobby_enabled');
+        $data['allow_guests'] = $request->has('allow_guests');
+        $data['ip_restriction_enabled'] = $request->has('ip_restriction_enabled');
 
         $meeting = Meeting::create($data);
 

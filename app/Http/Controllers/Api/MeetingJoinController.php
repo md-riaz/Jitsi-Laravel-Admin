@@ -29,10 +29,20 @@ class MeetingJoinController extends Controller
 
         // Check participant limit
         if ($meeting->max_participants) {
-            $currentParticipantCount = $meeting->participants()
-                ->whereNotNull('joined_at')
-                ->whereNull('left_at')
-                ->count();
+            // Count unique participants who joined in the last 24 hours from events
+            // This is more reliable than meeting_participants table since join flow always creates events
+            $recentJoinEvents = $meeting->events()
+                ->where('type', 'participant_joined')
+                ->where('created_at', '>=', Carbon::now()->subDay())
+                ->get();
+
+            // Count unique participants (by user_id for authenticated, by combination for guests)
+            $uniqueParticipants = $recentJoinEvents->unique(function ($event) {
+                $payload = $event->payload;
+                return $payload['user_id'] ?? ($payload['user_name'] . '_' . $payload['ip_address']);
+            });
+
+            $currentParticipantCount = $uniqueParticipants->count();
 
             if ($currentParticipantCount >= $meeting->max_participants) {
                 return response()->json([
