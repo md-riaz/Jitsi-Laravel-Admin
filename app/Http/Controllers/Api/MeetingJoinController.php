@@ -71,6 +71,7 @@ class MeetingJoinController extends Controller
             'domain' => config('services.jitsi.domain'),
             'jwt' => $jwt,
             'display_name' => $user?->name ?? $request->input('display_name'),
+            'avatar_url' => $user?->getJitsiAvatarUrl() ?? '',
             'is_moderator' => $isModerator,
             'config' => [
                 'roomName' => $meeting->room_name,
@@ -80,8 +81,40 @@ class MeetingJoinController extends Controller
                 'userInfo' => [
                     'displayName' => $user?->name ?? $request->input('display_name'),
                     'email' => $user?->email ?? '',
+                    'avatarURL' => $user?->getJitsiAvatarUrl() ?? '',
                 ],
             ],
+        ]);
+    }
+
+    /**
+     * Handle participant leaving the meeting
+     */
+    public function leave(Request $request, Meeting $meeting): JsonResponse
+    {
+        $user = $request->user();
+
+        // Log leave event
+        MeetingEvent::create([
+            'meeting_id' => $meeting->id,
+            'type' => 'participant_left',
+            'payload' => [
+                'user_id' => $user?->id,
+                'user_name' => $user?->name ?? $request->input('display_name'),
+                'left_at' => Carbon::now()->toIso8601String(),
+            ],
+        ]);
+
+        // Update participant left_at timestamp
+        if ($user) {
+            $meeting->participants()
+                ->where('user_id', $user->id)
+                ->update(['left_at' => Carbon::now()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Left meeting successfully',
         ]);
     }
 }
