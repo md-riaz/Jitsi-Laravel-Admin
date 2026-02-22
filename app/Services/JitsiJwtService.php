@@ -25,6 +25,7 @@ class JitsiJwtService
                 'user' => [
                     'name' => $user?->name ?? $guestName ?? 'Guest',
                     'email' => $user?->email ?? '',
+                    'avatar' => $user?->getJitsiAvatarUrl() ?? '',
                     'moderator' => $isModerator,
                 ],
             ],

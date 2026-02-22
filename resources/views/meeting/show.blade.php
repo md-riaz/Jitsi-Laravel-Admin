@@ -777,7 +777,9 @@
                     height: '650px',
                     parentNode: document.querySelector('#jitsi-container'),
                     userInfo: {
-                        displayName: data.display_name || 'Guest'
+                        displayName: data.display_name || 'Guest',
+                        email: data.config?.userInfo?.email || '',
+                        avatarURL: data.avatar_url || data.config?.userInfo?.avatarURL || ''
                     },
                     configOverwrite: {
                         prejoinPageEnabled: false,
@@ -799,8 +801,15 @@
 
                 jitsiApi = new JitsiMeetExternalAPI(domain, options);
 
-                jitsiApi.addEventListener('readyToClose', () => {
+                // Track when user leaves/closes the meeting
+                jitsiApi.addEventListener('readyToClose', async () => {
+                    await trackMeetingLeave();
                     window.location.reload();
+                });
+
+                // Also track on page unload (closing browser/tab)
+                window.addEventListener('beforeunload', () => {
+                    trackMeetingLeave();
                 });
 
             } catch (error) {
@@ -808,6 +817,22 @@
                 alert('Failed to join meeting. Please refresh the page and try again.');
                 button.disabled = false;
                 button.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Join Meeting Now';
+            }
+        }
+
+        async function trackMeetingLeave() {
+            try {
+                await fetch('/api/meetings/{{ $meeting->id }}/leave', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    credentials: 'same-origin',
+                    keepalive: true // Important for beforeunload
+                });
+            } catch (error) {
+                console.error('Error tracking meeting leave:', error);
             }
         }
     </script>
