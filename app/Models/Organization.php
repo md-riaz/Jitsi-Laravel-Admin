@@ -16,6 +16,17 @@ class Organization extends Model
     protected $fillable = [
         'name',
         'slug',
+        'require_jwt',
+        'jwt_expiry_minutes',
+    ];
+
+    protected $casts = [
+        'require_jwt' => 'boolean',
+    ];
+
+    protected $attributes = [
+        'require_jwt' => false,
+        'jwt_expiry_minutes' => 120,
     ];
 
     public function users(): BelongsToMany

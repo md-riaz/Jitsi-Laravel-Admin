@@ -18,33 +18,98 @@ class MeetingJoinController extends Controller
 
     public function join(Request $request, Meeting $meeting): JsonResponse
     {
+        // Check IP restriction
+        $clientIp = $request->ip();
+        if (!$meeting->isIpAllowed($clientIp)) {
+            return response()->json([
+                'message' => 'Access denied: Your IP address is not allowed to join this meeting.',
+                'can_join' => false,
+            ], 403);
+        }
+
+        // Check participant limit
+        if ($meeting->max_participants) {
+            // Count unique participants who joined in the last 24 hours from events
+            // This is more reliable than meeting_participants table since join flow always creates events
+            $recentJoinEvents = $meeting->events()
+                ->where('type', 'participant_joined')
+                ->where('created_at', '>=', Carbon::now()->subDay())
+                ->get();
+
+            // Count unique participants (by user_id for authenticated, by combination for guests)
+            $uniqueParticipants = $recentJoinEvents->unique(function ($event) {
+                $payload = $event->payload;
+                return $payload['user_id'] ?? ($payload['user_name'] . '_' . $payload['ip_address']);
+            });
+
+            $currentParticipantCount = $uniqueParticipants->count();
+
+            if ($currentParticipantCount >= $meeting->max_participants) {
+                return response()->json([
+                    'message' => 'Meeting is full. Maximum participants limit reached.',
+                    'can_join' => false,
+                    'max_participants' => $meeting->max_participants,
+                    'current_participants' => $currentParticipantCount,
+                ], 403);
+            }
+        }
+
+        // Check password protection
+        if (!empty($meeting->password)) {
+            $providedPassword = $request->input('password');
+            if (!$meeting->verifyPassword($providedPassword)) {
+                return response()->json([
+                    'message' => 'Invalid meeting password.',
+                    'can_join' => false,
+                    'requires_password' => true,
+                ], 403);
+            }
+        }
+
+        // Check guest policy
+        $user = $request->user();
+        $isGuest = !$user;
+        if ($isGuest && !$meeting->allow_guests) {
+            return response()->json([
+                'message' => 'Guest access is not allowed for this meeting.',
+                'can_join' => false,
+            ], 403);
+        }
+
         // Check if user can join at this time
-        if (! $meeting->canJoinAt(Carbon::now())) {
+        if (!$meeting->canJoinAt(Carbon::now())) {
             return response()->json([
                 'message' => 'Meeting is not available for joining at this time.',
                 'can_join' => false,
-                'opens_at' => $meeting->start_at->copy()->subMinutes($meeting->join_early_minutes),
-                'closes_at' => $meeting->end_at->copy()->addMinutes($meeting->join_late_minutes),
+                'opens_at' => $meeting->start_at?->copy()->subMinutes($meeting->join_early_minutes),
+                'closes_at' => $meeting->end_at?->copy()->addMinutes($meeting->join_late_minutes),
             ], 403);
         }
 
         // Determine if user is moderator
-        $user = $request->user();
         $isModerator = $user && (
             $meeting->created_by === $user->id ||
             $meeting->participants()->where('user_id', $user->id)->where('role', 'host')->exists() ||
             $meeting->participants()->where('user_id', $user->id)->where('role', 'cohost')->exists()
         );
 
-        // Generate JWT token if secret is configured
-        $jwt = null;
-        if (config('services.jitsi.secret')) {
-            $jwt = $this->jitsiService->generateToken(
-                $meeting,
-                $user,
-                $request->input('display_name'),
-                $isModerator
-            );
+        // Generate JWT token if configured and required
+        $jwt = $this->jitsiService->generateToken(
+            $meeting,
+            $user,
+            $request->input('display_name'),
+            $isModerator
+        );
+
+        // If organization requires JWT but we couldn't generate one, deny access
+        if ($meeting->organization_id &&
+            $meeting->organization &&
+            $meeting->organization->require_jwt &&
+            empty($jwt)) {
+            return response()->json([
+                'message' => 'JWT authentication is required but not properly configured.',
+                'can_join' => false,
+            ], 500);
         }
 
         // Log join event
@@ -55,6 +120,7 @@ class MeetingJoinController extends Controller
                 'user_id' => $user?->id,
                 'user_name' => $user?->name ?? $request->input('display_name'),
                 'is_moderator' => $isModerator,
+                'ip_address' => $clientIp,
             ],
         ]);
 
@@ -77,11 +143,14 @@ class MeetingJoinController extends Controller
                 'roomName' => $meeting->room_name,
                 'width' => '100%',
                 'height' => 600,
-                'parentNode' => null, // Will be set by frontend
+                'parentNode' => null,
                 'userInfo' => [
                     'displayName' => $user?->name ?? $request->input('display_name'),
                     'email' => $user?->email ?? '',
                     'avatarURL' => $user?->getJitsiAvatarUrl() ?? '',
+                ],
+                'configOverwrite' => [
+                    'prejoinPageEnabled' => $meeting->lobby_enabled,
                 ],
             ],
         ]);

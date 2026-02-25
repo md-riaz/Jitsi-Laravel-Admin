@@ -56,8 +56,15 @@ class CreateMeetingController extends Controller
             'visibility' => 'required|in:invite_only,link_anyone,org_only',
             'join_early_minutes' => 'nullable|integer|min:0|max:120',
             'join_late_minutes' => 'nullable|integer|min:0|max:240',
+            'password' => 'nullable|string|min:4|max:255',
+            'lobby_enabled' => 'nullable|boolean',
+            'allow_guests' => 'nullable|boolean',
+            'max_participants' => 'nullable|integer|min:2|max:1000',
+            'allowed_ips' => 'nullable|string',
+            'ip_restriction_enabled' => 'nullable|boolean',
         ], [
             'organization_id.required_if' => 'An organization must be selected when visibility is set to "Organization Only".',
+            'password.min' => 'Password must be at least 4 characters.',
         ]);
 
         if ($validator->fails()) {
@@ -79,6 +86,12 @@ class CreateMeetingController extends Controller
 
         unset($data['meeting_type']);
         $data['created_by'] = Auth::id();
+
+        // Handle checkbox fields properly - unchecked boxes don't send values
+        // So we treat absence as false, not default to true
+        $data['lobby_enabled'] = $request->has('lobby_enabled');
+        $data['allow_guests'] = $request->has('allow_guests');
+        $data['ip_restriction_enabled'] = $request->has('ip_restriction_enabled');
 
         $meeting = Meeting::create($data);
 
