@@ -13,6 +13,30 @@
             <h1 class="page-title">Welcome back, {{ $user->name ?? 'User' }}!</h1>
             <p class="page-description" style="font-size: 1rem;">Here's what's happening with your application today.</p>
         </div>
+        <div style="display: flex; gap: 10px;">
+            <form method="POST" action="{{ route('dashboard.create-meeting.store') }}" style="display:inline;">
+                @csrf
+                <input type="hidden" name="meeting_type" value="instant">
+                <input type="hidden" name="title" value="Instant Meeting">
+                <input type="hidden" name="timezone" value="UTC">
+                <input type="hidden" name="visibility" value="invite_only">
+                <button type="submit" class="btn btn-primary">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    New Meeting
+                </button>
+            </form>
+            <a href="{{ route('dashboard.create-meeting') }}?type=scheduled" class="btn btn-secondary">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Schedule
+            </a>
+            <a href="{{ route('dashboard.my-meetings') }}" class="btn btn-ghost">
+                My Meetings
+            </a>
+        </div>
     </div>
 </div>
 

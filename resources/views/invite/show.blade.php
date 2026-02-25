@@ -13,7 +13,7 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            background: #f3f4f6;
             min-height: 100vh;
             padding: 20px;
             display: flex;
@@ -29,7 +29,7 @@
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: #2563eb;
             color: white;
             padding: 40px 30px;
             text-align: center;
