@@ -50,11 +50,11 @@
         content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(17, 24, 39, 0.7) 100%);
+        background: rgba(17, 24, 39, 0.82);
     }
 
     html.dark .background-panel::before {
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
+        background: rgba(0, 0, 0, 0.82);
     }
 
     .background-panel-content {
@@ -472,13 +472,13 @@
         content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(17, 24, 39, 0.65) 100%);
+        background: rgba(17, 24, 39, 0.78);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
 
     html.dark .auth-container.fullscreen::before {
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.65) 100%);
+        background: rgba(0, 0, 0, 0.78);
     }
 
     .auth-container.fullscreen .form-panel {
@@ -509,21 +509,11 @@
     }
 
     .auth-container.card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image:
-            radial-gradient(circle at 20% 50%, rgba(17, 24, 39, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(17, 24, 39, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(17, 24, 39, 0.02) 0%, transparent 50%);
-        background-size: 100% 100%;
+        content: none;
     }
 
     html.dark .auth-container.card::before {
-        background-image:
-            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+        content: none;
     }
 
     .auth-container.card .form-panel {

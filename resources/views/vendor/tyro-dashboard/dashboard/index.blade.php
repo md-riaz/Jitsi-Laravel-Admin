@@ -177,7 +177,7 @@
 <!-- User Dashboard (Non-Admin) - Meeting-Focused Home -->
 <style>
 .meeting-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1d4ed8;
     border-radius: 12px;
     padding: 28px 32px;
     color: white;

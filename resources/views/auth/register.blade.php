@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="auth-container split-left">
-    <div class="background-panel" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="background-panel" style="background: #1d4ed8;">
         <div class="background-panel-content">
             <h1>Choose Your Account Type</h1>
             <p>Select between a personal account for individual meetings or an organization account to manage team meetings.</p>
