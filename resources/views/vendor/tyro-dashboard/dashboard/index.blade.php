@@ -248,24 +248,7 @@
 .jm-footer { display: flex; gap: 10px; justify-content: flex-end; }
 </style>
 
-@php
-    $dashUser = auth()->user();
-    $dashMeetings = \App\Models\Meeting::where(function($q) use ($dashUser) {
-        $q->where('created_by', $dashUser->id)
-          ->orWhereHas('participants', fn($p) => $p->where('user_id', $dashUser->id));
-    })->with(['organization', 'participants'])->get();
-
-    $dashLive = $dashMeetings->filter(fn($m) => $m->canJoinAt(now()));
-
-    $dashUpcoming = \App\Models\Meeting::where(function($q) use ($dashUser) {
-        $q->where('created_by', $dashUser->id)
-          ->orWhereHas('participants', fn($p) => $p->where('user_id', $dashUser->id));
-    })->where(function($q) {
-        $q->whereNull('end_at')->orWhere('end_at', '>', now());
-    })->where('status', '!=', 'live')->orderBy('start_at')->with(['organization', 'participants'])->limit(5)->get();
-@endphp
-
-<!-- Hero: Quick Actions -->
+<!-- Hero: Quick Actions (uses $upcomingMeetings, $liveMeetings, $totalMeetings, $totalParticipants from ViewComposer) -->
 <div class="meeting-hero">
     <div class="meeting-hero-text">
         <h2>Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening') }}, {{ explode(' ', $user->name ?? 'User')[0] }}!</h2>
@@ -308,7 +291,7 @@
         </div>
         <div>
             <div class="meeting-stat-label">Upcoming</div>
-            <div class="meeting-stat-value">{{ $dashUpcoming->count() }}</div>
+            <div class="meeting-stat-value">{{ $upcomingMeetings->count() }}</div>
         </div>
     </div>
     <div class="meeting-stat-card">
@@ -317,7 +300,7 @@
         </div>
         <div>
             <div class="meeting-stat-label">Live Now</div>
-            <div class="meeting-stat-value">{{ $dashLive->count() }}</div>
+            <div class="meeting-stat-value">{{ $liveMeetings->count() }}</div>
         </div>
     </div>
     <div class="meeting-stat-card">
@@ -326,7 +309,7 @@
         </div>
         <div>
             <div class="meeting-stat-label">Total Hosted</div>
-            <div class="meeting-stat-value">{{ $dashMeetings->where('created_by', auth()->id())->count() }}</div>
+            <div class="meeting-stat-value">{{ $totalMeetings }}</div>
         </div>
     </div>
     <div class="meeting-stat-card">
@@ -335,12 +318,12 @@
         </div>
         <div>
             <div class="meeting-stat-label">Participants</div>
-            <div class="meeting-stat-value">{{ $dashMeetings->sum(fn($m) => $m->participants->count()) }}</div>
+            <div class="meeting-stat-value">{{ $totalParticipants }}</div>
         </div>
     </div>
 </div>
 
-@if($dashLive->count())
+@if($liveMeetings->count())
 <div class="card" style="margin-bottom: 18px; border: 2px solid #22c55e;">
     <div class="card-header" style="border-bottom: 1px solid #dcfce7; background: #f0fdf4;">
         <h3 class="card-title" style="color: #16a34a; display: flex; align-items: center; gap: 8px;">
@@ -349,7 +332,7 @@
         </h3>
     </div>
     <div class="card-body" style="padding: 0 20px;">
-        @foreach($dashLive as $m)
+        @foreach($liveMeetings as $m)
         <div class="ml-list-item">
             <div class="ml-info">
                 <div class="ml-title">{{ $m->title }}</div>
@@ -371,14 +354,14 @@
         <a href="{{ route('dashboard.my-meetings') }}" class="btn btn-sm btn-ghost">View All</a>
     </div>
     <div class="card-body" style="padding: 0 20px;">
-        @if($dashUpcoming->isEmpty())
+        @if($upcomingMeetings->isEmpty())
             <div class="empty-mt">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                 <p>No upcoming meetings.</p>
                 <a href="{{ route('dashboard.create-meeting') }}" class="btn btn-primary btn-sm">Schedule a Meeting</a>
             </div>
         @else
-            @foreach($dashUpcoming as $m)
+            @foreach($upcomingMeetings->take(5) as $m)
             @php $isLive = $m->canJoinAt(now()); @endphp
             <div class="ml-list-item">
                 @if($m->start_at)

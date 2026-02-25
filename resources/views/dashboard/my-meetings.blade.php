@@ -222,6 +222,18 @@ function copyMeetingLink(btn, url) {
     navigator.clipboard.writeText(url).then(function() {
         btn.classList.add('did-copy');
         setTimeout(() => btn.classList.remove('did-copy'), 1800);
+    }).catch(function() {
+        // Fallback for environments where clipboard API is unavailable
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.classList.add('did-copy');
+        setTimeout(() => btn.classList.remove('did-copy'), 1800);
     });
 }
 </script>
