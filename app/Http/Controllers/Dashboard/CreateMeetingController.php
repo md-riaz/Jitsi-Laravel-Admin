@@ -43,7 +43,6 @@ class CreateMeetingController extends Controller
 
         return view('dashboard.create-meeting', compact('organizations', 'timezones'));
     }
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -96,8 +95,14 @@ class CreateMeetingController extends Controller
 
         $meeting = Meeting::create($data);
 
+        // For instant meetings, redirect directly to the meeting room
+        if ($data['status'] === 'live') {
+            return redirect()->route('meeting.show', $meeting->id)
+                ->with('success', 'Meeting started!');
+        }
+
         return redirect()
             ->route('dashboard.my-meetings')
-            ->with('success', 'Meeting created successfully! Meeting link: ' . url("/meet/{$meeting->id}"));
+            ->with('success', 'Meeting scheduled successfully! Meeting link: ' . url("/meet/{$meeting->id}"));
     }
 }

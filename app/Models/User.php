@@ -31,6 +31,7 @@ class User extends Authenticatable
         'password',
         'account_type',
         'organization_id',
+        'avatar_path',
     ];
 
     /**
@@ -78,5 +79,26 @@ class User extends Authenticatable
     public function isOrganizationUser(): bool
     {
         return $this->account_type === 'organization';
+    }
+
+    /**
+     * Get the URL for the user's avatar
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if ($this->avatar_path) {
+            return asset('storage/' . $this->avatar_path);
+        }
+
+        // Fallback to Gravatar
+        return 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($this->email))) . '?d=mp&s=200';
+    }
+
+    /**
+     * Get avatar URL for Jitsi integration
+     */
+    public function getJitsiAvatarUrl(): string
+    {
+        return $this->avatar_url;
     }
 }

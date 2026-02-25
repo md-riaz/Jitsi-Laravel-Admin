@@ -30,7 +30,7 @@
 
     <style>
         .impersonation-banner {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            background: #fef3c7;
             border-bottom: 2px solid #f59e0b;
             padding: 0.75rem 1.5rem;
             position: sticky;

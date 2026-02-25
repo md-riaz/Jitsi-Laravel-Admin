@@ -49,7 +49,7 @@
         .logo-icon {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: #2563eb;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -178,7 +178,7 @@
         .feature-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            background: #eff6ff;
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -201,7 +201,7 @@
         }
         
         .stats-section {
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            background: #f9fafb;
             padding: 4rem 2rem;
             margin: 4rem 0;
         }

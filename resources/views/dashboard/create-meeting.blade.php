@@ -9,25 +9,105 @@
 @endsection
 
 @section('content')
+<style>
+.meeting-type-tabs {
+    display: flex;
+    background: var(--muted);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 28px;
+    width: fit-content;
+}
+.meeting-type-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--muted-foreground);
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.meeting-type-tab.active {
+    background: var(--card);
+    color: var(--foreground);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+}
+.form-grid { display: grid; gap: 20px; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group label { display: block; margin-bottom: 7px; font-weight: 500; font-size: 0.9375rem; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    background: var(--background);
+    color: var(--foreground);
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+}
+.form-group .help-text { font-size: 0.8125rem; color: var(--muted-foreground); margin-top: 5px; }
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+}
+.advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    user-select: none;
+}
+.advanced-toggle svg { transition: transform 0.2s; }
+.advanced-toggle.open svg { transform: rotate(180deg); }
+@media (max-width: 600px) {
+    .form-row-2 { grid-template-columns: 1fr; }
+    .meeting-type-tabs { width: 100%; }
+    .meeting-type-tab { flex: 1; justify-content: center; }
+}
+</style>
+
 <div class="page-header">
     <div class="page-header-row">
         <div>
             <h1 class="page-title">Create Meeting</h1>
-            <p class="page-description" style="font-size: 1rem;">Create an instant meeting or schedule a meeting for later.</p>
+            <p class="page-description" style="font-size: 1rem;">Start instantly or schedule for later.</p>
         </div>
     </div>
 </div>
 
 @if(session('success'))
-    <div style="padding: 16px; margin-bottom: 20px; background: #d1fae5; border-left: 4px solid #10b981; color: #065f46; border-radius: 6px;">
+    <div style="padding: 14px 18px; margin-bottom: 20px; background: #d1fae5; border-left: 4px solid #10b981; color: #065f46; border-radius: 8px;">
         <strong>Success!</strong> {{ session('success') }}
     </div>
 @endif
 
 @if($errors->any())
-    <div style="padding: 16px; margin-bottom: 20px; background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; border-radius: 6px;">
-        <strong>Error!</strong>
-        <ul style="margin: 8px 0 0 20px;">
+    <div style="padding: 14px 18px; margin-bottom: 20px; background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; border-radius: 8px;">
+        <strong>Please fix the following:</strong>
+        <ul style="margin: 6px 0 0 20px;">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -36,198 +116,132 @@
 @endif
 
 <div class="card">
-    <div class="card-body">
+    <div class="card-body" style="padding: 28px 32px;">
         <form method="POST" action="{{ route('dashboard.create-meeting.store') }}">
             @csrf
 
-            <div style="display: grid; gap: 20px;">
-                <!-- Meeting Type Selection -->
-                <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Meeting Type</label>
-                    <div style="display: flex; gap: 20px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="radio" name="meeting_type" value="instant" id="instant_meeting" {{ old('meeting_type', 'instant') == 'instant' ? 'checked' : '' }} onchange="toggleMeetingType()" style="cursor: pointer;">
-                            <span>Instant Meeting (Start Now)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="radio" name="meeting_type" value="scheduled" id="scheduled_meeting" {{ old('meeting_type') == 'scheduled' ? 'checked' : '' }} onchange="toggleMeetingType()" style="cursor: pointer;">
-                            <span>Scheduled Meeting</span>
-                        </label>
+            <!-- Meeting Type Tabs -->
+            <div class="meeting-type-tabs">
+                <button type="button" class="meeting-type-tab {{ old('meeting_type', request('type', 'instant')) !== 'scheduled' ? 'active' : '' }}"
+                    id="tab_instant" onclick="setMeetingType('instant')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Instant Meeting
+                </button>
+                <button type="button" class="meeting-type-tab {{ old('meeting_type', request('type', 'instant')) === 'scheduled' ? 'active' : '' }}"
+                    id="tab_scheduled" onclick="setMeetingType('scheduled')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Schedule
+                </button>
+            </div>
+
+            <input type="hidden" name="meeting_type" id="meeting_type"
+                value="{{ old('meeting_type', request('type', 'instant') === 'scheduled' ? 'scheduled' : 'instant') }}">
+
+            <div class="form-grid">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">Meeting Title *</label>
+                    <input type="text" id="title" name="title" value="{{ old('title') }}" required
+                           placeholder="e.g. Weekly Team Standup" autofocus>
+                </div>
+
+                <!-- Scheduled Fields -->
+                <div id="scheduled_fields" style="{{ old('meeting_type', request('type', 'instant')) === 'scheduled' ? '' : 'display:none;' }}">
+                    <div class="form-row-2">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="start_at">Start Time *</label>
+                            <input type="datetime-local" id="start_at" name="start_at" value="{{ old('start_at') }}">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="end_at">End Time *</label>
+                            <input type="datetime-local" id="end_at" name="end_at" value="{{ old('end_at') }}">
+                        </div>
                     </div>
                 </div>
 
-                <!-- Title -->
-                <div>
-                    <label for="title" style="display: block; margin-bottom: 8px; font-weight: 500;">Title *</label>
-                    <input type="text" id="title" name="title" value="{{ old('title') }}" required
-                           style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                           placeholder="Enter meeting title">
+                <!-- Timezone & Visibility row -->
+                <div class="form-row-2">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="timezone">Timezone *</label>
+                        <select id="timezone" name="timezone" required>
+                            @foreach($timezones as $tz => $label)
+                                <option value="{{ $tz }}" {{ old('timezone', $defaultTimezone ?? 'UTC') == $tz ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="visibility">Visibility *</label>
+                        <select id="visibility" name="visibility" required onchange="toggleOrganizationRequirement()">
+                            <option value="invite_only" {{ old('visibility', 'invite_only') == 'invite_only' ? 'selected' : '' }}>Invite Only</option>
+                            <option value="link_anyone" {{ old('visibility') == 'link_anyone' ? 'selected' : '' }}>Anyone with Link</option>
+                            <option value="org_only" {{ old('visibility') == 'org_only' ? 'selected' : '' }}>Organization Only</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- Description -->
-                <div>
-                    <label for="description" style="display: block; margin-bottom: 8px; font-weight: 500;">Description</label>
-                    <textarea id="description" name="description" rows="4"
-                              style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                              placeholder="Enter meeting description (optional)">{{ old('description') }}</textarea>
-                </div>
-
-                <!-- Organization -->
-                <div>
-                    <label for="organization_id" style="display: block; margin-bottom: 8px; font-weight: 500;">
-                        Organization
-                        <span id="org_required_indicator" style="color: #ef4444; display: none;">*</span>
-                        <span id="org_optional_indicator" style="color: #6b7280; font-weight: 400;">(Optional)</span>
+                <!-- Organization (hidden unless org_only) -->
+                <div class="form-group" id="org_field" style="{{ old('visibility') == 'org_only' ? '' : 'display:none;' }}">
+                    <label for="organization_id">
+                        Organization <span style="color: #ef4444;">*</span>
                     </label>
-                    <select id="organization_id" name="organization_id"
-                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        <option value="">Personal Meeting (No Organization)</option>
+                    <select id="organization_id" name="organization_id">
+                        <option value="">— Select Organization —</option>
                         @foreach($organizations as $org)
                             <option value="{{ $org->id }}" {{ old('organization_id') == $org->id ? 'selected' : '' }}>
                                 {{ $org->name }}
                             </option>
                         @endforeach
                     </select>
-                    <small id="org_help_text" style="color: #6b7280;">Leave unselected to create a personal meeting, or select an organization to create an organization meeting</small>
-                    <small id="org_required_text" style="color: #ef4444; display: none;">An organization is required when visibility is set to "Organization Only"</small>
                 </div>
 
-                <!-- Scheduled Meeting Fields -->
-                <div id="scheduled_fields" style="display: none;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <!-- Start Time -->
-                        <div>
-                            <label for="start_at" style="display: block; margin-bottom: 8px; font-weight: 500;">Start Time</label>
-                            <input type="datetime-local" id="start_at" name="start_at" value="{{ old('start_at') }}"
-                                   style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        </div>
-
-                        <!-- End Time -->
-                        <div>
-                            <label for="end_at" style="display: block; margin-bottom: 8px; font-weight: 500;">End Time</label>
-                            <input type="datetime-local" id="end_at" name="end_at" value="{{ old('end_at') }}"
-                                   style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timezone -->
-                <div>
-                    <label for="timezone" style="display: block; margin-bottom: 8px; font-weight: 500;">Timezone *</label>
-                    <select id="timezone" name="timezone" required
-                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        @foreach($timezones as $tz => $label)
-                            <option value="{{ $tz }}" {{ old('timezone', 'UTC') == $tz ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Visibility -->
-                <div>
-                    <label for="visibility" style="display: block; margin-bottom: 8px; font-weight: 500;">Visibility *</label>
-                    <select id="visibility" name="visibility" required
-                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                        <option value="invite_only" {{ old('visibility', 'invite_only') == 'invite_only' ? 'selected' : '' }}>Invite Only</option>
-                        <option value="link_anyone" {{ old('visibility') == 'link_anyone' ? 'selected' : '' }}>Anyone with Link</option>
-                        <option value="org_only" {{ old('visibility') == 'org_only' ? 'selected' : '' }}>Organization Only</option>
-                    </select>
+                <!-- Description (collapsed by default) -->
+                <div class="form-group">
+                    <label for="description">Description <span style="font-weight: 400; color: var(--muted-foreground);">(optional)</span></label>
+                    <textarea id="description" name="description" rows="3"
+                              placeholder="Add agenda, notes, or other details…">{{ old('description') }}</textarea>
                 </div>
 
                 <!-- Advanced Options -->
                 <div>
-                    <details style="border: 1px solid #d1d5db; border-radius: 6px; padding: 16px;">
-                        <summary style="cursor: pointer; font-weight: 500; margin-bottom: 16px;">Advanced Options</summary>
-                        <div style="display: grid; gap: 20px; margin-top: 16px;">
-                            <!-- Join Window Settings -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div>
-                                    <label for="join_early_minutes" style="display: block; margin-bottom: 8px; font-weight: 500;">Join Early (minutes)</label>
-                                    <input type="number" id="join_early_minutes" name="join_early_minutes" value="{{ old('join_early_minutes', 10) }}" min="0" max="120"
-                                           style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                    <small style="color: #6b7280;">How many minutes before start time can users join</small>
-                                </div>
-
-                                <div>
-                                    <label for="join_late_minutes" style="display: block; margin-bottom: 8px; font-weight: 500;">Join Late (minutes)</label>
-                                    <input type="number" id="join_late_minutes" name="join_late_minutes" value="{{ old('join_late_minutes', 60) }}" min="0" max="240"
-                                           style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                    <small style="color: #6b7280;">How many minutes after end time can users still join</small>
-                                </div>
+                    <div class="advanced-toggle" id="advancedToggle" onclick="toggleAdvanced()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                        Advanced options
+                    </div>
+                    <div id="advancedFields" style="display:none; margin-top: 16px;">
+                        <div class="form-row-2">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="join_early_minutes">Join Early (minutes)</label>
+                                <input type="number" id="join_early_minutes" name="join_early_minutes"
+                                       value="{{ old('join_early_minutes', 10) }}" min="0" max="120">
+                                <div class="help-text">Minutes before start time users can join</div>
                             </div>
-
-                            <!-- Security Settings -->
-                            <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                                <h3 style="font-weight: 600; margin-bottom: 16px; color: #374151;">Security Settings</h3>
-
-                                <div style="display: grid; gap: 16px;">
-                                    <!-- Password -->
-                                    <div>
-                                        <label for="password" style="display: block; margin-bottom: 8px; font-weight: 500;">Meeting Password (Optional)</label>
-                                        <input type="password" id="password" name="password" value="{{ old('password') }}"
-                                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                                               placeholder="Leave blank for no password">
-                                        <small style="color: #6b7280;">Require participants to enter a password to join</small>
-                                    </div>
-
-                                    <!-- Lobby Enable/Disable -->
-                                    <div>
-                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                            <input type="checkbox" name="lobby_enabled" value="1" {{ old('lobby_enabled', true) ? 'checked' : '' }}
-                                                   style="width: 18px; height: 18px; cursor: pointer;">
-                                            <span style="font-weight: 500;">Enable Lobby (Waiting Room)</span>
-                                        </label>
-                                        <small style="color: #6b7280; margin-left: 26px; display: block;">Participants wait in a lobby until admitted by a moderator</small>
-                                    </div>
-
-                                    <!-- Allow Guests -->
-                                    <div>
-                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                            <input type="checkbox" name="allow_guests" value="1" {{ old('allow_guests', true) ? 'checked' : '' }}
-                                                   style="width: 18px; height: 18px; cursor: pointer;">
-                                            <span style="font-weight: 500;">Allow Guest Users</span>
-                                        </label>
-                                        <small style="color: #6b7280; margin-left: 26px; display: block;">Allow users without accounts to join the meeting</small>
-                                    </div>
-
-                                    <!-- Max Participants -->
-                                    <div>
-                                        <label for="max_participants" style="display: block; margin-bottom: 8px; font-weight: 500;">Maximum Participants (Optional)</label>
-                                        <input type="number" id="max_participants" name="max_participants" value="{{ old('max_participants') }}" min="2" max="1000"
-                                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                                               placeholder="Leave blank for unlimited">
-                                        <small style="color: #6b7280;">Limit the number of participants who can join</small>
-                                    </div>
-
-                                    <!-- IP Restriction -->
-                                    <div>
-                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
-                                            <input type="checkbox" name="ip_restriction_enabled" value="1" {{ old('ip_restriction_enabled', false) ? 'checked' : '' }}
-                                                   id="ip_restriction_enabled"
-                                                   style="width: 18px; height: 18px; cursor: pointer;">
-                                            <span style="font-weight: 500;">Enable IP Restriction</span>
-                                        </label>
-                                        <textarea id="allowed_ips" name="allowed_ips" rows="3"
-                                                  style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                                                  placeholder="Enter allowed IP addresses or CIDR ranges (one per line)&#10;Example:&#10;192.168.1.100&#10;10.0.0.0/8">{{ old('allowed_ips') }}</textarea>
-                                        <small style="color: #6b7280;">One IP address or CIDR range per line (e.g., 192.168.1.0/24)</small>
-                                    </div>
-                                </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="join_late_minutes">Join Late (minutes)</label>
+                                <input type="number" id="join_late_minutes" name="join_late_minutes"
+                                       value="{{ old('join_late_minutes', 60) }}" min="0" max="240">
+                                <div class="help-text">Minutes after end time users can still join</div>
                             </div>
                         </div>
-                    </details>
+                    </div>
                 </div>
 
-                <!-- Buttons -->
-                <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                    <a href="{{ route('dashboard.my-meetings') }}" 
-                       style="padding: 10px 24px; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; background: white;">
-                        Cancel
-                    </a>
-                    <button type="submit" 
-                            style="padding: 10px 24px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        <span id="submit_text">Create Instant Meeting</span>
+                <!-- Actions -->
+                <div class="form-actions">
+                    <a href="{{ route('dashboard.my-meetings') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="min-width: 160px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" id="submit_icon_instant"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" id="submit_icon_scheduled" style="display:none;"/>
+                        </svg>
+                        <span id="submit_text">Start Instant Meeting</span>
                     </button>
                 </div>
             </div>
@@ -236,56 +250,67 @@
 </div>
 
 <script>
-function toggleMeetingType() {
-    const isInstant = document.getElementById('instant_meeting').checked;
+function setMeetingType(type) {
+    document.getElementById('meeting_type').value = type;
+
     const scheduledFields = document.getElementById('scheduled_fields');
-    const submitText = document.getElementById('submit_text');
     const startInput = document.getElementById('start_at');
     const endInput = document.getElementById('end_at');
+    const submitText = document.getElementById('submit_text');
+    const iconInstant = document.getElementById('submit_icon_instant');
+    const iconScheduled = document.getElementById('submit_icon_scheduled');
 
-    if (isInstant) {
+    document.getElementById('tab_instant').classList.toggle('active', type === 'instant');
+    document.getElementById('tab_scheduled').classList.toggle('active', type === 'scheduled');
+
+    if (type === 'instant') {
         scheduledFields.style.display = 'none';
-        submitText.textContent = 'Create Instant Meeting';
         startInput.removeAttribute('required');
         endInput.removeAttribute('required');
+        submitText.textContent = 'Start Instant Meeting';
+        iconInstant.style.display = '';
+        iconScheduled.style.display = 'none';
     } else {
-        scheduledFields.style.display = 'block';
-        submitText.textContent = 'Schedule Meeting';
+        scheduledFields.style.display = '';
         startInput.setAttribute('required', 'required');
         endInput.setAttribute('required', 'required');
+        submitText.textContent = 'Schedule Meeting';
+        iconInstant.style.display = 'none';
+        iconScheduled.style.display = '';
+        // Set default start time to next round hour if empty
+        if (!startInput.value) {
+            const d = new Date();
+            d.setHours(d.getHours() + 1, 0, 0, 0);
+            startInput.value = d.toISOString().slice(0, 16);
+            const e = new Date(d.getTime() + 60 * 60000);
+            endInput.value = e.toISOString().slice(0, 16);
+        }
     }
 }
 
 function toggleOrganizationRequirement() {
     const visibility = document.getElementById('visibility').value;
+    const orgField = document.getElementById('org_field');
     const orgSelect = document.getElementById('organization_id');
-    const orgRequiredIndicator = document.getElementById('org_required_indicator');
-    const orgOptionalIndicator = document.getElementById('org_optional_indicator');
-    const orgHelpText = document.getElementById('org_help_text');
-    const orgRequiredText = document.getElementById('org_required_text');
-
     if (visibility === 'org_only') {
-        // Organization is required for org_only visibility
+        orgField.style.display = '';
         orgSelect.setAttribute('required', 'required');
-        orgRequiredIndicator.style.display = 'inline';
-        orgOptionalIndicator.style.display = 'none';
-        orgHelpText.style.display = 'none';
-        orgRequiredText.style.display = 'block';
     } else {
-        // Organization is optional for other visibility options
+        orgField.style.display = 'none';
         orgSelect.removeAttribute('required');
-        orgRequiredIndicator.style.display = 'none';
-        orgOptionalIndicator.style.display = 'inline';
-        orgHelpText.style.display = 'block';
-        orgRequiredText.style.display = 'none';
     }
 }
 
-// Initialize on page load
-toggleMeetingType();
-toggleOrganizationRequirement();
+function toggleAdvanced() {
+    const fields = document.getElementById('advancedFields');
+    const toggle = document.getElementById('advancedToggle');
+    const open = fields.style.display === 'none';
+    fields.style.display = open ? '' : 'none';
+    toggle.classList.toggle('open', open);
+}
 
-// Add event listener for visibility changes
-document.getElementById('visibility').addEventListener('change', toggleOrganizationRequirement);
+// Initialize
+setMeetingType(document.getElementById('meeting_type').value);
+toggleOrganizationRequirement();
 </script>
 @endsection
