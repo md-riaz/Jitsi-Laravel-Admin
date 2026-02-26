@@ -53,18 +53,6 @@ class MeetingPageController extends Controller
         ]);
     }
 
-    public function live(Request $request, Meeting $meeting): View
-    {
-        $now = Carbon::now();
-
-        return view('meeting.live', [
-            'meeting' => $meeting,
-            'status' => $meeting->isInstantMeeting()
-                ? ($meeting->status === 'live' ? 'live' : 'ended')
-                : ($meeting->canJoinAt($now) ? 'live' : 'not_started'),
-        ]);
-    }
-
     public function downloadIcs(Meeting $meeting): Response
     {
         $icsContent = $this->calendarService->generateIcs($meeting);
