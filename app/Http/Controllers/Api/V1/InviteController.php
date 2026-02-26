@@ -70,13 +70,8 @@ class InviteController extends Controller
             'email' => 'nullable|email',
         ]);
 
-        session(['invite_token' => $token]);
-        if ($request->filled('name')) {
-            session(['guest_name' => $request->input('name')]);
-        }
-        if ($request->filled('email')) {
-            session(['guest_email' => $request->input('email')]);
-        }
+        // API-first flow: client sends invite_token/name/email in join-guest request.
+        // We intentionally avoid web session coupling here.
 
         return response()->json([
             'ok' => true,

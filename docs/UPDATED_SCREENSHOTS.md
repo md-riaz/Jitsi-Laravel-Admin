@@ -16,20 +16,28 @@ This file tracks screenshots used in docs and what to capture next.
 1. Meeting Diagnostics page
    - URL: `/dashboard/meetings/{meeting}/diagnostics`
    - Suggested file: `docs/screenshots/09-meeting-diagnostics.png`
+   - Status: Pending capture
 
 2. Meeting Summary page
    - URL: `/dashboard/meetings/{meeting}/summary`
    - Suggested file: `docs/screenshots/10-meeting-summary.png`
+   - Status: Pending capture
 
 3. Summary export controls (CSV buttons)
    - Suggested file: `docs/screenshots/11-summary-exports.png`
+   - Status: Pending capture
 
 4. Moderator admission controls on meeting page
    - Suggested file: `docs/screenshots/12-admission-controls.png`
+   - Status: Pending capture
 
 5. Reconnect/inline status banner UX
    - Suggested file: `docs/screenshots/13-reconnect-banner.png`
+   - Status: Pending capture
 
+6. API v1 Postman collection screenshot (optional)
+   - Suggested file: `docs/screenshots/14-api-v1-postman.png`
+   - Status: Pending capture
 ## Notes
 
 - Keep screenshots at 1366x768 or 1440x900 for consistency.

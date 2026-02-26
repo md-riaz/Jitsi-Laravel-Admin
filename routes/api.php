@@ -17,13 +17,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
 
-    Route::middleware('web')->group(function () {
-        Route::post('/invites/resolve', [\App\Http\Controllers\Api\V1\InviteController::class, 'resolve']);
-        Route::post('/invites/{token}/accept', [\App\Http\Controllers\Api\V1\InviteController::class, 'accept']);
-        Route::post('/meetings/{meeting}/join-guest', [\App\Http\Controllers\Api\V1\InviteController::class, 'joinGuest']);
-    });
+    Route::post('/invites/resolve', [\App\Http\Controllers\Api\V1\InviteController::class, 'resolve']);
+    Route::post('/invites/{token}/accept', [\App\Http\Controllers\Api\V1\InviteController::class, 'accept']);
+    Route::post('/meetings/{meeting}/join-guest', [\App\Http\Controllers\Api\V1\InviteController::class, 'joinGuest']);
+    Route::get('/meetings/{meeting}/admission-status', [\App\Http\Controllers\Api\V1\MeetingController::class, 'admissionStatus']);
 
-    Route::middleware(['web', 'auth:sanctum'])->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [\App\Http\Controllers\Api\V1\AuthController::class, 'me']);
         Route::post('/auth/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
 

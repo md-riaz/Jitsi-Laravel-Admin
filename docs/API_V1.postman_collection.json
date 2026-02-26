@@ -1,0 +1,91 @@
+{
+  "info": {
+    "name": "Jitsi Admin API v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Smoke tests for auth, meeting join, invite and analytics endpoints"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://example.com" },
+    { "key": "appPath", "value": "" },
+    { "key": "email", "value": "superadmin@jitsi-admin.com" },
+    { "key": "password", "value": "password" },
+    { "key": "token", "value": "" },
+    { "key": "meetingId", "value": "" },
+    { "key": "inviteToken", "value": "" },
+    { "key": "participantId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"device_name\": \"postman\"\n}" }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "pm.test('status 200', function(){ pm.response.to.have.status(200); });",
+          "const j = pm.response.json();",
+          "pm.test('ok true', function(){ pm.expect(j.ok).to.eql(true); });",
+          "pm.environment.set('token', j.data.token);"
+        ], "type": "text/javascript" }
+      }]
+    },
+    {
+      "name": "Meetings List",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/meetings"
+      }
+    },
+    {
+      "name": "Join Meeting (auth)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/meetings/{{meetingId}}/join",
+        "body": { "mode": "raw", "raw": "{}" }
+      }
+    },
+    {
+      "name": "Resolve Invite",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/invites/resolve",
+        "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{inviteToken}}\"\n}" }
+      }
+    },
+    {
+      "name": "Join Guest",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/meetings/{{meetingId}}/join-guest",
+        "body": { "mode": "raw", "raw": "{\n  \"invite_token\": \"{{inviteToken}}\",\n  \"display_name\": \"Guest Tester\"\n}" }
+      }
+    },
+    {
+      "name": "Admission Status",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/meetings/{{meetingId}}/admission-status?participant_id={{participantId}}"
+      }
+    },
+    {
+      "name": "Meeting Summary",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}{{appPath}}/api/v1/meetings/{{meetingId}}/summary"
+      }
+    }
+  ]
+}

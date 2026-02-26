@@ -34,9 +34,11 @@ class MeetingAccessPolicyService
             }
         }
 
+        $inviteValidated = false;
+
         // Invite-only guest enforcement
         if (!$user && $visibility === 'invite_only') {
-            $inviteToken = (string) ($request->input('invite_token') ?: session('invite_token', ''));
+            $inviteToken = (string) ($request->input('invite_token') ?: ($request->hasSession() ? $request->session()->get('invite_token', '') : ''));
             if ($inviteToken === '') {
                 return $this->deny('ERR_INVITE_REQUIRED', 'This meeting requires a valid invitation.');
             }
@@ -49,10 +51,12 @@ class MeetingAccessPolicyService
             if ((string) $invite->meeting_id !== (string) $meeting->id) {
                 return $this->deny('ERR_INVITE_REQUIRED', 'Invitation does not match this meeting.');
             }
+
+            $inviteValidated = true;
         }
 
-        // Guest gate from computed policy
-        if (!$user && !$meeting->allow_guests) {
+        // Guest gate from computed policy (invite_only with valid invite is allowed)
+        if (!$user && !$meeting->allow_guests && !($visibility === 'invite_only' && $inviteValidated)) {
             return $this->deny('ERR_GUEST_NOT_ALLOWED', 'Guest access is not allowed for this meeting.');
         }
 

@@ -23,6 +23,7 @@ Meetings (Bearer):
 Admissions (Bearer):
 - `GET /meetings/{meeting}/pending-admissions`
 - `POST /meetings/{meeting}/admissions/{participant}`
+- `GET /meetings/{meeting}/admission-status?participant_id=...`
 
 Analytics (Bearer):
 - `GET /meetings/{meeting}/summary`

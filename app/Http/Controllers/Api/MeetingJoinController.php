@@ -79,9 +79,14 @@ class MeetingJoinController extends Controller
 
         // Waiting-room style gate (first pass): guest requires host admission when lobby is enabled.
         if (!$user && $meeting->lobby_enabled) {
-            $guestName = trim((string) $request->input('display_name', session('guest_name', 'Guest')));
-            $guestEmail = (string) session('guest_email', '');
-            $identity = $guestEmail !== '' ? $guestEmail : ('guest:' . substr(hash('sha256', session()->getId() . '|' . $clientIp), 0, 20));
+            $sessionGuestName = $request->hasSession() ? (string) $request->session()->get('guest_name', '') : '';
+            $sessionGuestEmail = $request->hasSession() ? (string) $request->session()->get('guest_email', '') : '';
+
+            $guestName = trim((string) $request->input('display_name', $sessionGuestName !== '' ? $sessionGuestName : 'Guest'));
+            $guestEmail = (string) $request->input('email', $sessionGuestEmail);
+
+            $sessionId = $request->hasSession() ? (string) $request->session()->getId() : (string) $request->header('X-Guest-Session', 'noguestsession');
+            $identity = $guestEmail !== '' ? $guestEmail : ('guest:' . substr(hash('sha256', $sessionId . '|' . $clientIp), 0, 20));
 
             $participant = MeetingParticipant::firstOrCreate(
                 [
@@ -91,11 +96,11 @@ class MeetingJoinController extends Controller
                 [
                     'display_name' => $guestName !== '' ? $guestName : 'Guest',
                     'role' => 'participant',
-                    'invite_status' => 'pending',
+                    'invite_status' => 'invited',
                 ]
             );
 
-            if ($participant->invite_status === 'rejected') {
+            if ($participant->invite_status === 'declined') {
                 return response()->json([
                     'message' => 'Join request was rejected by host.',
                     'error_code' => 'ERR_ADMISSION_REJECTED',
@@ -103,10 +108,10 @@ class MeetingJoinController extends Controller
                 ], 403);
             }
 
-            if ($participant->invite_status !== 'admitted') {
+            if ($participant->invite_status !== 'accepted') {
                 $participant->update([
                     'display_name' => $guestName !== '' ? $guestName : ($participant->display_name ?: 'Guest'),
-                    'invite_status' => 'pending',
+                    'invite_status' => 'invited',
                 ]);
 
                 MeetingEvent::create([
@@ -135,7 +140,9 @@ class MeetingJoinController extends Controller
             $meeting->participants()->where('user_id', $user->id)->where('role', 'cohost')->exists()
         );
 
-        $displayName = $user?->name ?? $request->input('display_name') ?? session('guest_name', 'Guest');
+        $displayName = $user?->name
+            ?? $request->input('display_name')
+            ?? ($request->hasSession() ? $request->session()->get('guest_name', 'Guest') : 'Guest');
 
         $jwt = $this->jitsiService->generateToken(
             $meeting,
@@ -243,7 +250,7 @@ class MeetingJoinController extends Controller
         }
 
         $items = $meeting->participants()
-            ->where('invite_status', 'pending')
+            ->where('invite_status', 'invited')
             ->whereNull('user_id')
             ->orderByDesc('updated_at')
             ->get(['id', 'display_name', 'email', 'updated_at']);
@@ -266,12 +273,12 @@ class MeetingJoinController extends Controller
             'action' => 'required|in:admit,reject',
         ]);
 
-        $status = $data['action'] === 'admit' ? 'admitted' : 'rejected';
+        $status = $data['action'] === 'admit' ? 'accepted' : 'declined';
         $participant->update(['invite_status' => $status]);
 
         MeetingEvent::create([
             'meeting_id' => $meeting->id,
-            'type' => $status === 'admitted' ? 'admitted' : 'rejected',
+            'type' => $status === 'accepted' ? 'admitted' : 'rejected',
             'payload' => [
                 'participant_id' => $participant->id,
                 'display_name' => $participant->display_name,

@@ -31,7 +31,7 @@ class MeetingDiagnosticsController extends Controller
             ->get();
 
         $pendingAdmissions = MeetingParticipant::where('meeting_id', $meeting->id)
-            ->where('invite_status', 'pending')
+            ->where('invite_status', 'invited')
             ->whereNull('user_id')
             ->latest('updated_at')
             ->get();

@@ -145,6 +145,40 @@ class MeetingController extends Controller
         ], $resp->getStatusCode());
     }
 
+    public function admissionStatus(Request $request, Meeting $meeting): JsonResponse
+    {
+        $data = $request->validate([
+            'participant_id' => 'required|string',
+        ]);
+
+        $participant = MeetingParticipant::where('meeting_id', $meeting->id)
+            ->where('id', $data['participant_id'])
+            ->first();
+
+        if (!$participant) {
+            return response()->json([
+                'ok' => false,
+                'error_code' => 'ERR_PARTICIPANT_NOT_FOUND',
+                'message' => 'Participant not found',
+            ], 404);
+        }
+
+        $statusMap = [
+            'invited' => 'pending',
+            'accepted' => 'admitted',
+            'declined' => 'rejected',
+            'bounced' => 'rejected',
+        ];
+
+        return response()->json([
+            'ok' => true,
+            'data' => [
+                'participant_id' => $participant->id,
+                'status' => $statusMap[$participant->invite_status] ?? $participant->invite_status,
+            ],
+        ]);
+    }
+
     public function summary(Request $request, Meeting $meeting): JsonResponse
     {
         $events = MeetingEvent::where('meeting_id', $meeting->id)->orderBy('created_at')->get();
