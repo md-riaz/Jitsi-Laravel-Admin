@@ -373,6 +373,26 @@
             height: 24px;
         }
 
+        .meeting-status-banner {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            background: rgba(15, 23, 42, 0.92);
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: none;
+            font-size: 14px;
+            min-width: 260px;
+            text-align: center;
+        }
+
+        .meeting-status-banner.error { border-color: #ef4444; color: #fecaca; }
+        .meeting-status-banner.warn { border-color: #f59e0b; color: #fde68a; }
+
         /* Jitsi Container */
         #jitsi-container {
             width: 100%;
@@ -675,7 +695,7 @@
                         <p class="countdown-hint">You can join {{ $meeting->join_early_minutes }} minutes before the scheduled time</p>
                     </div>
                     <div class="join-button-container">
-                        <button class="join-button" id="join-button" disabled>
+                        <button class="join-button" id="join-button" aria-label="Join meeting" disabled>
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
@@ -693,7 +713,7 @@
                         </div>
                     </div>
                     <div class="join-button-container">
-                        <button class="join-button" id="join-button" onclick="joinMeeting()">
+                        <button class="join-button" id="join-button" aria-label="Join meeting" onclick="joinMeeting()">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
@@ -701,6 +721,7 @@
                         </button>
                     </div>
                     <div id="jitsi-container" style="display: none;"></div>
+                    <div id="meeting-status-banner" class="meeting-status-banner" role="status" aria-live="polite"></div>
                     <div id="moderator-controls" style="display:none; margin-top:12px; background:#111827; color:#fff; padding:10px 12px; border-radius:10px;">
                         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                             <button type="button" class="btn-secondary" onclick="toggleLobby()">Toggle Lobby</button>
@@ -759,6 +780,27 @@
         const closesAt = new Date('{{ $closesAt->toIso8601String() }}');
         @endif
         let jitsiApi = null;
+        let reconnectAttempts = 0;
+
+        function showBanner(message, type = '') {
+            const el = document.getElementById('meeting-status-banner');
+            if (!el) return;
+            el.className = `meeting-status-banner ${type}`.trim();
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        function hideBanner() {
+            const el = document.getElementById('meeting-status-banner');
+            if (!el) return;
+            el.style.display = 'none';
+            el.textContent = '';
+        }
+
+        function setJoinButtonDefault(button) {
+            button.disabled = false;
+            button.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Join Meeting Now';
+        }
 
         @if(!$meeting->isInstantMeeting())
         function updateCountdown() {
@@ -796,7 +838,7 @@
 
         async function joinMeeting() {
             if (typeof JitsiMeetExternalAPI === 'undefined') {
-                alert('Unable to load meeting interface. Please check your internet connection and try again.');
+                showBanner('Unable to load meeting interface. Check network and retry.', 'error');
                 console.error('JitsiMeetExternalAPI not loaded from {{ config("services.jitsi.domain") }}');
                 return;
             }
@@ -804,6 +846,7 @@
             const button = document.getElementById('join-button');
             button.disabled = true;
             button.innerHTML = '<svg class="spinner" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="3" stroke="currentColor" stroke-opacity="0.25"></circle><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path></svg> Connecting...';
+            showBanner('Connecting to meeting...');
 
             try {
                 const apiBase = @json(url('/api'));
@@ -820,9 +863,8 @@
                 const data = await response.json();
 
                 if (!data.can_join) {
-                    alert(data.message || 'Cannot join meeting at this time. Please try again later.');
-                    button.disabled = false;
-                    button.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Join Meeting Now';
+                    showBanner(data.message || 'Cannot join meeting now. Please retry.', 'warn');
+                    setJoinButtonDefault(button);
                     return;
                 }
 
@@ -865,11 +907,31 @@
                 }
 
                 jitsiApi = new JitsiMeetExternalAPI(domain, options);
+                hideBanner();
 
                 if (data.is_moderator) {
                     document.getElementById('moderator-controls').style.display = 'block';
                     refreshAdmissions();
                 }
+
+                jitsiApi.addEventListener('videoConferenceJoined', () => {
+                    reconnectAttempts = 0;
+                    hideBanner();
+                });
+
+                jitsiApi.addEventListener('connectionInterrupted', () => {
+                    reconnectAttempts += 1;
+                    showBanner(`Connection interrupted. Reconnecting (attempt ${reconnectAttempts})...`, 'warn');
+                });
+
+                jitsiApi.addEventListener('connectionRestored', () => {
+                    showBanner('Connection restored.', '');
+                    setTimeout(() => hideBanner(), 1500);
+                });
+
+                jitsiApi.addEventListener('videoConferenceLeft', () => {
+                    showBanner('You left the meeting. Returning...', '');
+                });
 
                 // Track when user leaves/closes the meeting
                 jitsiApi.addEventListener('readyToClose', async () => {
@@ -878,8 +940,9 @@
                         container.style.display = 'none';
                     }
 
+                    showBanner('Leaving meeting...', '');
                     await trackMeetingLeave();
-                    window.location.reload();
+                    window.location.href = @json(route('dashboard.my-meetings'));
                 });
 
                 // Also track on page unload (closing browser/tab)
@@ -889,9 +952,8 @@
 
             } catch (error) {
                 console.error('Error joining meeting:', error);
-                alert('Failed to join meeting. Please refresh the page and try again.');
-                button.disabled = false;
-                button.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Join Meeting Now';
+                showBanner('Failed to join meeting. Please retry.', 'error');
+                setJoinButtonDefault(button);
             }
         }
 
