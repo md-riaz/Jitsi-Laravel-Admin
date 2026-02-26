@@ -36,7 +36,7 @@ class MeetingAccessPolicyService
 
         // Invite-only guest enforcement
         if (!$user && $visibility === 'invite_only') {
-            $inviteToken = (string) session('invite_token', '');
+            $inviteToken = (string) ($request->input('invite_token') ?: session('invite_token', ''));
             if ($inviteToken === '') {
                 return $this->deny('ERR_INVITE_REQUIRED', 'This meeting requires a valid invitation.');
             }

@@ -13,16 +13,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/profile/avatar', [\App\Http\Controllers\Api\ProfilePictureController::class, 'delete'])->name('api.profile.avatar.delete');
 });
 
-// Meeting Join API
-// Use web middleware so session-authenticated users are recognized on /api join flow,
-// while still allowing guests when meeting policy permits.
-Route::middleware('web')->group(function () {
-    Route::get('/meetings/{meeting}/health', [\App\Http\Controllers\Api\MeetingJoinController::class, 'health'])->name('api.meeting.health');
-    Route::post('/meetings/{meeting}/join', [\App\Http\Controllers\Api\MeetingJoinController::class, 'join'])->name('api.meeting.join');
-    Route::post('/meetings/{meeting}/leave', [\App\Http\Controllers\Api\MeetingJoinController::class, 'leave'])->name('api.meeting.leave');
+// v1 deployment-agnostic API (same contract for web/flutter/desktop)
+Route::prefix('v1')->group(function () {
+    Route::post('/auth/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
 
-    Route::get('/meetings/{meeting}/pending-admissions', [\App\Http\Controllers\Api\MeetingJoinController::class, 'pendingAdmissions'])
-        ->name('api.meeting.pending-admissions');
-    Route::post('/meetings/{meeting}/admissions/{participant}', [\App\Http\Controllers\Api\MeetingJoinController::class, 'decideAdmission'])
-        ->name('api.meeting.decide-admission');
+    Route::middleware('web')->group(function () {
+        Route::post('/invites/resolve', [\App\Http\Controllers\Api\V1\InviteController::class, 'resolve']);
+        Route::post('/invites/{token}/accept', [\App\Http\Controllers\Api\V1\InviteController::class, 'accept']);
+        Route::post('/meetings/{meeting}/join-guest', [\App\Http\Controllers\Api\V1\InviteController::class, 'joinGuest']);
+    });
+
+    Route::middleware(['web', 'auth:sanctum'])->group(function () {
+        Route::get('/auth/me', [\App\Http\Controllers\Api\V1\AuthController::class, 'me']);
+        Route::post('/auth/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
+
+        Route::get('/meetings', [\App\Http\Controllers\Api\V1\MeetingController::class, 'index']);
+        Route::get('/meetings/{meeting}', [\App\Http\Controllers\Api\V1\MeetingController::class, 'show']);
+        Route::get('/meetings/{meeting}/health', [\App\Http\Controllers\Api\V1\MeetingController::class, 'health']);
+        Route::post('/meetings/{meeting}/join', [\App\Http\Controllers\Api\V1\MeetingController::class, 'join']);
+        Route::post('/meetings/{meeting}/leave', [\App\Http\Controllers\Api\V1\MeetingController::class, 'leave']);
+
+        Route::get('/meetings/{meeting}/pending-admissions', [\App\Http\Controllers\Api\V1\MeetingController::class, 'pendingAdmissions']);
+        Route::post('/meetings/{meeting}/admissions/{participant}', [\App\Http\Controllers\Api\V1\MeetingController::class, 'decideAdmission']);
+
+        Route::get('/meetings/{meeting}/summary', [\App\Http\Controllers\Api\V1\MeetingController::class, 'summary']);
+        Route::get('/meetings/{meeting}/timeline', [\App\Http\Controllers\Api\V1\MeetingController::class, 'timeline']);
+        Route::get('/meetings/{meeting}/attendance', [\App\Http\Controllers\Api\V1\MeetingController::class, 'attendance']);
+        Route::get('/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Api\V1\MeetingController::class, 'diagnostics']);
+    });
 });

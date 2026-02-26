@@ -849,8 +849,10 @@
             showBanner('Connecting to meeting...');
 
             try {
-                const apiBase = @json(url('/api'));
-                const response = await fetch(`${apiBase}/meetings/${meetingId}/join`, {
+                const apiBase = @json(url('/api/v1'));
+                const isAuthenticated = @json((bool) auth()->check());
+                const joinPath = isAuthenticated ? `/meetings/${meetingId}/join` : `/meetings/${meetingId}/join-guest`;
+                const response = await fetch(`${apiBase}${joinPath}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -860,10 +862,11 @@
                     credentials: 'same-origin'
                 });
 
-                const data = await response.json();
+                const payload = await response.json();
+                const data = payload?.data ?? payload;
 
-                if (!data.can_join) {
-                    showBanner(data.message || 'Cannot join meeting now. Please retry.', 'warn');
+                if (!response.ok || !data?.can_join) {
+                    showBanner(payload?.message || data?.message || 'Cannot join meeting now. Please retry.', 'warn');
                     setJoinButtonDefault(button);
                     return;
                 }
@@ -872,16 +875,16 @@
                 document.getElementById('jitsi-container').style.display = 'block';
                 document.body.classList.add('meeting-active');
 
-                const domain = data.domain;
+                const domain = data.jitsi?.domain || data.domain;
                 const options = {
-                    roomName: data.room_name,
+                    roomName: data.jitsi?.room_name || data.room_name,
                     width: '100%',
                     height: '100%',
                     parentNode: document.querySelector('#jitsi-container'),
                     userInfo: {
-                        displayName: data.display_name || 'Guest',
+                        displayName: data.jitsi?.display_name || data.display_name || 'Guest',
                         email: data.config?.userInfo?.email || '',
-                        avatarURL: data.avatar_url || data.config?.userInfo?.avatarURL || ''
+                        avatarURL: data.jitsi?.avatar_url || data.avatar_url || data.config?.userInfo?.avatarURL || ''
                     },
                     configOverwrite: {
                         prejoinPageEnabled: false,
@@ -902,14 +905,14 @@
                     }
                 };
 
-                if (data.jwt) {
-                    options.jwt = data.jwt;
+                if (data.jitsi?.jwt || data.jwt) {
+                    options.jwt = data.jitsi?.jwt || data.jwt;
                 }
 
                 jitsiApi = new JitsiMeetExternalAPI(domain, options);
                 hideBanner();
 
-                if (data.is_moderator) {
+                if (data.jitsi?.is_moderator || data.is_moderator) {
                     document.getElementById('moderator-controls').style.display = 'block';
                     refreshAdmissions();
                 }
@@ -963,23 +966,24 @@
             list.textContent = 'Loading pending admissions...';
 
             try {
-                const res = await fetch(@json(url('/api/meetings/' . $meeting->id . '/pending-admissions')), {
+                const res = await fetch(@json(url('/api/v1/meetings/' . $meeting->id . '/pending-admissions')), {
                     credentials: 'same-origin',
                     headers: { 'Accept': 'application/json' }
                 });
-                const data = await res.json();
+                const payload = await res.json();
+                const items = payload?.data?.items || payload?.items || [];
 
                 if (!res.ok) {
-                    list.textContent = 'Unable to load admissions.';
+                    list.textContent = payload?.message || 'Unable to load admissions.';
                     return;
                 }
 
-                if (!data.items || data.items.length === 0) {
+                if (!items || items.length === 0) {
                     list.textContent = 'No pending admissions.';
                     return;
                 }
 
-                list.innerHTML = data.items.map(i => `
+                list.innerHTML = items.map(i => `
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #1f2937;">
                         <span>${i.display_name} <small style="color:#94a3b8">(${i.email})</small></span>
                         <span>
@@ -994,7 +998,7 @@
         }
 
         async function decideAdmission(participantId, action) {
-            await fetch(@json(url('/api/meetings/' . $meeting->id . '/admissions')) + '/' + participantId, {
+            await fetch(@json(url('/api/v1/meetings/' . $meeting->id . '/admissions')) + '/' + participantId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1021,7 +1025,7 @@
 
         async function trackMeetingLeave() {
             try {
-                await fetch(@json(url('/api/meetings/' . $meeting->id . '/leave')), {
+                await fetch(@json(url('/api/v1/meetings/' . $meeting->id . '/leave')), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

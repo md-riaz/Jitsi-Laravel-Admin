@@ -744,6 +744,7 @@ See [SETUP.md](SETUP.md) for detailed deployment guide.
 - **[Architecture](ARCHITECTURE.md)** - System design and patterns
 - **[Domain Rules](DOMAIN_RULES.md)** - Business logic and constraints
 - **[Backend API Reference](docs/API_REFERENCE.md)** - Current API contract and join flow error codes
+- **[API v1 Spec](docs/API_V1_SPEC.md)** - Client-ready endpoint contract (web/flutter/desktop)
 - **[Updated Screenshots Map](docs/UPDATED_SCREENSHOTS.md)** - Existing screenshots + capture list for new pages
 
 ## 🔧 Development

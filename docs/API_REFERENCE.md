@@ -13,34 +13,41 @@ This project exposes web and API endpoints under the same app root path.
 
 ## Authentication Model
 
-Current production flow is session/cookie-based (`web` middleware on critical join routes).
+Current app/client API uses v1 endpoints with Sanctum and deployment-agnostic pathing.
 
-- Dashboard login creates a Laravel session.
-- Meeting join/leave/admission endpoints are under `web` middleware to recognize authenticated users.
-
-If token auth is needed later (Sanctum/Passport), add it as an additional auth mode; keep current web-session endpoints for dashboard compatibility.
+- Token auth: `POST /api/v1/auth/login` then Bearer token
+- Browser dashboard can continue using same-domain auth context for v1 endpoints
 
 ---
 
-## Meeting Join Flow Endpoints
+## API v1 (recommended for app clients)
+
+See full spec: `docs/API_V1_SPEC.md`
+
+Base: `{APP_BASE_URL}{APP_BASE_PATH}/api/v1`
+
+## Core v1 Join Flow Endpoints
 
 ### Health check
-- `GET /api/meetings/{meeting}/health`
+- `GET /api/v1/meetings/{meeting}/health`
 - Purpose: verify Jitsi service availability before join.
 
-### Join
-- `POST /api/meetings/{meeting}/join`
+### Join (authenticated)
+- `POST /api/v1/meetings/{meeting}/join`
 - Purpose: policy validation + JWT generation (if required) + join payload.
 
+### Join (guest)
+- `POST /api/v1/meetings/{meeting}/join-guest`
+
 ### Leave
-- `POST /api/meetings/{meeting}/leave`
+- `POST /api/v1/meetings/{meeting}/leave`
 - Purpose: track participant leave event.
 
 ### Pending admissions (host/moderator)
-- `GET /api/meetings/{meeting}/pending-admissions`
+- `GET /api/v1/meetings/{meeting}/pending-admissions`
 
 ### Admit / reject waiting participant (host/moderator)
-- `POST /api/meetings/{meeting}/admissions/{participant}`
+- `POST /api/v1/meetings/{meeting}/admissions/{participant}`
 - Body: `{ "action": "admit" | "reject" }`
 
 ---
