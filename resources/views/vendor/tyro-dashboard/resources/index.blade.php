@@ -131,6 +131,11 @@
                                 </svg>
                             </a>
                             @if($resource === 'meetings')
+                            <a href="{{ route('dashboard.meetings.summary', $item->id) }}" class="btn btn-icon btn-ghost" title="Summary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M7 16V8m5 8V5m5 11v-6" />
+                                </svg>
+                            </a>
                             <a href="{{ route('dashboard.meetings.diagnostics', $item->id) }}" class="btn btn-icon btn-ghost" title="Diagnostics">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6M9 16h6M9 8h6" />

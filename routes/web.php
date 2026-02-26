@@ -30,6 +30,15 @@ Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->nam
 Route::get('dashboard/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Dashboard\MeetingDiagnosticsController::class, 'show'])
     ->middleware(['auth'])
     ->name('dashboard.meetings.diagnostics');
+Route::get('dashboard/meetings/{meeting}/summary', [\App\Http\Controllers\Dashboard\MeetingSummaryController::class, 'show'])
+    ->middleware(['auth'])
+    ->name('dashboard.meetings.summary');
+Route::get('dashboard/meetings/{meeting}/summary/export/participants', [\App\Http\Controllers\Dashboard\MeetingSummaryController::class, 'exportParticipants'])
+    ->middleware(['auth'])
+    ->name('dashboard.meetings.summary.export.participants');
+Route::get('dashboard/meetings/{meeting}/summary/export/events', [\App\Http\Controllers\Dashboard\MeetingSummaryController::class, 'exportEvents'])
+    ->middleware(['auth'])
+    ->name('dashboard.meetings.summary.export.events');
 
 // Meeting join page (public)
 Route::get('/meet/{meeting}', [\App\Http\Controllers\Web\MeetingPageController::class, 'show'])->name('meeting.show');

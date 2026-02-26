@@ -3,9 +3,12 @@
 @section('title', 'Meeting Diagnostics')
 
 @section('content')
-<div class="page-header">
-  <h1 class="page-title">Meeting Diagnostics</h1>
-  <p class="page-description">{{ $meeting->title }} ({{ $meeting->id }})</p>
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+  <div>
+    <h1 class="page-title">Meeting Diagnostics</h1>
+    <p class="page-description">{{ $meeting->title }} ({{ $meeting->id }})</p>
+  </div>
+  <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-secondary">Open Summary</a>
 </div>
 
 <div class="card" style="margin-bottom:16px;">

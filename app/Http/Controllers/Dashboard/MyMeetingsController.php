@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Models\Meeting;
+use App\Models\MeetingEvent;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -40,6 +41,33 @@ class MyMeetingsController extends Controller
         ->limit(10)
         ->get();
 
-        return view('dashboard.my-meetings', compact('upcomingMeetings', 'pastMeetings'));
+        $meetingIds = Meeting::where(function ($query) use ($user) {
+            $query->where('created_by', $user->id)
+                ->orWhereHas('participants', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
+        })->pluck('id');
+
+        $events = MeetingEvent::whereIn('meeting_id', $meetingIds)->get();
+        $joinEvents = $events->where('type', 'participant_joined');
+
+        $durations = $pastMeetings->map(function ($m) {
+            if ($m->start_at && $m->end_at) {
+                return $m->start_at->diffInMinutes($m->end_at);
+            }
+            return null;
+        })->filter();
+
+        $analytics = [
+            'total_meetings' => $meetingIds->count(),
+            'live_now' => $upcomingMeetings->filter(fn($m) => $m->canJoinAt(now()))->count(),
+            'avg_participants' => $pastMeetings->count() > 0
+                ? round($pastMeetings->avg(fn($m) => $m->participants->count()), 1)
+                : 0,
+            'avg_duration_minutes' => $durations->count() > 0 ? round($durations->avg(), 1) : 0,
+            'join_events_30d' => $joinEvents->filter(fn($e) => $e->created_at >= now()->subDays(30))->count(),
+        ];
+
+        return view('dashboard.my-meetings', compact('upcomingMeetings', 'pastMeetings', 'analytics'));
     }
 }

@@ -85,6 +85,14 @@
 </div>
 @endif
 
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
+    <div class="card"><div class="card-body"><div style="font-size:12px;color:#64748b;">Total Meetings</div><div style="font-size:24px;font-weight:700;">{{ $analytics['total_meetings'] ?? 0 }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:12px;color:#64748b;">Live Now</div><div style="font-size:24px;font-weight:700;">{{ $analytics['live_now'] ?? 0 }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:12px;color:#64748b;">Avg Participants</div><div style="font-size:24px;font-weight:700;">{{ $analytics['avg_participants'] ?? 0 }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:12px;color:#64748b;">Avg Duration (min)</div><div style="font-size:24px;font-weight:700;">{{ $analytics['avg_duration_minutes'] ?? 0 }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:12px;color:#64748b;">Join Events (30d)</div><div style="font-size:24px;font-weight:700;">{{ $analytics['join_events_30d'] ?? 0 }}</div></div></div>
+</div>
+
 <!-- Upcoming Meetings -->
 <div class="card" style="margin-bottom: 20px;">
     <div class="card-header">
@@ -146,6 +154,9 @@
                             {{ $meeting->participants->count() }} participant{{ $meeting->participants->count() !== 1 ? 's' : '' }}
                         </span>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+                            <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Summary">
+                                Summary
+                            </a>
                             <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">
                                 Diagnostics
                             </a>
@@ -190,6 +201,7 @@
                             <th>Date</th>
                             <th>Participants</th>
                             <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -211,6 +223,10 @@
                             </td>
                             <td>{{ $meeting->participants->count() }}</td>
                             <td><span class="badge-ended">Ended</span></td>
+                            <td style="text-align:right;">
+                                <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost">Summary</a>
+                                <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>

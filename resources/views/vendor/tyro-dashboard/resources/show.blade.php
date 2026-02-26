@@ -23,6 +23,7 @@
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
             @if($resource === 'meetings')
+            <a href="{{ route('dashboard.meetings.summary', $item->id) }}" class="btn btn-secondary">Summary</a>
             <a href="{{ route('dashboard.meetings.diagnostics', $item->id) }}" class="btn btn-secondary">Diagnostics</a>
             @endif
             @if(!($isReadonly ?? false))
