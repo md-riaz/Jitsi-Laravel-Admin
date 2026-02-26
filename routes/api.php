@@ -20,4 +20,9 @@ Route::middleware('web')->group(function () {
     Route::get('/meetings/{meeting}/health', [\App\Http\Controllers\Api\MeetingJoinController::class, 'health'])->name('api.meeting.health');
     Route::post('/meetings/{meeting}/join', [\App\Http\Controllers\Api\MeetingJoinController::class, 'join'])->name('api.meeting.join');
     Route::post('/meetings/{meeting}/leave', [\App\Http\Controllers\Api\MeetingJoinController::class, 'leave'])->name('api.meeting.leave');
+
+    Route::get('/meetings/{meeting}/pending-admissions', [\App\Http\Controllers\Api\MeetingJoinController::class, 'pendingAdmissions'])
+        ->name('api.meeting.pending-admissions');
+    Route::post('/meetings/{meeting}/admissions/{participant}', [\App\Http\Controllers\Api\MeetingJoinController::class, 'decideAdmission'])
+        ->name('api.meeting.decide-admission');
 });

@@ -701,6 +701,14 @@
                         </button>
                     </div>
                     <div id="jitsi-container" style="display: none;"></div>
+                    <div id="moderator-controls" style="display:none; margin-top:12px; background:#111827; color:#fff; padding:10px 12px; border-radius:10px;">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <button type="button" class="btn-secondary" onclick="toggleLobby()">Toggle Lobby</button>
+                            <button type="button" class="btn-secondary" onclick="muteEveryoneNow()">Mute Everyone</button>
+                            <button type="button" class="btn-secondary" onclick="refreshAdmissions()">Refresh Admissions</button>
+                        </div>
+                        <div id="admission-list" style="margin-top:10px; font-size:13px; color:#cbd5e1;"></div>
+                    </div>
                 @else
                     <div class="alert alert-error">
                         <svg fill="currentColor" viewBox="0 0 20 20">
@@ -858,6 +866,11 @@
 
                 jitsiApi = new JitsiMeetExternalAPI(domain, options);
 
+                if (data.is_moderator) {
+                    document.getElementById('moderator-controls').style.display = 'block';
+                    refreshAdmissions();
+                }
+
                 // Track when user leaves/closes the meeting
                 jitsiApi.addEventListener('readyToClose', async () => {
                     const container = document.getElementById('jitsi-container');
@@ -879,6 +892,68 @@
                 alert('Failed to join meeting. Please refresh the page and try again.');
                 button.disabled = false;
                 button.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Join Meeting Now';
+            }
+        }
+
+        async function refreshAdmissions() {
+            const list = document.getElementById('admission-list');
+            if (!list) return;
+            list.textContent = 'Loading pending admissions...';
+
+            try {
+                const res = await fetch(@json(url('/api/meetings/' . $meeting->id . '/pending-admissions')), {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    list.textContent = 'Unable to load admissions.';
+                    return;
+                }
+
+                if (!data.items || data.items.length === 0) {
+                    list.textContent = 'No pending admissions.';
+                    return;
+                }
+
+                list.innerHTML = data.items.map(i => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #1f2937;">
+                        <span>${i.display_name} <small style="color:#94a3b8">(${i.email})</small></span>
+                        <span>
+                          <button type="button" class="btn-secondary" onclick="decideAdmission('${i.id}','admit')">Admit</button>
+                          <button type="button" class="btn-secondary" onclick="decideAdmission('${i.id}','reject')">Reject</button>
+                        </span>
+                    </div>
+                `).join('');
+            } catch (_) {
+                list.textContent = 'Unable to load admissions.';
+            }
+        }
+
+        async function decideAdmission(participantId, action) {
+            await fetch(@json(url('/api/meetings/' . $meeting->id . '/admissions')) + '/' + participantId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ action })
+            });
+            refreshAdmissions();
+        }
+
+        function muteEveryoneNow() {
+            if (jitsiApi) {
+                jitsiApi.executeCommand('muteEveryone');
+            }
+        }
+
+        function toggleLobby() {
+            if (jitsiApi) {
+                jitsiApi.executeCommand('toggleLobby', true);
             }
         }
 

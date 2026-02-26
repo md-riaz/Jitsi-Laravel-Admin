@@ -27,6 +27,9 @@ Route::put('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamControlle
 Route::delete('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'destroy'])->middleware(['auth'])->name('dashboard.team.destroy');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
+Route::get('dashboard/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Dashboard\MeetingDiagnosticsController::class, 'show'])
+    ->middleware(['auth'])
+    ->name('dashboard.meetings.diagnostics');
 
 // Meeting join page (public)
 Route::get('/meet/{meeting}', [\App\Http\Controllers\Web\MeetingPageController::class, 'show'])->name('meeting.show');

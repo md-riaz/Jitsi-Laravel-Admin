@@ -88,8 +88,20 @@ class Meeting extends Model
         });
     }
 
+    public static function normalizeVisibility(?string $visibility): string
+    {
+        return match ($visibility) {
+            'organization' => 'org_only',
+            'org' => 'org_only',
+            'public_link' => 'link_anyone',
+            null, '' => 'invite_only',
+            default => $visibility,
+        };
+    }
+
     public function applyVisibilityGuestPolicy(): void
     {
+        $this->visibility = self::normalizeVisibility($this->visibility);
         $this->allow_guests = $this->visibility === 'link_anyone';
     }
 
