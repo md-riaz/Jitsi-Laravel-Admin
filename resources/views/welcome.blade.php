@@ -318,7 +318,7 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/" class="logo">
+            <a href="{{ url('/') }}" class="logo">
                 <div class="logo-icon">📅</div>
                 <span>Jitsi Admin</span>
             </a>

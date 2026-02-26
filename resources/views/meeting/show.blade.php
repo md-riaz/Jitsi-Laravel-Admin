@@ -533,7 +533,7 @@
     <!-- Header -->
     <header class="top-header">
         <div class="header-container">
-            <a href="/" class="logo">
+            <a href="{{ url('/') }}" class="logo">
                 <div class="logo-icon">J</div>
                 <span>Jitsi Admin</span>
             </a>
@@ -680,7 +680,7 @@
             <div class="meeting-footer">
                 <p>Powered by <strong>Jitsi Admin</strong></p>
                 <div class="footer-links">
-                    <a href="/">Home</a>
+                    <a href="{{ url('/') }}">Home</a>
                     @guest
                         <a href="{{ route('login') }}">Sign In</a>
                         <a href="{{ route('register') }}">Sign Up</a>
@@ -748,7 +748,8 @@
             button.innerHTML = '<svg class="spinner" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="3" stroke="currentColor" stroke-opacity="0.25"></circle><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path></svg> Connecting...';
 
             try {
-                const response = await fetch(`/api/meetings/${meetingId}/join`, {
+                const apiBase = @json(url('/api'));
+                const response = await fetch(`${apiBase}/meetings/${meetingId}/join`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -822,7 +823,7 @@
 
         async function trackMeetingLeave() {
             try {
-                await fetch('/api/meetings/{{ $meeting->id }}/leave', {
+                await fetch(@json(url('/api/meetings/' . $meeting->id . '/leave')), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

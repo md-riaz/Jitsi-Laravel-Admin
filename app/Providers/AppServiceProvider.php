@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Meeting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceRootUrl(config('app.url'));
+        URL::forceScheme('https');
+
         // Inject meeting stats into both user dashboard views
         $meetingComposer = function ($view) {
             $user = Auth::user();

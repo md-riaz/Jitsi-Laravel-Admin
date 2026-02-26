@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('avatar', file);
 
         try {
-            const response = await fetch('/api/profile/avatar', {
+            const response = await fetch(@json(url('/api/profile/avatar')), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const response = await fetch('/api/profile/avatar', {
+            const response = await fetch(@json(url('/api/profile/avatar')), {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,

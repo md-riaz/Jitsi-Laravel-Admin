@@ -52,7 +52,7 @@
                 @if(($loginField ?? 'email') === 'both')
                 <div class="form-group">
                     <label for="login" class="form-label">Email or Username</label>
-                    <input type="text" id="login" name="login" class="form-input @error('login') is-invalid @enderror" value="{{ old('login') }}" required autocomplete="username" autofocus placeholder="Email or username">
+                    <input type="text" id="login" name="login" class="form-input @error('login') is-invalid @enderror" value="{{ old('login', env('JITSIADMIN_PREFILL_LOGIN', 'superadmin@jitsi-admin.com')) }}" required autocomplete="username" autofocus placeholder="Email or username">
                     @error('login')
                     <span class="error-message">{{ $message }}</span>
                     @enderror
@@ -68,7 +68,7 @@
                 @else
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" name="email" class="form-input @error('email') is-invalid @enderror" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="email@example.com">
+                    <input type="email" id="email" name="email" class="form-input @error('email') is-invalid @enderror" value="{{ old('email', env('JITSIADMIN_PREFILL_EMAIL', 'superadmin@jitsi-admin.com')) }}" required autocomplete="email" autofocus placeholder="email@example.com">
                     @error('email')
                     <span class="error-message">{{ $message }}</span>
                     @enderror
@@ -78,7 +78,7 @@
                 <!-- Password Field -->
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-input @error('password') is-invalid @enderror" required autocomplete="current-password" placeholder="Password">
+                    <input type="password" id="password" name="password" class="form-input @error('password') is-invalid @enderror" value="{{ env('JITSIADMIN_PREFILL_PASSWORD', 'password') }}" required autocomplete="current-password" placeholder="Password">
                     @error('password')
                     <span class="error-message">{{ $message }}</span>
                     @enderror
