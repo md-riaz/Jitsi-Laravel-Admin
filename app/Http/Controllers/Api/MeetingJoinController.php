@@ -9,6 +9,7 @@ use App\Services\JitsiJwtService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class MeetingJoinController extends Controller
 {
@@ -23,6 +24,7 @@ class MeetingJoinController extends Controller
         if (!$meeting->isIpAllowed($clientIp)) {
             return response()->json([
                 'message' => 'Access denied: Your IP address is not allowed to join this meeting.',
+                'error_code' => 'ERR_IP_NOT_ALLOWED',
                 'can_join' => false,
             ], 403);
         }
@@ -47,6 +49,7 @@ class MeetingJoinController extends Controller
             if ($currentParticipantCount >= $meeting->max_participants) {
                 return response()->json([
                     'message' => 'Meeting is full. Maximum participants limit reached.',
+                    'error_code' => 'ERR_MEETING_FULL',
                     'can_join' => false,
                     'max_participants' => $meeting->max_participants,
                     'current_participants' => $currentParticipantCount,
@@ -60,6 +63,7 @@ class MeetingJoinController extends Controller
             if (!$meeting->verifyPassword($providedPassword)) {
                 return response()->json([
                     'message' => 'Invalid meeting password.',
+                    'error_code' => 'ERR_INVALID_PASSWORD',
                     'can_join' => false,
                     'requires_password' => true,
                 ], 403);
@@ -72,6 +76,7 @@ class MeetingJoinController extends Controller
         if ($isGuest && !$meeting->allow_guests) {
             return response()->json([
                 'message' => 'Guest access is not allowed for this meeting.',
+                'error_code' => 'ERR_GUEST_NOT_ALLOWED',
                 'can_join' => false,
             ], 403);
         }
@@ -80,6 +85,7 @@ class MeetingJoinController extends Controller
         if (!$meeting->canJoinAt(Carbon::now())) {
             return response()->json([
                 'message' => 'Meeting is not available for joining at this time.',
+                'error_code' => 'ERR_OUTSIDE_JOIN_WINDOW',
                 'can_join' => false,
                 'opens_at' => $meeting->start_at?->copy()->subMinutes($meeting->join_early_minutes),
                 'closes_at' => $meeting->end_at?->copy()->addMinutes($meeting->join_late_minutes),
@@ -108,6 +114,7 @@ class MeetingJoinController extends Controller
             empty($jwt)) {
             return response()->json([
                 'message' => 'JWT authentication is required but not properly configured.',
+                'error_code' => 'ERR_JWT_REQUIRED_NOT_CONFIGURED',
                 'can_join' => false,
             ], 500);
         }
@@ -153,6 +160,42 @@ class MeetingJoinController extends Controller
                     'prejoinPageEnabled' => $meeting->lobby_enabled,
                 ],
             ],
+        ]);
+    }
+
+    public function health(Meeting $meeting): JsonResponse
+    {
+        $domain = config('services.jitsi.domain');
+
+        if (empty($domain)) {
+            return response()->json([
+                'ok' => false,
+                'error_code' => 'ERR_HEALTH_DOMAIN_MISSING',
+                'message' => 'Meeting domain is not configured.',
+            ], 500);
+        }
+
+        try {
+            $resp = Http::timeout(4)->get("https://{$domain}/config.js");
+            if (!$resp->successful()) {
+                return response()->json([
+                    'ok' => false,
+                    'error_code' => 'ERR_HEALTH_UNREACHABLE',
+                    'message' => 'Meeting service is unreachable.',
+                ], 503);
+            }
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'error_code' => 'ERR_HEALTH_UNREACHABLE',
+                'message' => 'Meeting service is unreachable.',
+            ], 503);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'domain' => $domain,
+            'meeting_id' => $meeting->id,
         ]);
     }
 

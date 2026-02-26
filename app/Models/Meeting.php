@@ -52,13 +52,15 @@ class Meeting extends Model
         'visibility' => 'invite_only',
         'status' => 'scheduled',
         'lobby_enabled' => true,
-        'allow_guests' => true,
+        'allow_guests' => false,
         'ip_restriction_enabled' => false,
     ];
 
     protected static function booted(): void
     {
         static::creating(function (Meeting $meeting): void {
+            $meeting->applyVisibilityGuestPolicy();
+
             if (empty($meeting->room_name)) {
                 $meeting->room_name = sprintf('mtg_%s', Str::lower(Str::random(12)));
             }
@@ -70,6 +72,8 @@ class Meeting extends Model
         });
 
         static::updating(function (Meeting $meeting): void {
+            $meeting->applyVisibilityGuestPolicy();
+
             if ($meeting->isDirty('room_name')) {
                 $meeting->room_name = $meeting->getOriginal('room_name');
             }
@@ -82,6 +86,11 @@ class Meeting extends Model
                 }
             }
         });
+    }
+
+    public function applyVisibilityGuestPolicy(): void
+    {
+        $this->allow_guests = $this->visibility === 'link_anyone';
     }
 
     public function organization(): BelongsTo

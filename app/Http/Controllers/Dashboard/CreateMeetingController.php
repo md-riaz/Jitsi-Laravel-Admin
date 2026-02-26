@@ -90,8 +90,10 @@ class CreateMeetingController extends Controller
         // Handle checkbox fields properly - unchecked boxes don't send values
         // So we treat absence as false, not default to true
         $data['lobby_enabled'] = $request->has('lobby_enabled');
-        $data['allow_guests'] = $request->has('allow_guests');
         $data['ip_restriction_enabled'] = $request->has('ip_restriction_enabled');
+
+        // Visibility-driven guest policy (single source of truth)
+        $data['allow_guests'] = $data['visibility'] === 'link_anyone';
 
         $meeting = Meeting::create($data);
 

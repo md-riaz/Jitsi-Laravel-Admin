@@ -30,6 +30,7 @@ Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->nam
 
 // Meeting join page (public)
 Route::get('/meet/{meeting}', [\App\Http\Controllers\Web\MeetingPageController::class, 'show'])->name('meeting.show');
+Route::get('/meet/{meeting}/live', [\App\Http\Controllers\Web\MeetingPageController::class, 'live'])->name('meeting.live');
 Route::get('/meet/{meeting}/download-ics', [\App\Http\Controllers\Web\MeetingPageController::class, 'downloadIcs'])->name('meeting.download-ics');
 
 // Guest invite routes

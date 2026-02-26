@@ -230,6 +230,7 @@
                                 <div class="help-text">Minutes after end time users can still join</div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
