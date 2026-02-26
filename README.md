@@ -743,6 +743,8 @@ See [SETUP.md](SETUP.md) for detailed deployment guide.
 - **[Project Spec](PROJECT_SPEC.md)** - Complete feature specifications
 - **[Architecture](ARCHITECTURE.md)** - System design and patterns
 - **[Domain Rules](DOMAIN_RULES.md)** - Business logic and constraints
+- **[Backend API Reference](docs/API_REFERENCE.md)** - Current API contract and join flow error codes
+- **[Updated Screenshots Map](docs/UPDATED_SCREENSHOTS.md)** - Existing screenshots + capture list for new pages
 
 ## 🔧 Development
 
