@@ -21,7 +21,10 @@
             </a>
             <h1 class="page-title">{{ Str::singular($config['title']) }} Details</h1>
         </div>
-        <div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            @if($resource === 'meetings')
+            <a href="{{ route('dashboard.meetings.diagnostics', $item->id) }}" class="btn btn-secondary">Diagnostics</a>
+            @endif
             @if(!($isReadonly ?? false))
             <a href="{{ route('tyro-dashboard.resources.edit', [$resource, $item->id]) }}" class="btn btn-primary">Edit</a>
             <form action="{{ route('tyro-dashboard.resources.destroy', [$resource, $item->id]) }}" method="POST" style="display: inline;" id="delete-resource-form">
