@@ -248,7 +248,8 @@ return [
             'fields' => [
                 'type' => ['type' => 'text', 'label' => 'Type', 'searchable' => true],
                 'meeting_id' => ['type' => 'text', 'label' => 'Meeting', 'searchable' => true],
-                'payload' => ['type' => 'json', 'label' => 'Payload'],
+                'payload_preview' => ['type' => 'text', 'label' => 'Payload', 'hide_in_form' => true],
+                'payload' => ['type' => 'json', 'label' => 'Payload (Raw)', 'hide_in_index' => true],
                 'created_at' => ['type' => 'datetime', 'label' => 'Created At'],
             ],
         ],

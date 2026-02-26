@@ -384,6 +384,56 @@
             border: 1px solid var(--gray-200);
         }
 
+        /* Zoom-like focus mode after joining */
+        body.meeting-active {
+            background: #000;
+            overflow: hidden;
+        }
+
+        body.meeting-active .top-header,
+        body.meeting-active .meeting-header,
+        body.meeting-active .meeting-details,
+        body.meeting-active .meeting-footer,
+        body.meeting-active .alert,
+        body.meeting-active .join-button-container,
+        body.meeting-active .countdown-section {
+            display: none !important;
+        }
+
+        body.meeting-active .main-container {
+            max-width: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body.meeting-active .meeting-card,
+        body.meeting-active .meeting-content {
+            border-radius: 0;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+        }
+
+        body.meeting-active #jitsi-container {
+            position: fixed;
+            inset: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            z-index: 9999;
+        }
+
+        body.meeting-active #jitsi-container iframe {
+            width: 100vw !important;
+            height: 100vh !important;
+            border: 0 !important;
+            display: block;
+        }
+
         /* Meeting Details */
         .meeting-details {
             background: var(--gray-50);
@@ -770,12 +820,13 @@
 
                 button.style.display = 'none';
                 document.getElementById('jitsi-container').style.display = 'block';
+                document.body.classList.add('meeting-active');
 
                 const domain = data.domain;
                 const options = {
                     roomName: data.room_name,
                     width: '100%',
-                    height: '650px',
+                    height: '100%',
                     parentNode: document.querySelector('#jitsi-container'),
                     userInfo: {
                         displayName: data.display_name || 'Guest',
@@ -784,6 +835,11 @@
                     },
                     configOverwrite: {
                         prejoinPageEnabled: false,
+                        prejoinConfig: {
+                            enabled: false,
+                            hideDisplayName: true
+                        },
+                        requireDisplayName: false,
                         startWithAudioMuted: true,
                         startWithVideoMuted: true,
                         enableWelcomePage: false,
@@ -804,6 +860,11 @@
 
                 // Track when user leaves/closes the meeting
                 jitsiApi.addEventListener('readyToClose', async () => {
+                    const container = document.getElementById('jitsi-container');
+                    if (container) {
+                        container.style.display = 'none';
+                    }
+
                     await trackMeetingLeave();
                     window.location.reload();
                 });

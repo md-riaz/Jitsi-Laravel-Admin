@@ -14,5 +14,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Meeting Join API
-Route::post('/meetings/{meeting}/join', [\App\Http\Controllers\Api\MeetingJoinController::class, 'join'])->name('api.meeting.join');
-Route::post('/meetings/{meeting}/leave', [\App\Http\Controllers\Api\MeetingJoinController::class, 'leave'])->name('api.meeting.leave');
+// Use web middleware so session-authenticated users are recognized on /api join flow,
+// while still allowing guests when meeting policy permits.
+Route::middleware('web')->group(function () {
+    Route::post('/meetings/{meeting}/join', [\App\Http\Controllers\Api\MeetingJoinController::class, 'join'])->name('api.meeting.join');
+    Route::post('/meetings/{meeting}/leave', [\App\Http\Controllers\Api\MeetingJoinController::class, 'leave'])->name('api.meeting.leave');
+});
