@@ -29,7 +29,12 @@ RUN apk add --no-cache \
     oniguruma-dev \
     sqlite-dev \
     postgresql-dev \
-    mysql-dev
+    mysql-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
 RUN docker-php-ext-install \
     bcmath \
@@ -39,7 +44,8 @@ RUN docker-php-ext-install \
     pdo_mysql \
     pdo_pgsql \
     pdo_sqlite \
-    zip
+    zip \
+    gd
 
 FROM php:8.3-cli-alpine AS runtime
 WORKDIR /var/www/html
@@ -56,7 +62,10 @@ RUN apk add --no-cache \
     libzip \
     oniguruma \
     mysql-client \
-    postgresql-client
+    postgresql-client \
+    freetype \
+    libjpeg-turbo \
+    libpng
 
 # Copy pre-compiled PHP extensions from builder
 COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
