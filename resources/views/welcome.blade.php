@@ -3,8 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jitsi Admin - Professional Meeting Management</title>
+    <title>{{ config('app.name', 'Jitsi Admin') }} - Professional Meeting Management</title>
+    @php
+        $appName = config('app.name', 'Jitsi Admin');
+        $brandPrimary = env('LANDING_PRIMARY_COLOR', '#2563eb');
+        $brandPrimaryHover = env('LANDING_PRIMARY_HOVER_COLOR', '#1d4ed8');
+    @endphp
     <style>
+        :root {
+            --brand-primary: {{ $brandPrimary }};
+            --brand-primary-hover: {{ $brandPrimaryHover }};
+            --btn-secondary-bg: #f8fafc;
+            --btn-secondary-text: #0f172a;
+            --btn-secondary-border: #cbd5e1;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -49,7 +61,7 @@
         .logo-icon {
             width: 36px;
             height: 36px;
-            background: #2563eb;
+            background: var(--brand-primary);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -72,7 +84,7 @@
         }
         
         .nav-links a:hover {
-            color: #3b82f6;
+            color: var(--brand-primary);
         }
         
         .btn {
@@ -88,25 +100,26 @@
         }
         
         .btn-primary {
-            background: #3b82f6;
+            background: var(--brand-primary);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #2563eb;
+            background: var(--brand-primary-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
         }
         
         .btn-secondary {
-            background: transparent;
-            color: #3b82f6;
-            border: 1px solid #e5e7eb;
+            background: var(--btn-secondary-bg);
+            color: var(--btn-secondary-text);
+            border: 1px solid var(--btn-secondary-border);
         }
         
         .btn-secondary:hover {
-            background: #f9fafb;
-            border-color: #3b82f6;
+            background: #eef2ff;
+            color: #0b1220;
+            border-color: var(--brand-primary);
         }
         
         .hero {
@@ -119,7 +132,7 @@
         .hero-badge {
             display: inline-block;
             background: #eff6ff;
-            color: #3b82f6;
+            color: var(--brand-primary);
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-size: 0.875rem;
@@ -170,7 +183,7 @@
         }
         
         .feature-card:hover {
-            border-color: #3b82f6;
+            border-color: var(--brand-primary);
             box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
             transform: translateY(-2px);
         }
@@ -218,7 +231,7 @@
         .stat h4 {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #3b82f6;
+            color: var(--brand-primary);
             margin-bottom: 0.5rem;
         }
         
@@ -264,7 +277,7 @@
         }
         
         .footer-section a:hover {
-            color: #3b82f6;
+            color: var(--brand-primary);
         }
         
         .footer-bottom {
@@ -320,7 +333,7 @@
         <div class="nav-container">
             <a href="{{ url('/') }}" class="logo">
                 <div class="logo-icon">📅</div>
-                <span>Jitsi Admin</span>
+                <span>{{ $appName }}</span>
             </a>
             <div class="nav-links">
                 @auth
@@ -444,7 +457,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 Jitsi Admin. Built with Laravel & Jitsi Meet. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} {{ $appName }}. Built with Laravel & Jitsi Meet. All rights reserved.</p>
         </div>
     </footer>
 </body>
