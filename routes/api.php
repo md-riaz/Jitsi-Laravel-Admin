@@ -17,6 +17,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
 
+    // Jibri Recording Webhook
+    Route::post('/recordings/ingest', [\App\Http\Controllers\Api\V1\RecordingController::class, 'ingest']);
+
     Route::post('/invites/resolve', [\App\Http\Controllers\Api\V1\InviteController::class, 'resolve']);
     Route::post('/invites/{token}/accept', [\App\Http\Controllers\Api\V1\InviteController::class, 'accept']);
     Route::post('/meetings/{meeting}/join-guest', [\App\Http\Controllers\Api\V1\InviteController::class, 'joinGuest']);
