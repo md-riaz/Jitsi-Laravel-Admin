@@ -75,6 +75,18 @@ class CreateMeetingController extends Controller
 
         $data = $validator->validated();
 
+        // Clearer guidance for super admin users without org when selecting org-only visibility
+        if (
+            ($data['visibility'] ?? null) === 'org_only'
+            && empty($data['organization_id'])
+            && Auth::user()?->hasRole('super-admin')
+            && !Auth::user()?->organization_id
+        ) {
+            return redirect()->back()
+                ->withErrors(['organization_id' => 'You are a super admin and not part of any organization. Change meeting visibility from Organization Only to Invite Only or Anyone with Link.'])
+                ->withInput();
+        }
+
         // For instant meetings, set status to live and clear start/end times
         if ($data['meeting_type'] === 'instant') {
             $data['status'] = 'live';
