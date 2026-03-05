@@ -4,11 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8090:8090"
+      - "8091:8090"
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:8090
+      APP_URL: https://openclaw.mdriaz.com.bd/jitsiadmin
       DB_CONNECTION: sqlite
       DB_DATABASE: /var/www/html/database/database.sqlite
       RUN_MIGRATIONS: "true"
@@ -16,3 +16,4 @@ services:
     volumes:
       - ./database:/var/www/html/database
       - ./storage:/var/www/html/storage
+      - /root/.jitsi-meet-cfg/jibri/recordings:/config/recordings
