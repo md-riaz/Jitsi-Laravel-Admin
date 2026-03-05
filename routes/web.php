@@ -47,3 +47,6 @@ Route::get('/meet/{meeting}/download-ics', [\App\Http\Controllers\Web\MeetingPag
 // Guest invite routes
 Route::get('/invite/{token}', [\App\Http\Controllers\Web\InviteController::class, 'show'])->name('invite.show');
 Route::post('/invite/{token}/accept', [\App\Http\Controllers\Web\InviteController::class, 'accept'])->name('invite.accept');
+
+// Alias expected by Laravel auth middleware when unauthenticated
+Route::get('/_login', fn () => redirect()->route('tyro-login.login'))->name('login');

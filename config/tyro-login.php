@@ -117,9 +117,9 @@ return [
     |
     */
     'redirects' => [
-        'after_login' => env('TYRO_LOGIN_REDIRECT_AFTER_LOGIN', '/'),
+        'after_login' => env('TYRO_LOGIN_REDIRECT_AFTER_LOGIN', '/dashboard/my-meetings'),
         'after_logout' => env('TYRO_LOGIN_REDIRECT_AFTER_LOGOUT', '/login'),
-        'after_register' => env('TYRO_LOGIN_REDIRECT_AFTER_REGISTER', '/'),
+        'after_register' => env('TYRO_LOGIN_REDIRECT_AFTER_REGISTER', '/dashboard/my-meetings'),
         'after_email_verification' => env('TYRO_LOGIN_REDIRECT_AFTER_EMAIL_VERIFICATION', '/login'),
     ],
 
@@ -152,7 +152,7 @@ return [
         'assign_default_role' => env('TYRO_LOGIN_ASSIGN_DEFAULT_ROLE', true),
 
         // The default role slug to assign to new users
-        'default_role_slug' => env('TYRO_LOGIN_DEFAULT_ROLE_SLUG', 'user'),
+        'default_role_slug' => env('TYRO_LOGIN_DEFAULT_ROLE_SLUG', 'member'),
     ],
 
     /*

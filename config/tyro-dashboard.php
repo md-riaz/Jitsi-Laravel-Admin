@@ -219,7 +219,14 @@ return [
                 'display_name' => ['type' => 'text', 'label' => 'Display Name', 'searchable' => true],
                 'email' => ['type' => 'text', 'label' => 'Email', 'searchable' => true],
                 'role' => ['type' => 'select', 'label' => 'Role', 'options' => ['host' => 'Host', 'cohost' => 'Co-host', 'participant' => 'Participant']],
-                'joined_at' => ['type' => 'datetime', 'label' => 'Joined At'],
+                'joined_at' => [
+                    'type' => 'datetime-local',
+                    'label' => 'Joined At',
+                    'rules' => 'nullable|date',
+                    'help_text' => 'Participant joined সময় (date + time). সাধারণত system auto-set করে, manual edit only correction এর জন্য।',
+                    'attributes' => ['title' => 'Joined At: participant meeting এ যেই সময় join করেছে'],
+                    'hide_in_create' => true,
+                ],
             ],
         ],
         'organizations' => [
@@ -237,8 +244,8 @@ return [
             'roles' => ['super-admin', 'org-admin', 'host'],
             'fields' => [
                 'email' => ['type' => 'text', 'label' => 'Email', 'searchable' => true],
-                'expires_at' => ['type' => 'datetime', 'label' => 'Expires At'],
-                'revoked_at' => ['type' => 'datetime', 'label' => 'Revoked At'],
+                'expires_at' => ['type' => 'datetime-local', 'label' => 'Expires At', 'rules' => 'nullable|date', 'help_text' => 'Invite expire হওয়ার date+time দিন'],
+                'revoked_at' => ['type' => 'datetime-local', 'label' => 'Revoked At', 'rules' => 'nullable|date', 'hide_in_create' => true, 'help_text' => 'Invite revoke হলে date+time (optional)'],
             ],
         ],
         'meeting_events' => [
@@ -249,7 +256,7 @@ return [
                 'type' => ['type' => 'text', 'label' => 'Type', 'searchable' => true],
                 'meeting_id' => ['type' => 'text', 'label' => 'Meeting', 'searchable' => true],
                 'payload_preview' => ['type' => 'text', 'label' => 'Payload', 'hide_in_form' => true],
-                'payload' => ['type' => 'json', 'label' => 'Payload (Raw)', 'hide_in_index' => true, 'hide_in_single_view' => true],
+                'payload' => ['type' => 'json', 'label' => 'Payload (Raw)', 'hide_in_index' => true, 'hide_in_single_view' => true, 'hide_in_form' => true],
                 'created_at' => ['type' => 'datetime', 'label' => 'Created At'],
             ],
         ],
