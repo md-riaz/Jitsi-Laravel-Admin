@@ -41,6 +41,8 @@ return [
         'audience' => env('JITSI_JWT_AUDIENCE', 'jitsi'),
         'secret' => env('JITSI_JWT_SECRET', ''),
         'sub' => env('JITSI_JWT_SUB', env('JITSI_DOMAIN', 'meet.example.com')),
+        'webhook_secret' => env('JITSI_WEBHOOK_SECRET', ''),
+        'empty_room_grace_seconds' => (int) env('JITSI_EMPTY_ROOM_GRACE_SECONDS', 60),
     ],
 
 ];

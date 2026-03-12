@@ -19,6 +19,7 @@ Route::prefix('v1')->group(function () {
 
     // Jibri Recording Webhook
     Route::post('/recordings/ingest', [\App\Http\Controllers\Api\V1\RecordingController::class, 'ingest']);
+    Route::post('/jitsi/events', [\App\Http\Controllers\Api\V1\JitsiEventController::class, 'ingest']);
 
     Route::post('/invites/resolve', [\App\Http\Controllers\Api\V1\InviteController::class, 'resolve']);
     Route::post('/invites/{token}/accept', [\App\Http\Controllers\Api\V1\InviteController::class, 'accept']);

@@ -8,6 +8,7 @@ use App\Models\MeetingEvent;
 use App\Models\MeetingParticipant;
 use App\Services\JitsiJwtService;
 use App\Services\MeetingAccessPolicyService;
+use App\Services\MeetingLifecycleService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,8 @@ class MeetingJoinController extends Controller
 {
     public function __construct(
         private readonly JitsiJwtService $jitsiService,
-        private readonly MeetingAccessPolicyService $accessPolicyService
+        private readonly MeetingAccessPolicyService $accessPolicyService,
+        private readonly MeetingLifecycleService $lifecycleService
     ) {}
 
     public function join(Request $request, Meeting $meeting): JsonResponse
@@ -162,16 +164,13 @@ class MeetingJoinController extends Controller
             ], 500);
         }
 
-        MeetingEvent::create([
-            'meeting_id' => $meeting->id,
-            'type' => 'participant_joined',
-            'payload' => [
-                'user_id' => $user?->id,
-                'user_name' => $displayName,
-                'is_moderator' => $isModerator,
-                'ip_address' => $clientIp,
-            ],
-        ]);
+        $this->lifecycleService->participantJoined($meeting, [
+            'user_id' => $user?->id,
+            'user_name' => $displayName,
+            'is_moderator' => $isModerator,
+            'ip_address' => $clientIp,
+            'source' => 'app_join',
+        ], true);
 
         if ($user) {
             $meeting->participants()->where('user_id', $user->id)->update(['joined_at' => Carbon::now()]);
@@ -296,15 +295,12 @@ class MeetingJoinController extends Controller
     {
         $user = $request->user();
 
-        MeetingEvent::create([
-            'meeting_id' => $meeting->id,
-            'type' => 'participant_left',
-            'payload' => [
-                'user_id' => $user?->id,
-                'user_name' => $user?->name ?? $request->input('display_name'),
-                'left_at' => Carbon::now()->toIso8601String(),
-            ],
-        ]);
+        $this->lifecycleService->participantLeft($meeting, [
+            'user_id' => $user?->id,
+            'user_name' => $user?->name ?? $request->input('display_name'),
+            'left_at' => Carbon::now()->toIso8601String(),
+            'source' => 'app_leave',
+        ], true);
 
         if ($user) {
             $meeting->participants()

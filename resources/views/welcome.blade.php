@@ -109,6 +109,21 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
         }
+
+        .nav-links .btn-primary {
+            background: #0f172a;
+            color: #ffffff;
+            border: 1px solid #0f172a;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-links .btn-primary:hover,
+        .nav-links .btn-primary:focus-visible {
+            background: #020617;
+            color: #ffffff;
+            border-color: #020617;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.24);
+        }
         
         .btn-secondary {
             background: var(--btn-secondary-bg);
@@ -342,7 +357,7 @@
                     <a href="{{ url('/dashboard/create-meeting') }}" class="btn btn-primary">New Meeting</a>
                 @else
                     <a href="{{ route('tyro-login.login') }}">Login</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary" aria-label="Get started by creating an account">Get Started</a>
                 @endauth
             </div>
         </div>

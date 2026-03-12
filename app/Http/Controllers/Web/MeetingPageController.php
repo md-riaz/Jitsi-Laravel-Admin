@@ -23,10 +23,12 @@ class MeetingPageController extends Controller
 
         // Handle instant meetings (no fixed start/end times)
         if ($meeting->isInstantMeeting()) {
+            $isLive = $meeting->status === 'live' && $meeting->actual_ended_at === null;
+
             return view('meeting.show', [
                 'meeting' => $meeting,
-                'canJoin' => $meeting->status === 'live',
-                'status' => $meeting->status === 'live' ? 'live' : 'ended',
+                'canJoin' => $isLive,
+                'status' => $isLive ? 'live' : 'ended',
                 'opensAt' => $now,
                 'closesAt' => $now,
                 'now' => $now,

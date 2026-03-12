@@ -20,6 +20,7 @@ This guide covers deploying Jitsi Admin to production environments.
 - [ ] Database credentials configured
 - [ ] Mail credentials configured
 - [ ] Jitsi credentials configured
+- [ ] Jitsi webhook secret configured if using room lifecycle integration
 - [ ] Queue driver set to database
 - [ ] Cache driver set to database
 - [ ] Session driver set to database
@@ -218,6 +219,32 @@ sudo supervisorctl start jitsi-admin-worker:*
 ```
 
 ### 6. Scheduled Tasks (Cron)
+
+If you are using instant meeting lifecycle tracking, make sure both scheduler commands run every minute:
+
+```bash
+* * * * * cd /var/www/Jitsi-Laravel-Admin && php artisan schedule:run >> /dev/null 2>&1
+```
+
+The scheduler must include:
+- `meetings:update-statuses`
+- `meetings:cleanup-empty-instant`
+
+Also set these env vars in production when using the Prosody webhook bridge:
+
+```env
+JITSI_WEBHOOK_SECRET=change-this-secret
+JITSI_EMPTY_ROOM_GRACE_SECONDS=60
+```
+
+If the app is served from a subpath like `/jitsiadmin`, the public webhook URL becomes:
+
+```text
+https://your-domain.com/jitsiadmin/api/v1/jitsi/events
+```
+
+See `docs/JITSI_ROOM_LIFECYCLE_INTEGRATION.md` for the full Prosody integration.
+
 
 Add to crontab:
 ```bash

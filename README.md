@@ -214,6 +214,16 @@ JITSI_JWT_AUDIENCE=jitsi
 
 # Usually same as JITSI_DOMAIN or "*"
 JITSI_JWT_SUB=meet.yourdomain.com
+
+# Shared secret for Prosody room lifecycle webhooks
+JITSI_WEBHOOK_SECRET=change-this-secret
+
+# Grace period before empty instant meetings are auto-ended
+JITSI_EMPTY_ROOM_GRACE_SECONDS=60
+
+# Optional landing page brand colors
+LANDING_PRIMARY_COLOR=#2563eb
+LANDING_PRIMARY_HOVER_COLOR=#1d4ed8
 ```
 
 #### Environment Variables Explained

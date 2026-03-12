@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 // Schedule meeting status updates every minute
 Schedule::command('meetings:update-statuses')->everyMinute();
+Schedule::command('meetings:cleanup-empty-instant')->everyMinute();

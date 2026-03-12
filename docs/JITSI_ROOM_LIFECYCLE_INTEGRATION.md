@@ -1,0 +1,278 @@
+# Jitsi Room Lifecycle Integration
+
+This document describes how to replicate the same instant-meeting lifecycle behavior on other Jitsi Admin instances without modifying Jitsi core.
+
+## Goal
+
+End instant meetings automatically when either:
+
+1. all participants have left the room and it stays empty for a grace period
+2. a moderator ends the conference for everyone
+
+This integration uses existing Jitsi/Prosody event hooks and a Laravel webhook endpoint.
+
+## What this project implements
+
+### Laravel-side lifecycle tracking
+
+The app tracks these fields on `meetings`:
+
+- `active_participant_count`
+- `actual_started_at`
+- `actual_ended_at`
+- `last_activity_at`
+- `ended_reason`
+
+### Webhook endpoint
+
+The app exposes:
+
+- `POST /api/v1/jitsi/events`
+
+Supported event names:
+
+- `participant_joined`
+- `participant_left`
+- `occupant_joined`
+- `occupant_left`
+- `muc-occupant-joined`
+- `muc-occupant-left`
+- `room_destroyed`
+- `conference_ended`
+- `meeting_ended`
+- `end_conference`
+
+Authentication:
+
+- header: `X-Jitsi-Webhook-Secret: <secret>`
+- or `Authorization: Bearer <secret>`
+
+### Cleanup command
+
+To avoid zombie instant meetings if a leave event is missed:
+
+- `php artisan meetings:cleanup-empty-instant`
+
+This command ends any live instant meeting where:
+
+- `active_participant_count = 0`
+- `end_at is null`
+- `last_activity_at <= now - grace`
+
+Default grace period:
+
+- `60` seconds
+
+## Environment variables
+
+Add these to `.env`:
+
+```env
+JITSI_WEBHOOK_SECRET=change-this-secret
+JITSI_EMPTY_ROOM_GRACE_SECONDS=60
+```
+
+## App configuration
+
+In `config/services.php`, make sure the Jitsi section includes:
+
+```php
+'jitsi' => [
+    'domain' => env('JITSI_DOMAIN', 'meet.example.com'),
+    'issuer' => env('JITSI_JWT_ISSUER', 'your-app'),
+    'audience' => env('JITSI_JWT_AUDIENCE', 'jitsi'),
+    'secret' => env('JITSI_JWT_SECRET', ''),
+    'sub' => env('JITSI_JWT_SUB', env('JITSI_DOMAIN', 'meet.example.com')),
+    'webhook_secret' => env('JITSI_WEBHOOK_SECRET', ''),
+    'empty_room_grace_seconds' => (int) env('JITSI_EMPTY_ROOM_GRACE_SECONDS', 60),
+],
+```
+
+## Scheduler
+
+Keep both commands scheduled every minute:
+
+```php
+Schedule::command('meetings:update-statuses')->everyMinute();
+Schedule::command('meetings:cleanup-empty-instant')->everyMinute();
+```
+
+## Recommended Prosody integration
+
+Use a custom Prosody plugin. Do not patch Jitsi core.
+
+Suggested location in a docker-jitsi-meet deployment:
+
+- `/root/.jitsi-meet-cfg/prosody/prosody-plugins-custom/mod_laravel_meeting_webhook.lua`
+
+Then enable it on the MUC host in your Prosody config.
+
+## Sample Prosody plugin
+
+This is a minimal example that forwards room lifecycle events to Laravel.
+
+```lua
+local http = require 'net.http';
+local json = require 'util.json';
+
+local webhook_url = module:get_option_string('laravel_meeting_webhook_url');
+local webhook_secret = module:get_option_string('laravel_meeting_webhook_secret');
+
+if not webhook_url or webhook_url == '' then
+    module:log('warn', 'laravel_meeting_webhook_url is not configured');
+    return;
+end
+
+local function post_event(event_name, room, occupant, extra)
+    local payload = {
+        event = event_name,
+        room_name = room.jid and room.jid:match('^([^@]+)') or nil,
+        participant = occupant and {
+            jid = occupant.jid,
+            nick = occupant.nick,
+            bare_jid = occupant.bare_jid,
+            role = occupant.role,
+            affiliation = occupant.affiliation,
+        } or nil,
+        data = extra or {},
+    };
+
+    local body = json.encode(payload);
+    http.request(webhook_url, {
+        method = 'POST',
+        body = body,
+        headers = {
+            ['Content-Type'] = 'application/json',
+            ['X-Jitsi-Webhook-Secret'] = webhook_secret,
+        }
+    }, function(content, code)
+        if code < 200 or code >= 300 then
+            module:log('warn', 'Laravel webhook returned HTTP %s for event %s', tostring(code), event_name);
+        end
+    end);
+end
+
+module:hook('muc-occupant-joined', function (event)
+    post_event('muc-occupant-joined', event.room, event.occupant, {});
+end);
+
+module:hook('muc-occupant-left', function (event)
+    post_event('muc-occupant-left', event.room, event.occupant, {
+        reason = event.reason,
+    });
+end);
+
+module:hook('muc-room-destroyed', function (event)
+    post_event('room_destroyed', event.room, nil, {
+        reason = event.reason,
+    });
+end);
+```
+
+## Prosody config snippet
+
+Add the module and settings to the MUC component that manages meeting rooms.
+
+Example shape:
+
+```lua
+Component "muc.meet.example.com" "muc"
+    modules_enabled = {
+        "muc_meeting_id";
+        "laravel_meeting_webhook";
+    }
+
+    laravel_meeting_webhook_url = "https://your-app.example.com/api/v1/jitsi/events"
+    laravel_meeting_webhook_secret = "change-this-secret"
+```
+
+Exact component naming depends on your deployment.
+
+## Event mapping rules
+
+### Participant joined
+
+Laravel should:
+
+- increment `active_participant_count`
+- set `last_activity_at = now()`
+- set `actual_started_at` if empty
+- ensure `status = live`
+
+### Participant left
+
+Laravel should:
+
+- decrement `active_participant_count` but never below zero
+- set `last_activity_at = now()`
+- not end immediately unless you intentionally want zero-grace behavior
+
+### Room destroyed / conference ended
+
+Laravel should:
+
+- set `status = ended`
+- set `actual_ended_at = now()`
+- set `ended_reason = moderator_ended` or the provided reason
+- set `active_participant_count = 0`
+- for instant meetings, set `end_at = now()` so existing UI and analytics treat it as finished
+
+## Why the grace period matters
+
+Without a grace window, fast reconnects or tab refreshes can end meetings by mistake.
+
+Recommended default:
+
+- `60` seconds
+
+You can raise it to `120` if reconnect churn is common.
+
+## Deployment checklist for another instance
+
+If the Laravel app is served from a subpath instead of domain root, use that full public path in Prosody.
+
+Example:
+
+- domain root deployment: `https://your-app.example.com/api/v1/jitsi/events`
+- subpath deployment: `https://your-app.example.com/jitsiadmin/api/v1/jitsi/events`
+
+
+1. deploy the Laravel code with lifecycle fields and webhook endpoint
+2. run migrations
+3. set `JITSI_WEBHOOK_SECRET`
+4. set `JITSI_EMPTY_ROOM_GRACE_SECONDS`
+5. enable the cleanup scheduler
+6. add the custom Prosody plugin
+7. configure the MUC component to call the Laravel webhook
+8. restart Prosody / Jitsi stack
+9. verify these cases:
+   - join increments active count
+   - leave decrements active count
+   - empty room ends after grace period
+   - moderator end-for-all ends immediately
+
+## Testing flow
+
+### Test 1: instant meeting auto-end
+
+1. create an instant meeting
+2. join with 2 users
+3. leave with both users
+4. wait for grace period plus one scheduler run
+5. confirm meeting becomes `ended`
+
+### Test 2: moderator-end path
+
+1. create an instant meeting
+2. join as moderator and participant
+3. use Jitsi end-for-all
+4. confirm a room-ended webhook is sent
+5. confirm meeting becomes `ended` immediately
+
+## Notes
+
+- This approach does not require modifying Jitsi core.
+- It uses existing room/occupant events from Prosody.
+- Jibri webhook support exists but should not be the primary room presence source.
+- Prosody MUC events are the right integration point for room occupancy lifecycle.
+- If `short_lived_token` is enabled on both `meet.*` and `guest.*` virtual hosts, make sure the `short_lived_token = { ... }` config block exists on both hosts. Enabling the module on a host without its config causes Prosody startup errors.
