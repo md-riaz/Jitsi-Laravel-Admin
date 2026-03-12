@@ -20,7 +20,7 @@
 <body>
     <div class="dashboard-layout">
         <!-- Sidebar - Conditional based on role -->
-        @hasanyrole('admin', 'superadmin')
+        @hasanyrole('super-admin', 'org-admin')
             @include('tyro-dashboard::partials.admin-sidebar')
         @else
             @include('tyro-dashboard::partials.user-sidebar')
