@@ -6,19 +6,18 @@ use App\Models\Meeting;
 use App\Models\MeetingEvent;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class MeetingLifecycleService
 {
     public function participantJoined(Meeting $meeting, array $payload = [], bool $logEvent = false): Meeting
     {
-        return DB::transaction(function () use ($meeting, $payload, $logEvent) {
+        $now = CarbonImmutable::now();
+
+        $updated = DB::transaction(function () use ($meeting, $now) {
             /** @var Meeting $fresh */
             $fresh = Meeting::query()->whereKey($meeting->id)->lockForUpdate()->firstOrFail();
-            $now = CarbonImmutable::now();
-
-            if ($logEvent) {
-                $this->recordEvent($fresh, 'participant_joined', $payload, $now);
-            }
 
             $fresh->active_participant_count = max(0, (int) $fresh->active_participant_count) + 1;
             $fresh->last_activity_at = $now;
@@ -41,18 +40,21 @@ class MeetingLifecycleService
 
             return $fresh->fresh();
         });
+
+        if ($logEvent) {
+            $this->recordEventSafely($updated, 'participant_joined', $payload, $now);
+        }
+
+        return $updated;
     }
 
     public function participantLeft(Meeting $meeting, array $payload = [], bool $logEvent = false): Meeting
     {
-        return DB::transaction(function () use ($meeting, $payload, $logEvent) {
+        $now = CarbonImmutable::now();
+
+        $updated = DB::transaction(function () use ($meeting, $now) {
             /** @var Meeting $fresh */
             $fresh = Meeting::query()->whereKey($meeting->id)->lockForUpdate()->firstOrFail();
-            $now = CarbonImmutable::now();
-
-            if ($logEvent) {
-                $this->recordEvent($fresh, 'participant_left', $payload, $now);
-            }
 
             $fresh->active_participant_count = max(0, ((int) $fresh->active_participant_count) - 1);
             $fresh->last_activity_at = $now;
@@ -60,18 +62,21 @@ class MeetingLifecycleService
 
             return $fresh->fresh();
         });
+
+        if ($logEvent) {
+            $this->recordEventSafely($updated, 'participant_left', $payload, $now);
+        }
+
+        return $updated;
     }
 
     public function endMeeting(Meeting $meeting, string $reason, array $payload = [], bool $logEvent = false): Meeting
     {
-        return DB::transaction(function () use ($meeting, $reason, $payload, $logEvent) {
+        $now = CarbonImmutable::now();
+
+        $updated = DB::transaction(function () use ($meeting, $reason, $now) {
             /** @var Meeting $fresh */
             $fresh = Meeting::query()->whereKey($meeting->id)->lockForUpdate()->firstOrFail();
-            $now = CarbonImmutable::now();
-
-            if ($logEvent) {
-                $this->recordEvent($fresh, 'meeting_ended', array_merge($payload, ['reason' => $reason]), $now);
-            }
 
             $fresh->status = 'ended';
             $fresh->active_participant_count = 0;
@@ -91,6 +96,12 @@ class MeetingLifecycleService
 
             return $fresh->fresh();
         });
+
+        if ($logEvent) {
+            $this->recordEventSafely($updated, 'meeting_ended', array_merge($payload, ['reason' => $reason]), $now);
+        }
+
+        return $updated;
     }
 
     public function cleanupEmptyInstantMeetings(int $graceSeconds): int
@@ -127,5 +138,19 @@ class MeetingLifecycleService
                 'recorded_at' => $now->toIso8601String(),
             ]),
         ]);
+    }
+
+    private function recordEventSafely(Meeting $meeting, string $type, array $payload, CarbonImmutable $now): void
+    {
+        try {
+            $this->recordEvent($meeting, $type, $payload, $now);
+        } catch (Throwable $e) {
+            Log::warning('Failed to persist meeting lifecycle event', [
+                'meeting_id' => $meeting->id,
+                'room_name' => $meeting->room_name,
+                'type' => $type,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
