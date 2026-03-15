@@ -78,12 +78,6 @@
     </div>
 </div>
 
-@if(session('success'))
-<div style="padding: 14px 18px; margin-bottom: 20px; background: #d1fae5; border-left: 4px solid #10b981; color: #065f46; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
-    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-    {{ session('success') }}
-</div>
-@endif
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
     <div class="card"><div class="card-body"><div style="font-size:12px;color:#64748b;">Total Meetings</div><div style="font-size:24px;font-weight:700;">{{ $analytics['total_meetings'] ?? 0 }}</div></div></div>
