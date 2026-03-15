@@ -77,6 +77,36 @@
                     </p>
                 </div>
 
+                <!-- Subscription Plan (personal accounts only) -->
+                <div class="form-group" id="subscription_plan_field">
+                    <label class="form-label">Subscription Plan</label>
+                    @if($freePlan)
+                    <div style="border: 2px solid #6366f1; border-radius: 8px; padding: 1rem; background: #f5f3ff;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 700; color: #4f46e5; font-size: 1rem;">{{ $freePlan->name }} Plan</span>
+                            <span style="background: #4f46e5; color: #fff; font-size: 0.75rem; font-weight: 600; padding: 2px 10px; border-radius: 999px;">Free</span>
+                        </div>
+                        @if($freePlan->description)
+                        <p style="font-size: 0.85rem; color: #6b7280; margin: 0 0 0.5rem;">{{ $freePlan->description }}</p>
+                        @endif
+                        <ul style="font-size: 0.82rem; color: #374151; margin: 0; padding-left: 1.1rem; line-height: 1.7;">
+                            <li>Up to {{ $freePlan->max_users ?? 'Unlimited' }} users</li>
+                            <li>{{ $freePlan->max_meeting_duration ? $freePlan->max_meeting_duration . ' min' : 'Unlimited' }} per meeting</li>
+                            <li>{{ $freePlan->concurrent_meetings ?? 'Unlimited' }} concurrent meeting(s)</li>
+                            <li>{{ $freePlan->recording_storage_gb ? $freePlan->recording_storage_gb . ' GB' : 'No' }} recording storage</li>
+                        </ul>
+                    </div>
+                    @else
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; background: #f9fafb;">
+                        <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Free plan will be assigned to your account.</p>
+                    </div>
+                    @endif
+                    <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem;">
+                        Personal accounts start on the <strong>Free Plan</strong>.
+                        To upgrade, <a href="mailto:sales@example.com" style="color: #4f46e5;">contact our sales team</a>.
+                    </p>
+                </div>
+
                 <!-- Name Field -->
                 <div class="form-group">
                     <label for="name" class="form-label">Your Name *</label>
@@ -135,13 +165,16 @@ function toggleOrganizationField() {
     const accountType = document.querySelector('input[name="account_type"]:checked').value;
     const orgField = document.getElementById('organization_field');
     const orgSelect = document.getElementById('organization_id');
+    const planField = document.getElementById('subscription_plan_field');
 
     if (accountType === 'organization') {
         orgField.style.display = 'block';
         if (orgSelect) orgSelect.setAttribute('required', 'required');
+        if (planField) planField.style.display = 'none';
     } else {
         orgField.style.display = 'none';
         if (orgSelect) orgSelect.removeAttribute('required');
+        if (planField) planField.style.display = 'block';
     }
 }
 

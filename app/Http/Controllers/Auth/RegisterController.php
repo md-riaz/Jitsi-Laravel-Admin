@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use HasinHayder\Tyro\Models\Role;
 use Illuminate\Http\Request;
@@ -19,8 +20,9 @@ class RegisterController extends Controller
     public function showRegistrationForm()
     {
         $organizations = Organization::where('is_active', true)->orderBy('name')->get();
+        $freePlan = SubscriptionPlan::where('slug', 'free')->where('is_active', true)->first();
 
-        return view('auth.register', compact('organizations'));
+        return view('auth.register', compact('organizations', 'freePlan'));
     }
 
     /**
@@ -79,13 +81,16 @@ class RegisterController extends Controller
             return redirect()->route('auth.pending-approval');
         }
 
-        // Personal / single account – active immediately
+        // Personal / single account – active immediately, on Free Plan
+        $freePlan = SubscriptionPlan::where('slug', 'free')->where('is_active', true)->first();
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'account_type' => 'single',
             'status' => 'active',
+            'subscription_plan_id' => $freePlan?->id,
         ]);
 
         $hostRole = Role::where('slug', 'host')->firstOrFail();

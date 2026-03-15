@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'account_type',
         'status',
         'organization_id',
+        'subscription_plan_id',
         'avatar_path',
     ];
 
@@ -61,9 +63,32 @@ class User extends Authenticatable
     /**
      * Get the user's organization
      */
-    public function organization()
+    public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Get the subscription plan for personal users.
+     * Org users inherit the plan from their organization.
+     */
+    public function subscriptionPlan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    /**
+     * Resolve the effective subscription plan for this user:
+     *  - Org users → their organization's plan
+     *  - Personal users → their own plan
+     */
+    public function getEffectiveSubscriptionPlan(): ?SubscriptionPlan
+    {
+        if ($this->isOrganizationUser() && $this->organization) {
+            return $this->organization->subscriptionPlan;
+        }
+
+        return $this->subscriptionPlan;
     }
 
     /**

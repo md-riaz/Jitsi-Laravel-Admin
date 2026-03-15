@@ -27,7 +27,6 @@ class DemoDataSeeder extends Seeder
                 'status' => 'active',
             ]
         );
-
         // Assign super-admin role to Super Admin
         $superAdminRole = Role::where('slug', 'super-admin')->first();
         if ($superAdminRole && !$superAdmin->roles()->where('role_id', $superAdminRole->id)->exists()) {
@@ -330,6 +329,16 @@ class DemoDataSeeder extends Seeder
             $organization->subscription_status = 'active';
             $organization->subscription_starts_at = now();
             $organization->save();
+        }
+
+        // Assign Free Plan to personal/single users who don't have one
+        if ($freePlan) {
+            User::where('account_type', 'single')
+                ->whereNull('subscription_plan_id')
+                ->each(function (User $user) use ($freePlan) {
+                    $user->subscription_plan_id = $freePlan->id;
+                    $user->save();
+                });
         }
 
         $this->command->info('Demo data created successfully!');

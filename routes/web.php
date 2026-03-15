@@ -31,6 +31,7 @@ Route::post('dashboard/team/{id}/unsuspend', [\App\Http\Controllers\Dashboard\Te
 Route::post('dashboard/team/{id}/login-as', [\App\Http\Controllers\Dashboard\TeamController::class, 'loginAs'])->middleware(['auth'])->name('dashboard.team.login-as');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
+Route::get('dashboard/subscription', [\App\Http\Controllers\Dashboard\SubscriptionController::class, 'show'])->middleware(['auth'])->name('dashboard.subscription');
 Route::get('dashboard/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Dashboard\MeetingDiagnosticsController::class, 'show'])
     ->middleware(['auth'])
     ->name('dashboard.meetings.diagnostics');
