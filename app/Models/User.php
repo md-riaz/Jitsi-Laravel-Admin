@@ -30,6 +30,7 @@ class User extends Authenticatable
         'email',
         'password',
         'account_type',
+        'status',
         'organization_id',
         'avatar_path',
     ];
@@ -63,6 +64,22 @@ class User extends Authenticatable
     public function organization()
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Check if user account is pending approval
+     */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if user account is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
     }
 
     /**

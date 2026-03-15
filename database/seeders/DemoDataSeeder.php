@@ -24,6 +24,7 @@ class DemoDataSeeder extends Seeder
                 'name' => 'Super Administrator',
                 'password' => Hash::make('password'),
                 'account_type' => 'single',
+                'status' => 'active',
             ]
         );
 
@@ -40,6 +41,7 @@ class DemoDataSeeder extends Seeder
                 'name' => 'Admin User',
                 'password' => Hash::make('password'),
                 'account_type' => 'organization',
+                'status' => 'active',
             ]
         );
 
@@ -54,6 +56,7 @@ class DemoDataSeeder extends Seeder
             ['slug' => 'alpha-net'],
             [
                 'name' => 'Alpha Net',
+                'is_active' => true,
             ]
         );
 
@@ -129,6 +132,7 @@ class DemoDataSeeder extends Seeder
                     'name' => $member['name'],
                     'password' => Hash::make('password'),
                     'account_type' => 'organization',
+                    'status' => 'active',
                     'organization_id' => $alphaNet->id,
                 ]
             );

@@ -17,28 +17,56 @@ class Organization extends Model
     protected $fillable = [
         'name',
         'slug',
+        'is_active',
         'require_jwt',
         'jwt_expiry_minutes',
         'subscription_plan_id',
         'subscription_starts_at',
         'subscription_ends_at',
         'subscription_status',
+        'billing_notification_days',
         'logo_path',
         'primary_color',
         'secondary_color',
     ];
 
     protected $casts = [
+        'is_active' => 'boolean',
         'require_jwt' => 'boolean',
         'subscription_starts_at' => 'datetime',
         'subscription_ends_at' => 'datetime',
     ];
 
     protected $attributes = [
+        'is_active' => true,
         'require_jwt' => false,
         'jwt_expiry_minutes' => 120,
         'subscription_status' => 'active',
+        'billing_notification_days' => 5,
     ];
+
+    /**
+     * Check whether the subscription is expiring within the notification window.
+     */
+    public function isSubscriptionExpiringSoon(): bool
+    {
+        if (!$this->subscription_ends_at) {
+            return false;
+        }
+
+        $days = (int) ($this->billing_notification_days ?? 5);
+
+        return $this->subscription_ends_at->isFuture()
+            && now()->diffInDays($this->subscription_ends_at) <= $days;
+    }
+
+    /**
+     * Check whether the subscription has already expired.
+     */
+    public function isSubscriptionExpired(): bool
+    {
+        return $this->subscription_ends_at !== null && $this->subscription_ends_at->isPast();
+    }
 
     public function users(): BelongsToMany
     {

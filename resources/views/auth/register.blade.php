@@ -5,7 +5,7 @@
     <div class="background-panel" style="background: #1d4ed8;">
         <div class="background-panel-content">
             <h1>Choose Your Account Type</h1>
-            <p>Select between a personal account for individual meetings or an organization account to manage team meetings.</p>
+            <p>Select between a personal account for individual meetings or an organization account to join your team.</p>
         </div>
     </div>
 
@@ -44,7 +44,7 @@
                         <label style="flex: 1; cursor: pointer;">
                             <input type="radio" name="account_type" value="organization" {{ old('account_type') == 'organization' ? 'checked' : '' }} style="margin-right: 0.5rem;" onchange="toggleOrganizationField()">
                             <span style="font-weight: 500;">Organization Account</span>
-                            <p style="margin: 0.25rem 0 0 1.5rem; font-size: 0.875rem; color: #6b7280;">For teams and organization management</p>
+                            <p style="margin: 0.25rem 0 0 1.5rem; font-size: 0.875rem; color: #6b7280;">Join an existing organization – requires Org Admin approval</p>
                         </label>
                     </div>
                     @error('account_type')
@@ -52,13 +52,29 @@
                     @enderror
                 </div>
 
-                <!-- Organization Name (conditional) -->
-                <div class="form-group" id="organization_name_field" style="display: none;">
-                    <label for="organization_name" class="form-label">Organization Name *</label>
-                    <input type="text" id="organization_name" name="organization_name" class="form-input @error('organization_name') is-invalid @enderror" value="{{ old('organization_name') }}" placeholder="Enter your organization name">
-                    @error('organization_name')
+                <!-- Organization Selection (conditional) -->
+                <div class="form-group" id="organization_field" style="display: none;">
+                    <label for="organization_id" class="form-label">Select Organization *</label>
+                    @if($organizations->isEmpty())
+                        <p style="font-size: 0.875rem; color: #ef4444; margin-top: 0.25rem;">
+                            No active organizations are available. Please contact your administrator.
+                        </p>
+                    @else
+                        <select id="organization_id" name="organization_id" class="form-input @error('organization_id') is-invalid @enderror">
+                            <option value="">— Select an organization —</option>
+                            @foreach($organizations as $org)
+                                <option value="{{ $org->id }}" {{ old('organization_id') == $org->id ? 'selected' : '' }}>
+                                    {{ $org->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+                    @error('organization_id')
                     <span class="error-message">{{ $message }}</span>
                     @enderror
+                    <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.4rem;">
+                        Your registration will be reviewed by the organization admin before you can log in.
+                    </p>
                 </div>
 
                 <!-- Name Field -->
@@ -117,15 +133,15 @@
 <script>
 function toggleOrganizationField() {
     const accountType = document.querySelector('input[name="account_type"]:checked').value;
-    const orgField = document.getElementById('organization_name_field');
-    const orgInput = document.getElementById('organization_name');
+    const orgField = document.getElementById('organization_field');
+    const orgSelect = document.getElementById('organization_id');
 
     if (accountType === 'organization') {
         orgField.style.display = 'block';
-        orgInput.setAttribute('required', 'required');
+        if (orgSelect) orgSelect.setAttribute('required', 'required');
     } else {
         orgField.style.display = 'none';
-        orgInput.removeAttribute('required');
+        if (orgSelect) orgSelect.removeAttribute('required');
     }
 }
 

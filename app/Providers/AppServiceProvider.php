@@ -57,5 +57,40 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('vendor.tyro-dashboard.dashboard.user', $meetingComposer);
         View::composer('vendor.tyro-dashboard.dashboard.index', $meetingComposer);
+
+        // Inject billing notification data for org admins (dashboard views only)
+        View::composer('vendor.tyro-dashboard.*', function ($view) {
+            $user = Auth::user();
+            if (
+                $user
+                && method_exists($user, 'hasRole')
+                && $user->hasRole('org-admin')
+                && !$user->hasRole('super-admin')
+                && $user->organization
+            ) {
+                $org = $user->organization;
+                $view->with('billingExpiringSoon', $org->isSubscriptionExpiringSoon());
+                $view->with('billingExpired', $org->isSubscriptionExpired());
+                $view->with('billingNotificationDays', $org->billing_notification_days ?? 5);
+                $view->with('subscriptionEndsAt', $org->subscription_ends_at);
+            } else {
+                $view->with('billingExpiringSoon', false);
+                $view->with('billingExpired', false);
+                $view->with('billingNotificationDays', 5);
+                $view->with('subscriptionEndsAt', null);
+            }
+        });
+
+        // Inject pending user count for org admins (sidebar)
+        View::composer('vendor.tyro-dashboard.partials.admin-sidebar', function ($view) {
+            $user = Auth::user();
+            $pendingCount = 0;
+            if ($user && method_exists($user, 'hasRole') && $user->hasRole('org-admin') && $user->organization_id) {
+                $pendingCount = \App\Models\User::where('organization_id', $user->organization_id)
+                    ->where('status', 'pending')
+                    ->count();
+            }
+            $view->with('sidebarPendingCount', $pendingCount);
+        });
     }
 }
