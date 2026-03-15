@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->appendToGroup('web', \App\Http\Middleware\RedirectMemberFromAdminDashboard::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\RedirectOrgAdminFromSuperAdminUserManagement::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

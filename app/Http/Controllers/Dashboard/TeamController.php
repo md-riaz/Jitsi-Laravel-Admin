@@ -12,19 +12,57 @@ use Illuminate\Support\Facades\Validator;
 class TeamController extends Controller
 {
     /**
-     * Display a listing of team members
+     * Ensure the current user is an org-admin with a valid organization.
      */
-    public function index()
+    private function authorizeOrgAdmin(): User
     {
         $user = Auth::user();
 
-        // Only organization users can access team management
         if (!$user->isOrganizationUser() || !$user->organization_id) {
-            abort(403, 'Only organization admins can manage teams.');
+            abort(403, 'Only organization admins can manage team members.');
         }
 
-        $organization = $user->organization;
-        $teamMembers = $organization->users()->withPivot('role', 'created_at')->get();
+        return $user;
+    }
+
+    /**
+     * Ensure the target member belongs to the admin's organization.
+     */
+    private function resolveOrgMember(User $admin, int|string $id): User
+    {
+        $member = User::findOrFail($id);
+
+        if ($member->organization_id !== $admin->organization_id) {
+            abort(403, 'You can only manage members of your organization.');
+        }
+
+        return $member;
+    }
+
+    /**
+     * Display a listing of team members
+     */
+    public function index(Request $request)
+    {
+        $admin = $this->authorizeOrgAdmin();
+        $organization = $admin->organization;
+
+        $query = $organization->users()->withPivot('role', 'created_at');
+
+        // Search filter
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.email', 'like', "%{$search}%");
+            });
+        }
+
+        // Role filter
+        if ($role = $request->input('role')) {
+            $query->wherePivot('role', $role);
+        }
+
+        $teamMembers = $query->get();
 
         return view('dashboard.team.index', compact('organization', 'teamMembers'));
     }
@@ -34,11 +72,7 @@ class TeamController extends Controller
      */
     public function create()
     {
-        $user = Auth::user();
-
-        if (!$user->isOrganizationUser() || !$user->organization_id) {
-            abort(403, 'Only organization admins can manage teams.');
-        }
+        $this->authorizeOrgAdmin();
 
         return view('dashboard.team.create');
     }
@@ -48,11 +82,7 @@ class TeamController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-
-        if (!$user->isOrganizationUser() || !$user->organization_id) {
-            abort(403, 'Only organization admins can manage teams.');
-        }
+        $admin = $this->authorizeOrgAdmin();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -62,115 +92,139 @@ class TeamController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         $data = $validator->validated();
 
-        // Create the new team member
         $newMember = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'account_type' => 'organization',
-            'organization_id' => $user->organization_id,
+            'organization_id' => $admin->organization_id,
         ]);
 
-        // Assign appropriate role
-        if ($data['role'] === 'admin') {
-            $newMember->assignRole('org-admin');
-        } elseif ($data['role'] === 'host') {
-            $newMember->assignRole('host');
-        } else {
-            $newMember->assignRole('member');
-        }
+        $this->assignOrgRole($newMember, $data['role']);
 
-        // Add to organization pivot table
-        $user->organization->users()->attach($newMember->id, ['role' => $data['role']]);
+        $admin->organization->users()->attach($newMember->id, ['role' => $data['role']]);
 
         return redirect()->route('dashboard.team.index')
-            ->with('success', 'Team member invited successfully!');
+            ->with('success', 'Team member added successfully!');
     }
 
     /**
-     * Show the form for editing a team member's role
+     * Show the form for editing a team member
      */
     public function edit($id)
     {
-        $user = Auth::user();
-
-        if (!$user->isOrganizationUser() || !$user->organization_id) {
-            abort(403, 'Only organization admins can manage teams.');
-        }
-
-        $teamMember = User::findOrFail($id);
-
-        // Ensure the team member belongs to the same organization
-        if ($teamMember->organization_id !== $user->organization_id) {
-            abort(403, 'You can only edit members of your organization.');
-        }
+        $admin = $this->authorizeOrgAdmin();
+        $teamMember = $this->resolveOrgMember($admin, $id);
 
         return view('dashboard.team.edit', compact('teamMember'));
     }
 
     /**
-     * Update a team member's role
+     * Update a team member's profile and role
      */
     public function update(Request $request, $id)
     {
-        $user = Auth::user();
+        $admin = $this->authorizeOrgAdmin();
+        $teamMember = $this->resolveOrgMember($admin, $id);
 
-        if (!$user->isOrganizationUser() || !$user->organization_id) {
-            abort(403, 'Only organization admins can manage teams.');
+        if ($teamMember->id === $admin->id) {
+            return redirect()->back()->with('error', 'You cannot edit your own account here.');
         }
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $teamMember->id,
             'role' => 'required|in:admin,host,member',
-        ]);
+            'password' => 'nullable|string|min:8|confirmed',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $teamMember = User::findOrFail($id);
-
-        // Ensure the team member belongs to the same organization
-        if ($teamMember->organization_id !== $user->organization_id) {
-            abort(403, 'You can only edit members of your organization.');
-        }
-
-        // Prevent users from changing their own role
-        if ($teamMember->id === $user->id) {
-            return redirect()->back()
-                ->with('error', 'You cannot change your own role.');
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         $data = $validator->validated();
 
-        // Update role in pivot table
-        $user->organization->users()->updateExistingPivot($teamMember->id, ['role' => $data['role']]);
+        $teamMember->name = $data['name'];
+        $teamMember->email = $data['email'];
+        if (!empty($data['password'])) {
+            $teamMember->password = Hash::make($data['password']);
+        }
+        $teamMember->save();
 
-        // Update user's role in the system
-        if ($data['role'] === 'admin') {
-            $teamMember->removeRole('host');
-            $teamMember->removeRole('member');
-            $teamMember->assignRole('org-admin');
-        } elseif ($data['role'] === 'host') {
-            $teamMember->removeRole('org-admin');
-            $teamMember->removeRole('member');
-            $teamMember->assignRole('host');
-        } else {
-            $teamMember->removeRole('org-admin');
-            $teamMember->removeRole('host');
-            $teamMember->assignRole('member');
+        // Update role in pivot table
+        $admin->organization->users()->updateExistingPivot($teamMember->id, ['role' => $data['role']]);
+
+        // Sync system roles
+        $this->syncOrgRole($teamMember, $data['role']);
+
+        return redirect()->route('dashboard.team.index')
+            ->with('success', 'Team member updated successfully!');
+    }
+
+    /**
+     * Suspend a team member
+     */
+    public function suspend(Request $request, $id)
+    {
+        $admin = $this->authorizeOrgAdmin();
+        $teamMember = $this->resolveOrgMember($admin, $id);
+
+        if ($teamMember->id === $admin->id) {
+            return redirect()->back()->with('error', 'You cannot suspend yourself.');
+        }
+
+        $reason = $request->input('reason', '');
+
+        if (method_exists($teamMember, 'suspend')) {
+            $teamMember->suspend($reason);
         }
 
         return redirect()->route('dashboard.team.index')
-            ->with('success', 'Team member role updated successfully!');
+            ->with('success', $teamMember->name . ' has been suspended.');
+    }
+
+    /**
+     * Unsuspend a team member
+     */
+    public function unsuspend($id)
+    {
+        $admin = $this->authorizeOrgAdmin();
+        $teamMember = $this->resolveOrgMember($admin, $id);
+
+        if (method_exists($teamMember, 'unsuspend')) {
+            $teamMember->unsuspend();
+        }
+
+        return redirect()->route('dashboard.team.index')
+            ->with('success', $teamMember->name . ' has been unsuspended.');
+    }
+
+    /**
+     * Log in as a team member (impersonation)
+     */
+    public function loginAs($id)
+    {
+        $admin = $this->authorizeOrgAdmin();
+        $teamMember = $this->resolveOrgMember($admin, $id);
+
+        if ($teamMember->id === $admin->id) {
+            return redirect()->back()->with('error', 'You cannot impersonate yourself.');
+        }
+
+        // Store the admin's ID so the impersonation banner can display it
+        session(['impersonator_id' => $admin->id]);
+
+        Auth::login($teamMember);
+
+        return redirect()->route('tyro-dashboard.index')
+            ->with('success', 'Now logged in as ' . $teamMember->name . '.');
     }
 
     /**
@@ -178,34 +232,19 @@ class TeamController extends Controller
      */
     public function destroy($id)
     {
-        $user = Auth::user();
+        $admin = $this->authorizeOrgAdmin();
+        $teamMember = $this->resolveOrgMember($admin, $id);
 
-        if (!$user->isOrganizationUser() || !$user->organization_id) {
-            abort(403, 'Only organization admins can manage teams.');
+        if ($teamMember->id === $admin->id) {
+            return redirect()->back()->with('error', 'You cannot remove yourself from the team.');
         }
 
-        $teamMember = User::findOrFail($id);
+        $admin->organization->users()->detach($teamMember->id);
 
-        // Ensure the team member belongs to the same organization
-        if ($teamMember->organization_id !== $user->organization_id) {
-            abort(403, 'You can only remove members of your organization.');
-        }
-
-        // Prevent users from removing themselves
-        if ($teamMember->id === $user->id) {
-            return redirect()->back()
-                ->with('error', 'You cannot remove yourself from the team.');
-        }
-
-        // Remove from organization pivot table
-        $user->organization->users()->detach($teamMember->id);
-
-        // Update user's organization_id to null and change to single account
         $teamMember->organization_id = null;
         $teamMember->account_type = 'single';
         $teamMember->save();
 
-        // Update roles
         $teamMember->removeRole('org-admin');
         $teamMember->removeRole('member');
         if (!$teamMember->hasRole('host')) {
@@ -214,5 +253,39 @@ class TeamController extends Controller
 
         return redirect()->route('dashboard.team.index')
             ->with('success', 'Team member removed from organization successfully!');
+    }
+
+    /**
+     * Assign a system role to a user based on an org-level role string.
+     */
+    private function assignOrgRole(User $user, string $role): void
+    {
+        if ($role === 'admin') {
+            $user->assignRole('org-admin');
+        } elseif ($role === 'host') {
+            $user->assignRole('host');
+        } else {
+            $user->assignRole('member');
+        }
+    }
+
+    /**
+     * Sync a user's system roles to match their org-level role.
+     */
+    private function syncOrgRole(User $user, string $role): void
+    {
+        if ($role === 'admin') {
+            $user->removeRole('host');
+            $user->removeRole('member');
+            $user->assignRole('org-admin');
+        } elseif ($role === 'host') {
+            $user->removeRole('org-admin');
+            $user->removeRole('member');
+            $user->assignRole('host');
+        } else {
+            $user->removeRole('org-admin');
+            $user->removeRole('host');
+            $user->assignRole('member');
+        }
     }
 }

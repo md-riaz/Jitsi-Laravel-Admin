@@ -25,6 +25,9 @@ Route::post('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::c
 Route::get('dashboard/team/{id}/edit', [\App\Http\Controllers\Dashboard\TeamController::class, 'edit'])->middleware(['auth'])->name('dashboard.team.edit');
 Route::put('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'update'])->middleware(['auth'])->name('dashboard.team.update');
 Route::delete('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'destroy'])->middleware(['auth'])->name('dashboard.team.destroy');
+Route::post('dashboard/team/{id}/suspend', [\App\Http\Controllers\Dashboard\TeamController::class, 'suspend'])->middleware(['auth'])->name('dashboard.team.suspend');
+Route::post('dashboard/team/{id}/unsuspend', [\App\Http\Controllers\Dashboard\TeamController::class, 'unsuspend'])->middleware(['auth'])->name('dashboard.team.unsuspend');
+Route::post('dashboard/team/{id}/login-as', [\App\Http\Controllers\Dashboard\TeamController::class, 'loginAs'])->middleware(['auth'])->name('dashboard.team.login-as');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
 Route::get('dashboard/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Dashboard\MeetingDiagnosticsController::class, 'show'])
