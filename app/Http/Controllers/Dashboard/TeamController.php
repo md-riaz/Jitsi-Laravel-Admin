@@ -47,22 +47,30 @@ class TeamController extends Controller
         $admin = $this->authorizeOrgAdmin();
         $organization = $admin->organization;
 
-        $query = $organization->users()->withPivot('role', 'created_at');
+        // Query by FK so users created via any path (super admin, org admin, self-registration) all appear.
+        $query = User::where('organization_id', $admin->organization_id)
+                     ->with(['roles', 'organization']);
 
         // Search filter
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('users.name', 'like', "%{$search}%")
-                  ->orWhere('users.email', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        // Role filter
+        // Role filter — map display role to system role slug
         if ($role = $request->input('role')) {
-            $query->wherePivot('role', $role);
+            $roleSlug = $role === 'admin' ? 'org-admin' : $role;
+            $query->whereHas('roles', fn ($q) => $q->where('slug', $roleSlug));
         }
 
-        $teamMembers = $query->get();
+        // Status filter
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $teamMembers = $query->orderBy('created_at', 'desc')->get();
 
         return view('dashboard.team.index', compact('organization', 'teamMembers'));
     }
