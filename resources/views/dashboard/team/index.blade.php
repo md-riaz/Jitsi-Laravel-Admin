@@ -70,6 +70,8 @@
                             <td>
                                 @if($member->pivot->role === 'admin')
                                     <span class="badge badge-primary">Admin</span>
+                                @elseif($member->pivot->role === 'host')
+                                    <span class="badge badge-info">Host</span>
                                 @else
                                     <span class="badge badge-secondary">Member</span>
                                 @endif

@@ -69,7 +69,14 @@
                             <input type="radio" name="role" value="member" {{ old('role', $currentRole) == 'member' ? 'checked' : '' }} required style="margin-top: 4px;">
                             <div style="flex: 1;">
                                 <strong style="display: block;">Member</strong>
-                                <small style="color: #6b7280;">Can create and manage their own meetings within the organization.</small>
+                                <small style="color: #6b7280;">Can join meetings they are invited to. Cannot create or manage meetings.</small>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: start; gap: 12px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="role" value="host" {{ old('role', $currentRole) == 'host' ? 'checked' : '' }} required style="margin-top: 4px;">
+                            <div style="flex: 1;">
+                                <strong style="display: block;">Host</strong>
+                                <small style="color: #6b7280;">Can create and manage their own meetings, invite participants, and moderate sessions.</small>
                             </div>
                         </label>
                         <label style="display: flex; align-items: start; gap: 12px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
