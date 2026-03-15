@@ -58,7 +58,7 @@ class TeamController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,member',
+            'role' => 'required|in:admin,host,member',
         ]);
 
         if ($validator->fails()) {
@@ -81,8 +81,10 @@ class TeamController extends Controller
         // Assign appropriate role
         if ($data['role'] === 'admin') {
             $newMember->assignRole('org-admin');
-        } else {
+        } elseif ($data['role'] === 'host') {
             $newMember->assignRole('host');
+        } else {
+            $newMember->assignRole('member');
         }
 
         // Add to organization pivot table
@@ -125,7 +127,7 @@ class TeamController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'role' => 'required|in:admin,member',
+            'role' => 'required|in:admin,host,member',
         ]);
 
         if ($validator->fails()) {
@@ -155,10 +157,16 @@ class TeamController extends Controller
         // Update user's role in the system
         if ($data['role'] === 'admin') {
             $teamMember->removeRole('host');
+            $teamMember->removeRole('member');
             $teamMember->assignRole('org-admin');
+        } elseif ($data['role'] === 'host') {
+            $teamMember->removeRole('org-admin');
+            $teamMember->removeRole('member');
+            $teamMember->assignRole('host');
         } else {
             $teamMember->removeRole('org-admin');
-            $teamMember->assignRole('host');
+            $teamMember->removeRole('host');
+            $teamMember->assignRole('member');
         }
 
         return redirect()->route('dashboard.team.index')
@@ -199,6 +207,7 @@ class TeamController extends Controller
 
         // Update roles
         $teamMember->removeRole('org-admin');
+        $teamMember->removeRole('member');
         if (!$teamMember->hasRole('host')) {
             $teamMember->assignRole('host');
         }

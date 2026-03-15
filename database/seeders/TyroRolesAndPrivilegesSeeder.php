@@ -25,25 +25,47 @@ class TyroRolesAndPrivilegesSeeder extends Seeder
 
         $privilegesByRole = [
             'super-admin' => [
+                // Meeting privileges
                 'meeting.create',
                 'meeting.update',
                 'meeting.cancel',
                 'meeting.join',
                 'meeting.invite',
                 'meeting.view.audit',
+                'meeting.view.history',
+                // Organization management
+                'org.create',
+                'org.update',
+                'org.delete',
+                'org.suspend',
                 'org.users.manage',
                 'org.settings.manage',
+                'org.branding.manage',
+                // Subscription & billing
+                'subscription.manage',
+                'subscription.assign',
+                'subscription.view',
+                // System-level
                 'system.view.analytics',
+                'system.view.logs',
+                'system.security.manage',
             ],
             'org-admin' => [
+                // Meeting privileges
                 'meeting.create',
                 'meeting.update',
                 'meeting.cancel',
                 'meeting.join',
                 'meeting.invite',
                 'meeting.view.audit',
+                'meeting.view.history',
+                // Organization management (own org only)
                 'org.users.manage',
                 'org.settings.manage',
+                'org.branding.manage',
+                // Reporting
+                'org.view.analytics',
+                'org.recordings.manage',
             ],
             'host' => [
                 'meeting.create',
@@ -51,9 +73,13 @@ class TyroRolesAndPrivilegesSeeder extends Seeder
                 'meeting.cancel',
                 'meeting.join',
                 'meeting.invite',
+                'meeting.moderate',
+                'meeting.view.history',
+                'meeting.attendance.view',
             ],
             'member' => [
                 'meeting.join',
+                'meeting.view.history',
             ],
         ];
 

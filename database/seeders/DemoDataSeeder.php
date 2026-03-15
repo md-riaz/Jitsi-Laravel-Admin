@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Meeting;
 use App\Models\MeetingParticipant;
 use App\Models\Organization;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Carbon\Carbon;
 use HasinHayder\Tyro\Models\Role;
@@ -245,6 +246,88 @@ class DemoDataSeeder extends Seeder
             );
         }
 
+        // Create default subscription plans
+        $plans = [
+            [
+                'name' => 'Free',
+                'slug' => 'free',
+                'description' => 'Get started with basic meeting functionality.',
+                'price' => 0.00,
+                'billing_cycle' => 'monthly',
+                'max_users' => 10,
+                'max_meeting_duration' => 40,
+                'recording_storage_gb' => 0,
+                'concurrent_meetings' => 1,
+                'trial_days' => 0,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Basic',
+                'slug' => 'basic',
+                'description' => 'For small teams that need reliable meetings.',
+                'price' => 9.99,
+                'billing_cycle' => 'monthly',
+                'max_users' => 25,
+                'max_meeting_duration' => 120,
+                'recording_storage_gb' => 5,
+                'concurrent_meetings' => 3,
+                'trial_days' => 14,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Pro',
+                'slug' => 'pro',
+                'description' => 'For growing organizations with advanced needs.',
+                'price' => 29.99,
+                'billing_cycle' => 'monthly',
+                'max_users' => 100,
+                'max_meeting_duration' => null,
+                'recording_storage_gb' => 50,
+                'concurrent_meetings' => 10,
+                'trial_days' => 14,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Enterprise',
+                'slug' => 'enterprise',
+                'description' => 'Unlimited scale for large enterprises.',
+                'price' => 99.99,
+                'billing_cycle' => 'monthly',
+                'max_users' => null,
+                'max_meeting_duration' => null,
+                'recording_storage_gb' => null,
+                'concurrent_meetings' => null,
+                'trial_days' => 30,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($plans as $planData) {
+            SubscriptionPlan::firstOrCreate(
+                ['slug' => $planData['slug']],
+                $planData
+            );
+        }
+
+        // Assign Pro plan to Alpha Net and Free plan to Demo Organization
+        $proPlan = SubscriptionPlan::where('slug', 'pro')->first();
+        $freePlan = SubscriptionPlan::where('slug', 'free')->first();
+
+        if ($proPlan && !$alphaNet->subscription_plan_id) {
+            $alphaNet->subscription_plan_id = $proPlan->id;
+            $alphaNet->subscription_status = 'active';
+            $alphaNet->subscription_starts_at = now();
+            $alphaNet->subscription_ends_at = now()->addYear();
+            $alphaNet->save();
+        }
+
+        if ($freePlan && !$organization->subscription_plan_id) {
+            $organization->subscription_plan_id = $freePlan->id;
+            $organization->subscription_status = 'active';
+            $organization->subscription_starts_at = now();
+            $organization->save();
+        }
+
         $this->command->info('Demo data created successfully!');
         $this->command->info('');
         $this->command->info('=== Super Admin (Platform Management) ===');
@@ -264,6 +347,11 @@ class DemoDataSeeder extends Seeder
         $this->command->info('Team members created: ' . count($alphaNetUsers));
         foreach ($teamMembers as $member) {
             $this->command->info('  - ' . $member['name'] . ' (' . $member['email'] . ') - ' . $member['designation']);
+        }
+        $this->command->info('');
+        $this->command->info('=== Subscription Plans Created ===');
+        foreach ($plans as $plan) {
+            $this->command->info('  - ' . $plan['name'] . ' ($' . $plan['price'] . '/' . $plan['billing_cycle'] . ')');
         }
         $this->command->info('');
         $this->command->info('=== Meetings Created ===');
