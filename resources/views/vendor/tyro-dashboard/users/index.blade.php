@@ -63,12 +63,14 @@
 
 <!-- Users Table -->
 <div class="card">
+    @php($users->load('organization'))
     @if($users->count())
     <div class="table-container">
         <table class="table">
             <thead>
                 <tr>
                     <th>User</th>
+                    <th>Organization</th>
                     <th>Roles</th>
                     <th>Status</th>
                     <th>Joined</th>
@@ -92,6 +94,13 @@
                                 <div class="user-cell-email">{{ $listUser->email }}</div>
                             </div>
                         </a>
+                    </td>
+                    <td>
+                        @if($listUser->organization_id && $listUser->organization)
+                            <span style="font-size: 0.875rem; color: #374151;">{{ $listUser->organization->name }}</span>
+                        @else
+                            <span style="font-size: 0.875rem; color: #9ca3af;">None (Personal)</span>
+                        @endif
                     </td>
                     <td>
                         <div class="badge-list">

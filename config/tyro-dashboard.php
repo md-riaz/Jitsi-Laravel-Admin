@@ -232,14 +232,18 @@ return [
         'organizations' => [
             'model' => 'App\\Models\\Organization',
             'title' => 'Organizations',
-            'roles' => ['super-admin', 'org-admin'],
+            'roles' => ['super-admin'],
             'fields' => [
-                'name' => ['type' => 'text', 'label' => 'Name', 'searchable' => true],
+                'name' => ['type' => 'text', 'label' => 'Name', 'rules' => 'required|string|max:255', 'searchable' => true],
                 'slug' => ['type' => 'text', 'label' => 'Slug', 'searchable' => true],
+                'is_active' => ['type' => 'checkbox', 'label' => 'Active', 'default' => true, 'help_text' => 'Deactivate to prevent all users from logging in.'],
+                'subscription_plan_id' => ['type' => 'select', 'label' => 'Subscription Plan', 'relationship' => 'subscriptionPlan', 'rules' => 'nullable|exists:subscription_plans,id'],
+                'subscription_starts_at' => ['type' => 'datetime-local', 'label' => 'Subscription Start', 'rules' => 'nullable|date'],
+                'subscription_ends_at' => ['type' => 'datetime-local', 'label' => 'Subscription End', 'rules' => 'nullable|date'],
+                'subscription_status' => ['type' => 'select', 'label' => 'Subscription Status', 'options' => ['active' => 'Active', 'trialing' => 'Trialing', 'suspended' => 'Suspended', 'expired' => 'Expired']],
+                'billing_notification_days' => ['type' => 'number', 'label' => 'Billing Notification Days', 'rules' => 'nullable|integer|min:1|max:90', 'default' => 5, 'help_text' => 'Number of days before subscription expiry to notify Org Admin.'],
                 'primary_color' => ['type' => 'text', 'label' => 'Primary Color (hex)', 'rules' => 'nullable|string|max:20', 'help_text' => 'e.g. #6366f1'],
                 'secondary_color' => ['type' => 'text', 'label' => 'Secondary Color (hex)', 'rules' => 'nullable|string|max:20', 'help_text' => 'e.g. #a5b4fc'],
-                'subscription_status' => ['type' => 'select', 'label' => 'Subscription Status', 'options' => ['active' => 'Active', 'trialing' => 'Trialing', 'suspended' => 'Suspended', 'expired' => 'Expired'], 'roles' => ['super-admin']],
-                'subscription_ends_at' => ['type' => 'datetime-local', 'label' => 'Subscription Ends At', 'rules' => 'nullable|date', 'roles' => ['super-admin']],
             ],
         ],
         'subscription_plans' => [

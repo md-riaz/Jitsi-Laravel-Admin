@@ -9,6 +9,7 @@ Route::get('/', function () {
 // Custom Registration Routes (override Tyro Login)
 Route::get('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register.submit');
+Route::get('/pending-approval', [\App\Http\Controllers\Auth\RegisterController::class, 'pendingApproval'])->middleware(['auth'])->name('auth.pending-approval');
 
 Route::get('dashboard/my-meetings', [\App\Http\Controllers\Dashboard\MyMeetingsController::class, 'index'])->middleware(['auth'])->name('dashboard.my-meetings');
 
@@ -30,6 +31,7 @@ Route::post('dashboard/team/{id}/unsuspend', [\App\Http\Controllers\Dashboard\Te
 Route::post('dashboard/team/{id}/login-as', [\App\Http\Controllers\Dashboard\TeamController::class, 'loginAs'])->middleware(['auth'])->name('dashboard.team.login-as');
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
+Route::get('dashboard/subscription', [\App\Http\Controllers\Dashboard\SubscriptionController::class, 'show'])->middleware(['auth'])->name('dashboard.subscription');
 Route::get('dashboard/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Dashboard\MeetingDiagnosticsController::class, 'show'])
     ->middleware(['auth'])
     ->name('dashboard.meetings.diagnostics');
@@ -50,6 +52,11 @@ Route::get('/meet/{meeting}/download-ics', [\App\Http\Controllers\Web\MeetingPag
 // Guest invite routes
 Route::get('/invite/{token}', [\App\Http\Controllers\Web\InviteController::class, 'show'])->name('invite.show');
 Route::post('/invite/{token}/accept', [\App\Http\Controllers\Web\InviteController::class, 'accept'])->name('invite.accept');
+
+// Pending User Management Routes (for organization admins)
+Route::get('dashboard/pending-users', [\App\Http\Controllers\Dashboard\PendingUsersController::class, 'index'])->middleware(['auth'])->name('dashboard.pending-users.index');
+Route::post('dashboard/pending-users/{id}/approve', [\App\Http\Controllers\Dashboard\PendingUsersController::class, 'approve'])->middleware(['auth'])->name('dashboard.pending-users.approve');
+Route::delete('dashboard/pending-users/{id}/reject', [\App\Http\Controllers\Dashboard\PendingUsersController::class, 'reject'])->middleware(['auth'])->name('dashboard.pending-users.reject');
 
 // Alias expected by Laravel auth middleware when unauthenticated
 Route::get('/_login', fn () => redirect()->route('tyro-login.login'))->name('login');

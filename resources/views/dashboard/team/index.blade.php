@@ -56,9 +56,17 @@
                     <option value="member" {{ request('role') === 'member' ? 'selected' : '' }}>Member</option>
                 </select>
             </div>
+            <div style="min-width: 140px;">
+                <label style="display: block; margin-bottom: 4px; font-size: 0.875rem; font-weight: 500;">Status</label>
+                <select name="status" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                    <option value="">All Status</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                </select>
+            </div>
             <div style="display: flex; gap: 8px;">
                 <button type="submit" class="btn btn-secondary" style="padding: 8px 16px;">Filter</button>
-                @if(request('search') || request('role'))
+                @if(request('search') || request('role') || request('status'))
                     <a href="{{ route('dashboard.team.index') }}" class="btn btn-secondary" style="padding: 8px 16px;">Clear</a>
                 @endif
             </div>
@@ -100,22 +108,24 @@
                                 @endif
                             </td>
                             <td>
-                                @if($member->pivot->role === 'admin')
+                                @if($member->hasRole('org-admin'))
                                     <span class="badge badge-primary">Admin</span>
-                                @elseif($member->pivot->role === 'host')
+                                @elseif($member->hasRole('host'))
                                     <span class="badge badge-info">Host</span>
                                 @else
                                     <span class="badge badge-secondary">Member</span>
                                 @endif
                             </td>
                             <td>
-                                @if(method_exists($member, 'isSuspended') && $member->isSuspended())
+                                @if($member->status === 'pending')
+                                    <span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">Pending</span>
+                                @elseif(method_exists($member, 'isSuspended') && $member->isSuspended())
                                     <span class="badge badge-danger" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">Suspended</span>
                                 @else
                                     <span class="badge badge-success" style="background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;">Active</span>
                                 @endif
                             </td>
-                            <td>{{ $member->pivot->created_at ? $member->pivot->created_at->format('M d, Y') : '—' }}</td>
+                            <td>{{ $member->created_at ? $member->created_at->format('M d, Y') : '—' }}</td>
                             <td>
                                 @if($member->id !== auth()->id())
                                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">

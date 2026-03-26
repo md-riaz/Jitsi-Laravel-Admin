@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
+use HasinHayder\Tyro\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
@@ -18,7 +19,10 @@ class RegisterController extends Controller
      */
     public function showRegistrationForm()
     {
-        return view('auth.register');
+        $organizations = Organization::where('is_active', true)->orderBy('name')->get();
+        $freePlan = SubscriptionPlan::where('slug', 'free')->where('is_active', true)->first();
+
+        return view('auth.register', compact('organizations', 'freePlan'));
     }
 
     /**
@@ -31,9 +35,10 @@ class RegisterController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'account_type' => 'required|in:single,organization',
-            'organization_name' => 'required_if:account_type,organization|nullable|string|max:255',
+            'organization_id' => 'required_if:account_type,organization|nullable|exists:organizations,id',
         ], [
-            'organization_name.required_if' => 'Organization name is required when creating an organization account.',
+            'organization_id.required_if' => 'Please select an organization to join.',
+            'organization_id.exists' => 'The selected organization does not exist.',
         ]);
 
         if ($validator->fails()) {
@@ -44,41 +49,64 @@ class RegisterController extends Controller
 
         $data = $validator->validated();
 
-        // Create the organization if account type is organization
-        $organizationId = null;
-        if ($data['account_type'] === 'organization' && !empty($data['organization_name'])) {
-            $organization = Organization::create([
-                'name' => $data['organization_name'],
-                'slug' => Str::slug($data['organization_name']) . '-' . Str::random(6),
+        if ($data['account_type'] === 'organization') {
+            // Verify the chosen org is active
+            $organization = Organization::find($data['organization_id']);
+            if (!$organization || !$organization->is_active) {
+                return redirect()->back()
+                    ->withErrors(['organization_id' => 'The selected organization is not accepting new members.'])
+                    ->withInput();
+            }
+
+            // Create the user in a pending state – awaiting Org Admin approval
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'account_type' => 'organization',
+                'status' => 'pending',
+                'organization_id' => $organization->id,
             ]);
-            $organizationId = $organization->id;
+
+            // Assign member role (will be upgraded by Org Admin if needed)
+            $memberRole = Role::where('slug', 'member')->firstOrFail();
+            $user->assignRole($memberRole);
+
+            // Add to the organization pivot table with member role
+            $organization->users()->attach($user->id, ['role' => 'member']);
+
+            // Log the user in so they can see the pending-approval page
+            Auth::login($user);
+
+            return redirect()->route('auth.pending-approval');
         }
 
-        // Create the user
+        // Personal / single account – active immediately, on Free Plan
+        $freePlan = SubscriptionPlan::where('slug', 'free')->where('is_active', true)->first();
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'account_type' => $data['account_type'],
-            'organization_id' => $organizationId,
+            'account_type' => 'single',
+            'status' => 'active',
+            'subscription_plan_id' => $freePlan?->id,
         ]);
 
-        // Assign appropriate role based on account type
-        if ($data['account_type'] === 'organization') {
-            $user->assignRole('org-admin');
+        $hostRole = Role::where('slug', 'host')->firstOrFail();
+        $user->assignRole($hostRole);
 
-            // Add user to organization pivot table
-            if ($organizationId) {
-                $user->organization->users()->attach($user->id, ['role' => 'admin']);
-            }
-        } else {
-            $user->assignRole('host');
-        }
-
-        // Log the user in
         Auth::login($user);
 
         return redirect()->route('dashboard.my-meetings')
             ->with('success', 'Account created successfully!');
+    }
+
+    /**
+     * Show the pending-approval page for users awaiting Org Admin approval.
+     */
+    public function pendingApproval()
+    {
+        return view('auth.pending-approval');
     }
 }

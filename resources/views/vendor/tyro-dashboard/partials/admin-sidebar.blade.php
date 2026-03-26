@@ -25,6 +25,17 @@
     @endif
 
     <nav class="sidebar-nav">
+        <!-- Billing Notification Banner (org admin only) -->
+        @if($billingExpired ?? false)
+        <div style="margin: 0.75rem 1rem; padding: 0.75rem 1rem; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 6px; font-size: 0.8125rem; color: #991b1b;">
+            <strong>Subscription Expired.</strong> Please contact your administrator to renew your subscription.
+        </div>
+        @elseif($billingExpiringSoon ?? false)
+        <div style="margin: 0.75rem 1rem; padding: 0.75rem 1rem; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 6px; font-size: 0.8125rem; color: #92400e;">
+            <strong>Subscription Expiring Soon.</strong> Your subscription expires {{ isset($subscriptionEndsAt) ? \Carbon\Carbon::parse($subscriptionEndsAt)->diffForHumans() : 'soon' }}. Please update payment now.
+        </div>
+        @endif
+
         <!-- Main Menu -->
         <div class="sidebar-section">
             <div class="sidebar-section-title">Menu</div>
@@ -39,6 +50,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 My Profile
+            </a>
+            <a href="{{ route('dashboard.subscription') }}" class="sidebar-link {{ request()->routeIs('dashboard.subscription') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                My Subscription
             </a>
             <a href="{{ route('dashboard.create-meeting') }}" class="sidebar-link {{ request()->routeIs('dashboard.create-meeting') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -106,6 +123,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                     User Management
+                </a>
+                <a href="{{ route('dashboard.pending-users.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.pending-users.*') ? 'active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pending Approvals
+                    @if($sidebarPendingCount ?? 0)
+                        <span style="margin-left: auto; background: #f59e0b; color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px;">{{ $sidebarPendingCount }}</span>
+                    @endif
                 </a>
             @else
                 {{-- Super-admin: platform-wide user/role/privilege management --}}
