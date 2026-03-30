@@ -24,3 +24,8 @@
 - **Failure mode:** Started with a heavier PostgreSQL-based Docker stack when the current project stage only needed a simpler local deployment.
 - **Detection signal:** User explicitly requested SQLite instead of a full database service.
 - **Prevention rule:** Default to the lightest viable infrastructure for first-pass deployments, and only add separate stateful services when the user asks for them or the app clearly requires them.
+
+## 2026-03-30 — Do not force URLs in local Docker runtime
+- **Failure mode:** Forced global URL generation in application bootstrapping, which made local Docker auth pages render absolute secure URLs even though the app was served over plain HTTP.
+- **Detection signal:** User hit `Unsupported SSL request`, the rendered login form used `https://localhost:18090/...`, and the app still had global URL forcing enabled in `AppServiceProvider`.
+- **Prevention rule:** In local Docker, do not force scheme or root URL globally unless the runtime actually terminates TLS there; let URL generation follow the real incoming request and clear Laravel caches after URL-generation changes.

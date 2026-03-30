@@ -411,10 +411,12 @@ Want to explore these features hands-on? Follow the [Quick Start](#-quick-start)
 ### Quick Start with Docker
 
 This repo now includes a ready-to-run `docker-compose.yml` for a lean local stack:
-- `app` serves Laravel on port `8090`
+- `app` serves Laravel on container port `8090` and is published on host port `18090`
 - `queue` runs `php artisan queue:work`
 - `scheduler` runs `php artisan schedule:run` every minute
 - SQLite is used through a persisted Docker volume, so no separate database service is required
+
+Important: this stack deploys only the admin/orchestration side. It does not install or run Jitsi Meet. Configure `JITSI_DOMAIN` to point to an external Jitsi instance.
 
 #### 1. Configure environment
 
@@ -425,6 +427,8 @@ cp stack.env .env
 ```
 
 Set at least these values before a real deployment:
+
+Do not try to add Jitsi Meet containers to this compose stack. This repository only manages the Laravel admin side and integrates with Jitsi as an external system.
 
 ```env
 APP_KEY=base64:YOUR_APP_KEY_HERE
@@ -449,7 +453,7 @@ SQLite is the default in this Docker setup, so you do not need to configure `DB_
 docker compose up --build -d
 ```
 
-Access the application at: http://localhost:8090
+Access the application at: http://localhost:18090
 
 #### 3. First-run notes
 
@@ -479,7 +483,6 @@ docker compose down
 #### 5. Persistent data
 
 Docker named volumes are used for:
-- PostgreSQL data
 - Laravel `storage`
 - Laravel `database`
 

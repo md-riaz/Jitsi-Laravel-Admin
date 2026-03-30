@@ -1,4 +1,7 @@
 services:
+  # Admin/orchestration stack only.
+  # Jitsi Meet itself is NOT installed or run by this compose file.
+  # Point the app at an external Jitsi instance via JITSI_DOMAIN.
   app:
     build:
       context: .
@@ -8,7 +11,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:8090
+      APP_URL: http://localhost:18090
       PORT: 8090
       RUN_MIGRATIONS: "true"
       DB_CONNECTION: sqlite
@@ -17,7 +20,7 @@ services:
       CACHE_STORE: database
       SESSION_DRIVER: database
     ports:
-      - "8090:8090"
+      - "18090:8090"
     volumes:
       - app_storage:/var/www/html/storage
       - app_database:/var/www/html/database
@@ -32,7 +35,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:8090
+      APP_URL: http://localhost:18090
       RUN_MIGRATIONS: "false"
       DB_CONNECTION: sqlite
       DB_DATABASE: /var/www/html/database/database.sqlite
@@ -57,7 +60,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:8090
+      APP_URL: http://localhost:18090
       RUN_MIGRATIONS: "false"
       DB_CONNECTION: sqlite
       DB_DATABASE: /var/www/html/database/database.sqlite

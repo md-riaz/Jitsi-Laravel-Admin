@@ -18,10 +18,6 @@ wait_for_database() {
   esac
 }
 
-if [ ! -f .env ] && [ -f .env.example ]; then
-  cp .env.example .env
-fi
-
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache database
 
 if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
@@ -30,15 +26,16 @@ fi
 
 wait_for_database
 
-if [ -f .env ]; then
-  php artisan key:generate --force --no-interaction || true
-fi
+php artisan optimize:clear --no-interaction || true
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   php artisan migrate --force --no-interaction
 fi
 
-php artisan config:clear --no-interaction || true
 php artisan storage:link --no-interaction || true
+
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
 
 exec php artisan serve --host=0.0.0.0 --port="${PORT:-8090}"

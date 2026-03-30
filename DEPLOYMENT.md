@@ -31,11 +31,13 @@ This guide covers deploying Jitsi Admin to production environments.
 
 Use this option on platforms that deploy directly from a repository URL.
 
+Important: this Docker setup deploys only the Laravel admin/orchestration application. It does not install Jitsi Meet, Prosody, Jicofo, or Jitsi Videobridge. You must point `JITSI_DOMAIN` at an existing external Jitsi deployment.
+
 1. Connect this GitHub repository in your Docker-capable host.
 2. Build from the root `Dockerfile`.
 3. Configure runtime env vars (`APP_KEY`, database credentials, mail, queue, Jitsi vars, etc.).
 4. Set `RUN_MIGRATIONS=true` only when startup migrations are desired.
-5. Publish port `8090` (or pass `PORT` from your platform).
+5. Publish host port `18090` to container port `8090` (or pass `PORT` from your platform if your host requires a different mapping).
 
 Example local validation:
 
@@ -45,7 +47,7 @@ docker compose up --build -d
 ```
 
 The included `docker-compose.yml` starts three services:
-- `app` on port `8090`
+- `app` published on host port `18090` and serving on container port `8090`
 - `queue` for database-backed jobs
 - `scheduler` for Laravel scheduled commands
 
