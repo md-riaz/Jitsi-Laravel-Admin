@@ -178,9 +178,9 @@
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="visibility">Visibility *</label>
                         <select id="visibility" name="visibility" required onchange="toggleOrganizationRequirement()">
-                            <option value="invite_only" {{ old('visibility', 'invite_only') == 'invite_only' ? 'selected' : '' }}>Invite Only</option>
-                            <option value="link_anyone" {{ old('visibility') == 'link_anyone' ? 'selected' : '' }}>Anyone with Link</option>
-                            <option value="org_only" {{ old('visibility') == 'org_only' ? 'selected' : '' }}>Organization Only</option>
+                            <option value="invite_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'invite_only' ? 'selected' : '' }}>Invite Only</option>
+                            <option value="link_anyone" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'link_anyone' ? 'selected' : '' }}>Anyone with Link</option>
+                            <option value="org_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'org_only' ? 'selected' : '' }}>Organization Only</option>
                         </select>
                     </div>
                 </div>
@@ -310,7 +310,29 @@ function toggleAdvanced() {
     toggle.classList.toggle('open', open);
 }
 
+function applyBrowserTimezoneDefault() {
+    const timezoneSelect = document.getElementById('timezone');
+    const hasOldTimezone = @json(old('timezone')) !== null;
+
+    if (hasOldTimezone || !window.Intl || !Intl.DateTimeFormat) {
+        return;
+    }
+
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    if (!browserTimezone) {
+        return;
+    }
+
+    const supportedTimezone = Array.from(timezoneSelect.options).some(option => option.value === browserTimezone);
+
+    if (supportedTimezone) {
+        timezoneSelect.value = browserTimezone;
+    }
+}
+
 // Initialize
+applyBrowserTimezoneDefault();
 setMeetingType(document.getElementById('meeting_type').value);
 toggleOrganizationRequirement();
 </script>

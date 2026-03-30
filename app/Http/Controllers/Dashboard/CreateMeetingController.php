@@ -41,7 +41,10 @@ class CreateMeetingController extends Controller
             'Australia/Sydney' => 'Sydney',
         ];
 
-        return view('dashboard.create-meeting', compact('organizations', 'timezones'));
+        $defaultTimezone = 'UTC';
+        $defaultVisibility = 'link_anyone';
+
+        return view('dashboard.create-meeting', compact('organizations', 'timezones', 'defaultTimezone', 'defaultVisibility'));
     }
     public function store(Request $request)
     {

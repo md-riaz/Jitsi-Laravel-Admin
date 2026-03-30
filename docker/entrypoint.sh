@@ -32,6 +32,10 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   php artisan migrate --force --no-interaction
 fi
 
+if [ "${RUN_SEEDERS:-false}" = "true" ]; then
+  php artisan db:seed --force --no-interaction
+fi
+
 php artisan storage:link --no-interaction || true
 
 if [ "$#" -gt 0 ]; then

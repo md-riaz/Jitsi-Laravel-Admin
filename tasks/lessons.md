@@ -29,3 +29,8 @@
 - **Failure mode:** Forced global URL generation in application bootstrapping, which made local Docker auth pages render absolute secure URLs even though the app was served over plain HTTP.
 - **Detection signal:** User hit `Unsupported SSL request`, the rendered login form used `https://localhost:18090/...`, and the app still had global URL forcing enabled in `AppServiceProvider`.
 - **Prevention rule:** In local Docker, do not force scheme or root URL globally unless the runtime actually terminates TLS there; let URL generation follow the real incoming request and clear Laravel caches after URL-generation changes.
+
+## 2026-03-30 — Migrations do not imply seeding in Docker startup
+- **Failure mode:** Assumed seeded demo data would exist after container deployment because migrations were running.
+- **Detection signal:** Docker startup only executed `php artisan migrate --force --no-interaction`, while `DatabaseSeeder` and demo seeders existed but were never invoked.
+- **Prevention rule:** When seeded data is expected in a containerized Laravel environment, wire seeding explicitly into startup with an opt-in env flag such as `RUN_SEEDERS=true`.
