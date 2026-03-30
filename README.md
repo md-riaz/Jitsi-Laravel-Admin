@@ -410,158 +410,83 @@ Want to explore these features hands-on? Follow the [Quick Start](#-quick-start)
 
 ### Quick Start with Docker
 
-The easiest way to deploy this application in production is using Docker. The included `Dockerfile` builds a production-ready image.
+This repo now includes a ready-to-run `docker-compose.yml` for a lean local stack:
+- `app` serves Laravel on port `8090`
+- `queue` runs `php artisan queue:work`
+- `scheduler` runs `php artisan schedule:run` every minute
+- SQLite is used through a persisted Docker volume, so no separate database service is required
 
-#### 1. Local Docker Testing
+#### 1. Configure environment
 
-Test the Docker setup locally:
+Start from the provided Docker env file:
 
 ```bash
-docker compose up --build
+cp stack.env .env
+```
+
+Set at least these values before a real deployment:
+
+```env
+APP_KEY=base64:YOUR_APP_KEY_HERE
+APP_URL=https://your-domain.com
+MAIL_HOST=[mail_host]
+MAIL_PORT=[mail_port]
+MAIL_USERNAME=[mail_username]
+MAIL_PASSWORD=[mail_password]
+MAIL_FROM_ADDRESS=[email]
+JITSI_DOMAIN=meet.your-domain.com
+JITSI_JWT_SECRET=[secret]
+JITSI_JWT_ISSUER=[issuer]
+JITSI_JWT_AUDIENCE=jitsi
+JITSI_JWT_SUB=meet.your-domain.com
+```
+
+SQLite is the default in this Docker setup, so you do not need to configure `DB_HOST`, `DB_PORT`, `DB_USERNAME`, or `DB_PASSWORD` unless you later switch to MySQL/PostgreSQL.
+
+#### 2. Build and run the stack
+
+```bash
+docker compose up --build -d
 ```
 
 Access the application at: http://localhost:8090
 
-#### 2. Production Docker Deployment
+#### 3. First-run notes
 
-For production, you have several options:
+- `app` runs migrations automatically when `RUN_MIGRATIONS=true`
+- after the first successful boot, set `RUN_MIGRATIONS=false` in `.env` or your deployment platform
+- queue, cache, and session storage all use the database driver, which matches the app defaults
 
-**Option A: Docker Compose (Recommended for single-server deployments)**
-
-Create a `docker-compose.production.yml`:
-
-```yaml
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
-    environment:
-      # App Configuration
-      APP_NAME: "Jitsi Admin"
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_KEY: "base64:YOUR_APP_KEY_HERE"  # Generate with: php artisan key:generate --show
-      APP_URL: https://your-domain.com
-      
-      # Database Configuration (SQLite - single file database)
-      DB_CONNECTION: sqlite
-      DB_DATABASE: /var/www/html/database/database.sqlite
-      
-      # Run migrations on container start (set to "false" after first run)
-      RUN_MIGRATIONS: "true"
-      
-      # Mail Configuration (required for invitations)
-      MAIL_MAILER: smtp
-      MAIL_HOST: smtp.your-provider.com
-      MAIL_PORT: 587
-      MAIL_USERNAME: your-email@domain.com
-      MAIL_PASSWORD: your-password
-      MAIL_ENCRYPTION: tls
-      MAIL_FROM_ADDRESS: noreply@your-domain.com
-      MAIL_FROM_NAME: "Jitsi Admin"
-      
-      # Jitsi Integration (see Jitsi Integration Setup section above)
-      JITSI_DOMAIN: meet.your-domain.com
-      JITSI_JWT_SECRET: your-shared-secret-key
-      JITSI_JWT_ISSUER: your-app
-      JITSI_JWT_AUDIENCE: jitsi
-      JITSI_JWT_SUB: meet.your-domain.com
-      
-      # Queue & Cache (database-based, no Redis needed)
-      QUEUE_CONNECTION: database
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      
-      # Server Port
-      PORT: 8090
-      
-    volumes:
-      # Persist database and storage across container restarts
-      - ./database:/var/www/html/database
-      - ./storage:/var/www/html/storage
-    
-    restart: unless-stopped
-    
-    # Optional: Run queue worker in same container
-    command: >
-      sh -c "php artisan serve --host=0.0.0.0 --port=8090 &
-             php artisan queue:work database --tries=3 --sleep=3 --max-time=3600"
-```
-
-Deploy with:
+#### 4. Common Docker operations
 
 ```bash
-docker compose -f docker-compose.production.yml up -d
+# View running services
+docker compose ps
+
+# Follow app logs
+docker compose logs -f app
+
+# Follow queue worker logs
+docker compose logs -f queue
+
+# Run artisan inside the app container
+docker compose exec app php artisan about
+
+# Stop the stack
+docker compose down
 ```
 
-**Option B: Docker with PostgreSQL (For larger deployments)**
+#### 5. Persistent data
 
-```yaml
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
-    environment:
-      APP_NAME: "Jitsi Admin"
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_KEY: "base64:YOUR_APP_KEY_HERE"
-      APP_URL: https://your-domain.com
-      
-      # PostgreSQL Configuration
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: jitsi_admin
-      DB_USERNAME: jitsi_user
-      DB_PASSWORD: secure_password_here
-      
-      RUN_MIGRATIONS: "true"
-      
-      # Mail settings...
-      MAIL_MAILER: smtp
-      MAIL_HOST: smtp.your-provider.com
-      MAIL_PORT: 587
-      MAIL_USERNAME: your-email@domain.com
-      MAIL_PASSWORD: your-password
-      MAIL_ENCRYPTION: tls
-      MAIL_FROM_ADDRESS: noreply@your-domain.com
-      MAIL_FROM_NAME: "Jitsi Admin"
-      
-      # Jitsi settings...
-      JITSI_DOMAIN: meet.your-domain.com
-      JITSI_JWT_SECRET: your-shared-secret-key
-      JITSI_JWT_ISSUER: your-app
-      JITSI_JWT_AUDIENCE: jitsi
-      JITSI_JWT_SUB: meet.your-domain.com
-      
-      QUEUE_CONNECTION: database
-      CACHE_STORE: database
-      SESSION_DRIVER: database
-      PORT: 8090
-      
-    depends_on:
-      - db
-    restart: unless-stopped
-    
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: jitsi_admin
-      POSTGRES_USER: jitsi_user
-      POSTGRES_PASSWORD: secure_password_here
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+Docker named volumes are used for:
+- PostgreSQL data
+- Laravel `storage`
+- Laravel `database`
 
-volumes:
-  postgres_data:
+If you want a full reset locally:
+
+```bash
+docker compose down -v
 ```
 
 **Option C: Platform-as-a-Service (Heroku, Railway, Render, etc.)**

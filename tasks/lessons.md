@@ -19,3 +19,8 @@
 - **Failure mode:** Docker setup used a common default port (`8080`) instead of the requested project-specific deployment port.
 - **Detection signal:** User follow-up explicitly requested port `8090`.
 - **Prevention rule:** When user specifies operational defaults (ports, tags, env names), encode them consistently across runtime files and documentation before finalizing.
+
+## 2026-03-30 — Match infrastructure scope to current deployment stage
+- **Failure mode:** Started with a heavier PostgreSQL-based Docker stack when the current project stage only needed a simpler local deployment.
+- **Detection signal:** User explicitly requested SQLite instead of a full database service.
+- **Prevention rule:** Default to the lightest viable infrastructure for first-pass deployments, and only add separate stateful services when the user asks for them or the app clearly requires them.

@@ -1,15 +1,19 @@
-# TODO - Docker Port Correction
+# TODO - Docker Deployment
 
 ## Goal
-Align Docker deployment defaults with requested platform port `8090`.
+Deploy this Laravel Jitsi admin project with Docker using the smallest production-ready setup that matches the app's requirements.
 
 ## Acceptance Criteria
-- [x] Docker runtime defaults use port `8090`.
-- [x] Compose service maps and environment use `8090`.
-- [x] Documentation reflects `8090` consistently.
+- [ ] Root `Dockerfile` exists and builds the Laravel app with Composer and Vite assets.
+- [ ] `docker-compose.yml` provisions the app and required supporting services.
+- [ ] Runtime supports web, queue worker, and scheduler responsibilities.
+- [ ] Docker docs reflect how to start the stack on port `8090`.
 
 ## Working Notes
-- Scope intentionally minimal: only deployment/runtime artifacts and docs.
+- Existing `docker/entrypoint.sh` already starts Laravel on `${PORT:-8090}`.
+- App defaults expect database-backed queue, cache, and session drivers.
+- User requested SQLite instead of a separate database service.
+- Docker deployment should stay minimal and avoid custom dashboard changes.
 
 ## Plan
 - [x] Restate goal + acceptance criteria
@@ -19,8 +23,10 @@ Align Docker deployment defaults with requested platform port `8090`.
 - [x] Add/adjust tests
 - [x] Run verification (lint/tests/build/manual repro)
 - [x] Summarize changes + verification story
-- [x] Record lessons (if any)
+- [ ] Record lessons (if any)
 
 ## Results
-- Updated Docker defaults and docs from `8080` to `8090`.
-- Verified formatting and tests.
+- Switched Docker deployment from PostgreSQL to SQLite-backed volumes.
+- Kept separate app, queue, and scheduler services using the same image.
+- Updated `docker/entrypoint.sh` to create the SQLite database file automatically.
+- Verified `docker compose config` and editor diagnostics for Docker/runtime files.

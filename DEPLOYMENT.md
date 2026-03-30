@@ -40,8 +40,18 @@ Use this option on platforms that deploy directly from a repository URL.
 Example local validation:
 
 ```bash
-docker compose up --build
+cp stack.env .env
+docker compose up --build -d
 ```
+
+The included `docker-compose.yml` starts three services:
+- `app` on port `8090`
+- `queue` for database-backed jobs
+- `scheduler` for Laravel scheduled commands
+
+SQLite is used by default and persisted in the `app_database` Docker volume, so no separate database container is required.
+
+For first boot, keep `RUN_MIGRATIONS=true`. After the schema is created, switch it to `false` for normal restarts.
 
 ### 1. Server Preparation
 
