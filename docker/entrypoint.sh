@@ -47,4 +47,4 @@ if [ "$#" -gt 0 ]; then
   exec "$@"
 fi
 
-exec php artisan serve --host=0.0.0.0 --port="${PORT:-8090}"
+exec /usr/bin/supervisord -c /etc/supervisord.conf

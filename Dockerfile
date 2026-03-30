@@ -47,13 +47,10 @@ RUN docker-php-ext-install \
     zip \
     gd
 
-FROM php:8.3-cli-alpine AS runtime
+FROM php:8.3-fpm-alpine AS runtime
 WORKDIR /var/www/html
 
 # Install runtime dependencies for extensions
-# intl extension needs icu-libs
-# zip extension needs libzip
-# oniguruma (used by mbstring) needs oniguruma
 RUN apk add --no-cache \
     bash \
     curl \
@@ -65,11 +62,19 @@ RUN apk add --no-cache \
     postgresql-client \
     freetype \
     libjpeg-turbo \
-    libpng
+    libpng \
+    nginx \
+    supervisor
 
 # Copy pre-compiled PHP extensions from builder
 COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
 COPY --from=builder /usr/local/etc/php/conf.d /usr/local/etc/php/conf.d
+
+# Setup Nginx and Supervisor
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisord.conf /etc/supervisord.conf
+RUN mkdir -p /var/log/supervisor /var/run/nginx && \
+    chown -R www-data:www-data /var/lib/nginx /var/log/nginx
 
 COPY . .
 COPY --from=vendor /app/vendor ./vendor
