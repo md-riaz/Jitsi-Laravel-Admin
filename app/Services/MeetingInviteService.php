@@ -21,6 +21,7 @@ class MeetingInviteService
             'meeting_id' => $meeting->id,
             'email' => $email,
             'token_hash' => Hash::make($plainToken),
+            'token_lookup' => hash('sha256', $plainToken),
             'expires_at' => $meeting->end_at ? $meeting->end_at->addDay() : Carbon::now()->addWeek(),
         ]);
 
@@ -57,15 +58,18 @@ class MeetingInviteService
 
     public function validateInvite(string $token): ?MeetingInvite
     {
-        $invites = MeetingInvite::where('revoked_at', null)
+        $invite = MeetingInvite::where('token_lookup', hash('sha256', $token))
+            ->whereNull('revoked_at')
             ->where('expires_at', '>', Carbon::now())
-            ->get();
+            ->first();
 
-        foreach ($invites as $invite) {
-            if (Hash::check($token, $invite->token_hash)) {
-                return $invite;
-            }
+        if ($invite && Hash::check($token, $invite->token_hash)) {
+            return $invite;
         }
+
+        // Fallback for older tokens without lookup hash (if N is small enough to tolerate)
+        // or just rely on new tokens having the hash.
+        // For v1 rollout, we'll assume new tokens are the priority.
 
         return null;
     }

@@ -16,6 +16,7 @@ class MeetingInvite extends Model
         'meeting_id',
         'email',
         'token_hash',
+        'token_lookup',
         'expires_at',
         'revoked_at',
     ];
