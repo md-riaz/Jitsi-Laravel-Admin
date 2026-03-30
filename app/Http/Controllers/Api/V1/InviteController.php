@@ -42,7 +42,7 @@ class InviteController extends Controller
         return response()->json([
             'ok' => true,
             'data' => [
-                'token' => $invite->token,
+                'invite_token' => $data['token'],
                 'meeting' => [
                     'id' => $meeting->id,
                     'title' => $meeting->title,

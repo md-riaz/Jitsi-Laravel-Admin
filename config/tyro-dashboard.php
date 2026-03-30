@@ -197,7 +197,7 @@ return [
         'meetings' => [
             'model' => 'App\\Models\\Meeting',
             'title' => 'Meetings',
-            'roles' => ['super-admin', 'org-admin', 'host'],
+            'roles' => ['super-admin'],
             'fields' => [
                 'title' => ['type' => 'text', 'label' => 'Title', 'rules' => 'required|string|max:255', 'searchable' => true],
                 'description' => ['type' => 'textarea', 'label' => 'Description', 'rules' => 'nullable|string', 'searchable' => false],
@@ -214,7 +214,7 @@ return [
         'meeting_participants' => [
             'model' => 'App\\Models\\MeetingParticipant',
             'title' => 'Participants',
-            'roles' => ['super-admin', 'org-admin', 'host'],
+            'roles' => ['super-admin'],
             'fields' => [
                 'display_name' => ['type' => 'text', 'label' => 'Display Name', 'searchable' => true],
                 'email' => ['type' => 'text', 'label' => 'Email', 'searchable' => true],
@@ -268,17 +268,19 @@ return [
         'meeting_invites' => [
             'model' => 'App\\Models\\MeetingInvite',
             'title' => 'Invites',
-            'roles' => ['super-admin', 'org-admin', 'host'],
+            'roles' => ['super-admin'],
+            'disable_create' => true,
             'fields' => [
+                'meeting_id' => ['type' => 'text', 'label' => 'Meeting', 'searchable' => true],
                 'email' => ['type' => 'text', 'label' => 'Email', 'searchable' => true],
-                'expires_at' => ['type' => 'datetime-local', 'label' => 'Expires At', 'rules' => 'nullable|date', 'help_text' => 'Invite expire হওয়ার date+time দিন'],
-                'revoked_at' => ['type' => 'datetime-local', 'label' => 'Revoked At', 'rules' => 'nullable|date', 'hide_in_create' => true, 'help_text' => 'Invite revoke হলে date+time (optional)'],
+                'expires_at' => ['type' => 'datetime-local', 'label' => 'Expires At', 'rules' => 'nullable|date'],
+                'revoked_at' => ['type' => 'datetime-local', 'label' => 'Revoked At', 'rules' => 'nullable|date', 'help_text' => 'Set a date to revoke this invite'],
             ],
         ],
         'meeting_events' => [
             'model' => 'App\\Models\\MeetingEvent',
             'title' => 'Audit Events',
-            'roles' => ['super-admin', 'org-admin'],
+            'roles' => ['super-admin'],
             'fields' => [
                 'type' => ['type' => 'text', 'label' => 'Type', 'searchable' => true],
                 'meeting_id' => ['type' => 'text', 'label' => 'Meeting', 'searchable' => true],

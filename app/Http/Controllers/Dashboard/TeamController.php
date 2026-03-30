@@ -18,7 +18,15 @@ class TeamController extends Controller
     {
         $user = Auth::user();
 
+        if (method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+            return $user;
+        }
+
         if (!$user->isOrganizationUser() || !$user->organization_id) {
+            abort(403, 'Only organization admins can manage team members.');
+        }
+
+        if (!method_exists($user, 'hasRole') || !$user->hasRole('org-admin')) {
             abort(403, 'Only organization admins can manage team members.');
         }
 
@@ -31,6 +39,10 @@ class TeamController extends Controller
     private function resolveOrgMember(User $admin, int|string $id): User
     {
         $member = User::findOrFail($id);
+
+        if (method_exists($admin, 'hasRole') && $admin->hasRole('super-admin')) {
+            return $member;
+        }
 
         if ($member->organization_id !== $admin->organization_id) {
             abort(403, 'You can only manage members of your organization.');

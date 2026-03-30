@@ -18,6 +18,8 @@ class MeetingDiagnosticsController extends Controller
 
     public function show(Request $request, Meeting $meeting): View
     {
+        $this->authorize('manage', $meeting);
+
         $visibility = Meeting::normalizeVisibility($meeting->visibility);
 
         $recentDenials = MeetingEvent::where('meeting_id', $meeting->id)

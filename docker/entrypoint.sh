@@ -26,6 +26,11 @@ fi
 
 wait_for_database
 
+if [ "${APP_ENV:-production}" = "production" ] && [ -z "${APP_KEY:-}" ]; then
+  echo "APP_KEY is required in production. Refusing to start."
+  exit 1
+fi
+
 php artisan optimize:clear --no-interaction || true
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then

@@ -20,15 +20,17 @@ Route::get('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMe
 Route::post('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'store'])->middleware(['auth'])->name('dashboard.create-meeting.store');
 
 // Team Management Routes (for organization admins)
-Route::get('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::class, 'index'])->middleware(['auth'])->name('dashboard.team.index');
-Route::get('dashboard/team/create', [\App\Http\Controllers\Dashboard\TeamController::class, 'create'])->middleware(['auth'])->name('dashboard.team.create');
-Route::post('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::class, 'store'])->middleware(['auth'])->name('dashboard.team.store');
-Route::get('dashboard/team/{id}/edit', [\App\Http\Controllers\Dashboard\TeamController::class, 'edit'])->middleware(['auth'])->name('dashboard.team.edit');
-Route::put('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'update'])->middleware(['auth'])->name('dashboard.team.update');
-Route::delete('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'destroy'])->middleware(['auth'])->name('dashboard.team.destroy');
-Route::post('dashboard/team/{id}/suspend', [\App\Http\Controllers\Dashboard\TeamController::class, 'suspend'])->middleware(['auth'])->name('dashboard.team.suspend');
-Route::post('dashboard/team/{id}/unsuspend', [\App\Http\Controllers\Dashboard\TeamController::class, 'unsuspend'])->middleware(['auth'])->name('dashboard.team.unsuspend');
-Route::post('dashboard/team/{id}/login-as', [\App\Http\Controllers\Dashboard\TeamController::class, 'loginAs'])->middleware(['auth'])->name('dashboard.team.login-as');
+Route::middleware(['auth', 'org-admin-or-super-admin'])->group(function () {
+    Route::get('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::class, 'index'])->name('dashboard.team.index');
+    Route::get('dashboard/team/create', [\App\Http\Controllers\Dashboard\TeamController::class, 'create'])->name('dashboard.team.create');
+    Route::post('dashboard/team', [\App\Http\Controllers\Dashboard\TeamController::class, 'store'])->name('dashboard.team.store');
+    Route::get('dashboard/team/{id}/edit', [\App\Http\Controllers\Dashboard\TeamController::class, 'edit'])->name('dashboard.team.edit');
+    Route::put('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'update'])->name('dashboard.team.update');
+    Route::delete('dashboard/team/{id}', [\App\Http\Controllers\Dashboard\TeamController::class, 'destroy'])->name('dashboard.team.destroy');
+    Route::post('dashboard/team/{id}/suspend', [\App\Http\Controllers\Dashboard\TeamController::class, 'suspend'])->name('dashboard.team.suspend');
+    Route::post('dashboard/team/{id}/unsuspend', [\App\Http\Controllers\Dashboard\TeamController::class, 'unsuspend'])->name('dashboard.team.unsuspend');
+    Route::post('dashboard/team/{id}/login-as', [\App\Http\Controllers\Dashboard\TeamController::class, 'loginAs'])->name('dashboard.team.login-as');
+});
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
 Route::get('dashboard/subscription', [\App\Http\Controllers\Dashboard\SubscriptionController::class, 'show'])->middleware(['auth'])->name('dashboard.subscription');

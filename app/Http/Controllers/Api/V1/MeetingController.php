@@ -43,6 +43,8 @@ class MeetingController extends Controller
 
     public function show(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('view', $meeting);
+
         $meeting->load(['organization:id,name,require_jwt,jwt_expiry_minutes']);
 
         return response()->json([
@@ -65,6 +67,8 @@ class MeetingController extends Controller
 
     public function health(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('view', $meeting);
+
         $resp = $this->joinController->health($meeting);
         $payload = $resp->getData(true);
         return response()->json([
@@ -125,6 +129,8 @@ class MeetingController extends Controller
 
     public function pendingAdmissions(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('manage', $meeting);
+
         $resp = $this->joinController->pendingAdmissions($request, $meeting);
         $payload = $resp->getData(true);
         return response()->json([
@@ -136,6 +142,8 @@ class MeetingController extends Controller
 
     public function decideAdmission(Request $request, Meeting $meeting, MeetingParticipant $participant): JsonResponse
     {
+        $this->authorize('manage', $meeting);
+
         $resp = $this->joinController->decideAdmission($request, $meeting, $participant);
         $payload = $resp->getData(true);
         return response()->json([
@@ -147,6 +155,8 @@ class MeetingController extends Controller
 
     public function admissionStatus(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('view', $meeting);
+
         $data = $request->validate([
             'participant_id' => 'required|string',
         ]);
@@ -181,6 +191,8 @@ class MeetingController extends Controller
 
     public function summary(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('manage', $meeting);
+
         $events = MeetingEvent::where('meeting_id', $meeting->id)->orderBy('created_at')->get();
         $joinEvents = $events->where('type', 'participant_joined');
         $leaveEvents = $events->where('type', 'participant_left');
@@ -206,6 +218,8 @@ class MeetingController extends Controller
 
     public function timeline(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('manage', $meeting);
+
         $items = MeetingEvent::where('meeting_id', $meeting->id)
             ->orderBy('created_at')
             ->get(['id', 'type', 'payload', 'created_at']);
@@ -218,6 +232,8 @@ class MeetingController extends Controller
 
     public function attendance(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('manage', $meeting);
+
         $rows = MeetingParticipant::where('meeting_id', $meeting->id)
             ->get(['id', 'display_name', 'email', 'user_id', 'joined_at', 'left_at'])
             ->map(function ($p) {
@@ -241,6 +257,8 @@ class MeetingController extends Controller
 
     public function diagnostics(Request $request, Meeting $meeting): JsonResponse
     {
+        $this->authorize('manage', $meeting);
+
         $visibility = Meeting::normalizeVisibility($meeting->visibility);
         $user = $request->user();
         $policy = $this->accessPolicy->evaluateJoin($request, $meeting, $user);

@@ -36,23 +36,35 @@ class MeetingAccessPolicyService
 
         $inviteValidated = false;
 
-        // Invite-only guest enforcement
-        if (!$user && $visibility === 'invite_only') {
-            $inviteToken = (string) ($request->input('invite_token') ?: ($request->hasSession() ? $request->session()->get('invite_token', '') : ''));
-            if ($inviteToken === '') {
-                return $this->deny('ERR_INVITE_REQUIRED', 'This meeting requires a valid invitation.');
-            }
+        // Invite-only enforcement — applies to ALL users (guests AND authenticated)
+        if ($visibility === 'invite_only') {
+            $isOwner = $user && (int) $meeting->created_by === (int) $user->id;
+            $isSuperAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('super-admin');
+            $isParticipant = $user && $meeting->participants()->where('user_id', $user->id)->exists();
 
-            $invite = $this->inviteService->validateInvite($inviteToken);
-            if (!$invite) {
-                return $this->deny('ERR_INVITE_EXPIRED', 'Invitation is invalid or expired.');
-            }
+            // Creator, super-admin, and existing participants can join without an invite token
+            if (!$isOwner && !$isSuperAdmin && !$isParticipant) {
+                $inviteToken = (string) ($request->input('invite_token') ?: ($request->hasSession() ? $request->session()->get('invite_token', '') : ''));
+                if ($inviteToken === '') {
+                    return $this->deny('ERR_INVITE_REQUIRED', 'This meeting requires a valid invitation.');
+                }
 
-            if ((string) $invite->meeting_id !== (string) $meeting->id) {
-                return $this->deny('ERR_INVITE_REQUIRED', 'Invitation does not match this meeting.');
-            }
+                $invite = $this->inviteService->validateInvite($inviteToken);
+                if (!$invite) {
+                    return $this->deny('ERR_INVITE_EXPIRED', 'Invitation is invalid or expired.');
+                }
 
-            $inviteValidated = true;
+                if ((string) $invite->meeting_id !== (string) $meeting->id) {
+                    return $this->deny('ERR_INVITE_REQUIRED', 'Invitation does not match this meeting.');
+                }
+
+                // If authenticated, optionally verify the invite email matches the user
+                if ($user && $invite->email && strtolower($invite->email) !== strtolower($user->email)) {
+                    return $this->deny('ERR_INVITE_REQUIRED', 'This invitation was sent to a different email address.');
+                }
+
+                $inviteValidated = true;
+            }
         }
 
         // Guest gate from computed policy (invite_only with valid invite is allowed)

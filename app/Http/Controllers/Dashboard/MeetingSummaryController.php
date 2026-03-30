@@ -15,6 +15,8 @@ class MeetingSummaryController extends Controller
 {
     public function show(Request $request, Meeting $meeting)
     {
+        $this->authorize('manage', $meeting);
+
         $events = MeetingEvent::where('meeting_id', $meeting->id)
             ->orderBy('created_at')
             ->get();
@@ -56,6 +58,8 @@ class MeetingSummaryController extends Controller
 
     public function exportParticipants(Request $request, Meeting $meeting): StreamedResponse
     {
+        $this->authorize('manage', $meeting);
+
         $rows = $this->buildAttendanceRows($meeting, MeetingEvent::where('meeting_id', $meeting->id)->orderBy('created_at')->get());
         $filename = "meeting_{$meeting->id}_attendance.csv";
 
@@ -77,6 +81,8 @@ class MeetingSummaryController extends Controller
 
     public function exportEvents(Request $request, Meeting $meeting): StreamedResponse
     {
+        $this->authorize('manage', $meeting);
+
         $events = MeetingEvent::where('meeting_id', $meeting->id)->orderBy('created_at')->get();
         $filename = "meeting_{$meeting->id}_events.csv";
 

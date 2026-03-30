@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Meeting;
+use App\Policies\MeetingPolicy;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Meeting::class, MeetingPolicy::class);
+
         // Inject meeting stats into both user dashboard views
         $meetingComposer = function ($view) {
             $user = Auth::user();

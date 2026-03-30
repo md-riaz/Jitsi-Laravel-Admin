@@ -48,6 +48,21 @@ class CreateMeetingController extends Controller
     }
     public function store(Request $request)
     {
+        $user = Auth::user();
+        $plan = $user?->getEffectiveSubscriptionPlan();
+
+        if ($user?->isOrganizationUser() && $user->organization?->isSubscriptionExpired()) {
+            return redirect()->back()
+                ->withErrors(['subscription' => 'Your organization subscription has expired. Renew it before creating new meetings.'])
+                ->withInput();
+        }
+
+        if ($user?->isSingleUser() && $plan === null) {
+            return redirect()->back()
+                ->withErrors(['subscription' => 'A subscription plan is required before creating meetings.'])
+                ->withInput();
+        }
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

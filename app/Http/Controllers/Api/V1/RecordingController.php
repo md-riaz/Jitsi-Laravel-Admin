@@ -13,11 +13,10 @@ class RecordingController extends Controller
      */
     public function ingest(Request $request)
     {
-        // For basic security, verify a static token in the header
-        $expectedToken = 'your_secure_backend_token_here';
-        $providedToken = str_replace('Bearer ', '', $request->header('Authorization'));
+        $expectedToken = (string) config('services.jitsi.recording_ingest_secret', '');
+        $providedToken = (string) ($request->bearerToken() ?: $request->header('X-Jitsi-Recording-Secret') ?: '');
 
-        if ($providedToken !== $expectedToken) {
+        if ($expectedToken === '' || !hash_equals($expectedToken, $providedToken)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 

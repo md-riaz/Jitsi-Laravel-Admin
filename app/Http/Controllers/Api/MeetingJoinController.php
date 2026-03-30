@@ -79,63 +79,6 @@ class MeetingJoinController extends Controller
             ], 403);
         }
 
-        // Waiting-room style gate (first pass): guest requires host admission when lobby is enabled.
-        if (!$user && $meeting->lobby_enabled) {
-            $sessionGuestName = $request->hasSession() ? (string) $request->session()->get('guest_name', '') : '';
-            $sessionGuestEmail = $request->hasSession() ? (string) $request->session()->get('guest_email', '') : '';
-
-            $guestName = trim((string) $request->input('display_name', $sessionGuestName !== '' ? $sessionGuestName : 'Guest'));
-            $guestEmail = (string) $request->input('email', $sessionGuestEmail);
-
-            $sessionId = $request->hasSession() ? (string) $request->session()->getId() : (string) $request->header('X-Guest-Session', 'noguestsession');
-            $identity = $guestEmail !== '' ? $guestEmail : ('guest:' . substr(hash('sha256', $sessionId . '|' . $clientIp), 0, 20));
-
-            $participant = MeetingParticipant::firstOrCreate(
-                [
-                    'meeting_id' => $meeting->id,
-                    'email' => $identity,
-                ],
-                [
-                    'display_name' => $guestName !== '' ? $guestName : 'Guest',
-                    'role' => 'participant',
-                    'invite_status' => 'invited',
-                ]
-            );
-
-            if ($participant->invite_status === 'declined') {
-                return response()->json([
-                    'message' => 'Join request was rejected by host.',
-                    'error_code' => 'ERR_ADMISSION_REJECTED',
-                    'can_join' => false,
-                ], 403);
-            }
-
-            if ($participant->invite_status !== 'accepted') {
-                $participant->update([
-                    'display_name' => $guestName !== '' ? $guestName : ($participant->display_name ?: 'Guest'),
-                    'invite_status' => 'invited',
-                ]);
-
-                MeetingEvent::create([
-                    'meeting_id' => $meeting->id,
-                    'type' => 'admission_requested',
-                    'payload' => [
-                        'participant_id' => $participant->id,
-                        'display_name' => $participant->display_name,
-                        'email' => $participant->email,
-                        'ip_address' => $clientIp,
-                    ],
-                ]);
-
-                return response()->json([
-                    'message' => 'Waiting for host approval.',
-                    'error_code' => 'ERR_ADMISSION_REQUIRED',
-                    'can_join' => false,
-                    'pending_participant_id' => $participant->id,
-                ], 403);
-            }
-        }
-
         $isModerator = $user && (
             $meeting->created_by === $user->id ||
             $meeting->participants()->where('user_id', $user->id)->where('role', 'host')->exists() ||

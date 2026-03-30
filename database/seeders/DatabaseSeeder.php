@@ -16,7 +16,12 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TyroRolesAndPrivilegesSeeder::class,
-            DemoDataSeeder::class,
         ]);
+
+        if (config('app.env') !== 'production' && env('ENABLE_DEMO_SEEDERS', false)) {
+            $this->call([
+                DemoDataSeeder::class,
+            ]);
+        }
     }
 }

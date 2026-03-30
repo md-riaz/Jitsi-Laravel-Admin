@@ -178,7 +178,8 @@
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="visibility">Visibility *</label>
                         <select id="visibility" name="visibility" required onchange="toggleOrganizationRequirement()">
-                            <option value="invite_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'invite_only' ? 'selected' : '' }}>Invite Only</option>
+                            {{-- invite_only hidden for v1: not production-complete --}}
+                            {{-- <option value="invite_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'invite_only' ? 'selected' : '' }}>Invite Only</option> --}}
                             <option value="link_anyone" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'link_anyone' ? 'selected' : '' }}>Anyone with Link</option>
                             <option value="org_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'org_only' ? 'selected' : '' }}>Organization Only</option>
                         </select>

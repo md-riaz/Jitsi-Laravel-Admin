@@ -695,6 +695,36 @@
                         <div class="countdown-timer" id="countdown-timer">Loading...</div>
                         <p class="countdown-hint">You can join {{ $meeting->join_early_minutes }} minutes before the scheduled time</p>
                     </div>
+                    @guest
+                        <div class="meeting-details" id="guest-prejoin" style="margin-top: 0; margin-bottom: 1.5rem;">
+                            <h3>Join as guest</h3>
+                            <div style="display:grid; gap:12px; margin-top:12px;">
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="guest_display_name">Display name</label>
+                                    <input type="text" id="guest_display_name" maxlength="120" placeholder="Enter your name" autocomplete="name">
+                                </div>
+                                @if(!empty($meeting->password))
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label for="guest_password">Meeting password</label>
+                                        <input type="password" id="guest_password" placeholder="Enter meeting password" autocomplete="current-password">
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endguest
+                    @auth
+                        @if(!empty($meeting->password))
+                            <div class="meeting-details" id="auth-password-prompt" style="margin-top: 0; margin-bottom: 1.5rem;">
+                                <h3>Meeting password required</h3>
+                                <div style="display:grid; gap:12px; margin-top:12px;">
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label for="auth_password">Meeting password</label>
+                                        <input type="password" id="auth_password" placeholder="Enter meeting password" autocomplete="current-password">
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endauth
                     <div class="join-button-container">
                         <button class="join-button" id="join-button" aria-label="Join meeting" disabled>
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -713,6 +743,36 @@
                             <p>Click the button below to join the meeting now.</p>
                         </div>
                     </div>
+                    @guest
+                        <div class="meeting-details" id="guest-prejoin" style="margin-top: 0; margin-bottom: 1.5rem;">
+                            <h3>Join as guest</h3>
+                            <div style="display:grid; gap:12px; margin-top:12px;">
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="guest_display_name">Display name</label>
+                                    <input type="text" id="guest_display_name" maxlength="120" placeholder="Enter your name" autocomplete="name">
+                                </div>
+                                @if(!empty($meeting->password))
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label for="guest_password">Meeting password</label>
+                                        <input type="password" id="guest_password" placeholder="Enter meeting password" autocomplete="current-password">
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endguest
+                    @auth
+                        @if(!empty($meeting->password))
+                            <div class="meeting-details" id="auth-password-prompt" style="margin-top: 0; margin-bottom: 1.5rem;">
+                                <h3>Meeting password required</h3>
+                                <div style="display:grid; gap:12px; margin-top:12px;">
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label for="auth_password">Meeting password</label>
+                                        <input type="password" id="auth_password" placeholder="Enter meeting password" autocomplete="current-password">
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endauth
                     <div class="join-button-container">
                         <button class="join-button" id="join-button" aria-label="Join meeting" onclick="joinMeeting()">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -727,9 +787,8 @@
                         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                             <button type="button" class="btn-secondary" onclick="toggleLobby()">Toggle Lobby</button>
                             <button type="button" class="btn-secondary" onclick="muteEveryoneNow()">Mute Everyone</button>
-                            <button type="button" class="btn-secondary" onclick="refreshAdmissions()">Refresh Admissions</button>
                         </div>
-                        <div id="admission-list" style="margin-top:10px; font-size:13px; color:#cbd5e1;"></div>
+                        <div style="margin-top:10px; font-size:13px; color:#cbd5e1;">Waiting room and password changes for moderators are managed inside the Jitsi security controls.</div>
                     </div>
                 @else
                     <div class="alert alert-error">
@@ -839,20 +898,41 @@
 
         async function joinMeeting() {
             if (typeof JitsiMeetExternalAPI === 'undefined') {
-                showBanner('Unable to load meeting interface. Check network and retry.', 'error');
-                console.error('JitsiMeetExternalAPI not loaded from {{ config("services.jitsi.domain") }}');
+                const domain = @json(config('services.jitsi.domain'));
+                showBanner(`Error: Jitsi meeting library failed to load from ${domain}. Please check your connection or ad-blocker.`, 'error');
+                console.error('JitsiMeetExternalAPI not loaded');
                 return;
             }
 
             const button = document.getElementById('join-button');
+            const isAuthenticated = @json((bool) auth()->check());
+            const guestDisplayNameInput = document.getElementById('guest_display_name');
+            const guestPasswordInput = document.getElementById('guest_password');
+            const guestDisplayName = guestDisplayNameInput ? guestDisplayNameInput.value.trim() : '';
+            const guestPassword = guestPasswordInput ? guestPasswordInput.value : '';
+
+            if (!isAuthenticated && guestDisplayName === '') {
+                showBanner('Please enter your display name before joining.', 'warn');
+                guestDisplayNameInput?.focus();
+                return;
+            }
+
             button.disabled = true;
             button.innerHTML = '<svg class="spinner" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="3" stroke="currentColor" stroke-opacity="0.25"></circle><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path></svg> Connecting...';
             showBanner('Connecting to meeting...');
 
             try {
                 const apiBase = @json(url('/api/v1'));
-                const isAuthenticated = @json((bool) auth()->check());
                 const joinPath = isAuthenticated ? `/meetings/${meetingId}/join` : `/meetings/${meetingId}/join-guest`;
+                const authPasswordInput = document.getElementById('auth_password');
+                const authPassword = authPasswordInput ? authPasswordInput.value : '';
+                const requestBody = isAuthenticated ? {
+                    password: authPassword || undefined
+                } : {
+                    display_name: guestDisplayName,
+                    password: guestPassword || undefined
+                };
+
                 const response = await fetch(`${apiBase}${joinPath}`, {
                     method: 'POST',
                     headers: {
@@ -860,19 +940,37 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json'
                     },
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    body: JSON.stringify(requestBody)
                 });
 
                 const payload = await response.json();
                 const data = payload?.data ?? payload;
 
                 if (!response.ok || !data?.can_join) {
-                    showBanner(payload?.message || data?.message || 'Cannot join meeting now. Please retry.', 'warn');
+                    if (data?.error_code === 'ERR_INVALID_PASSWORD') {
+                        showBanner('Invalid password. Please try again.', 'warn');
+                        const passwordInput = isAuthenticated ? document.getElementById('auth_password') : document.getElementById('guest_password');
+                        if (passwordInput) {
+                            passwordInput.value = '';
+                            passwordInput.focus();
+                        }
+                    } else {
+                        showBanner(payload?.message || data?.message || 'Cannot join meeting now. Please retry.', 'warn');
+                    }
                     setJoinButtonDefault(button);
                     return;
                 }
 
                 button.style.display = 'none';
+                const guestPrejoin = document.getElementById('guest-prejoin');
+                if (guestPrejoin) {
+                    guestPrejoin.style.display = 'none';
+                }
+                const authPrompt = document.getElementById('auth-password-prompt');
+                if (authPrompt) {
+                    authPrompt.style.display = 'none';
+                }
                 document.getElementById('jitsi-container').style.display = 'block';
                 document.body.classList.add('meeting-active');
 
@@ -915,7 +1013,6 @@
 
                 if (data.jitsi?.is_moderator || data.is_moderator) {
                     document.getElementById('moderator-controls').style.display = 'block';
-                    refreshAdmissions();
                 }
 
                 jitsiApi.addEventListener('videoConferenceJoined', () => {
@@ -946,7 +1043,9 @@
 
                     showBanner('Leaving meeting...', '');
                     await trackMeetingLeave();
-                    window.location.href = @json(route('dashboard.my-meetings'));
+                    window.location.href = isAuthenticated
+                        ? @json(route('dashboard.my-meetings'))
+                        : @json(route('meeting.show', $meeting->id));
                 });
 
                 // Also track on page unload (closing browser/tab)
@@ -959,57 +1058,6 @@
                 showBanner('Failed to join meeting. Please retry.', 'error');
                 setJoinButtonDefault(button);
             }
-        }
-
-        async function refreshAdmissions() {
-            const list = document.getElementById('admission-list');
-            if (!list) return;
-            list.textContent = 'Loading pending admissions...';
-
-            try {
-                const res = await fetch(@json(url('/api/v1/meetings/' . $meeting->id . '/pending-admissions')), {
-                    credentials: 'same-origin',
-                    headers: { 'Accept': 'application/json' }
-                });
-                const payload = await res.json();
-                const items = payload?.data?.items || payload?.items || [];
-
-                if (!res.ok) {
-                    list.textContent = payload?.message || 'Unable to load admissions.';
-                    return;
-                }
-
-                if (!items || items.length === 0) {
-                    list.textContent = 'No pending admissions.';
-                    return;
-                }
-
-                list.innerHTML = items.map(i => `
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #1f2937;">
-                        <span>${i.display_name} <small style="color:#94a3b8">(${i.email})</small></span>
-                        <span>
-                          <button type="button" class="btn-secondary" onclick="decideAdmission('${i.id}','admit')">Admit</button>
-                          <button type="button" class="btn-secondary" onclick="decideAdmission('${i.id}','reject')">Reject</button>
-                        </span>
-                    </div>
-                `).join('');
-            } catch (_) {
-                list.textContent = 'Unable to load admissions.';
-            }
-        }
-
-        async function decideAdmission(participantId, action) {
-            await fetch(@json(url('/api/v1/meetings/' . $meeting->id . '/admissions')) + '/' + participantId, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ action })
-            });
-            refreshAdmissions();
         }
 
         function muteEveryoneNow() {

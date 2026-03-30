@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', \App\Http\Middleware\RedirectOrgAdminFromSuperAdminUserManagement::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckOrganizationActive::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckUserStatus::class);
+        $middleware->alias([
+            'org-admin-or-super-admin' => \App\Http\Middleware\EnsureOrgAdminOrSuperAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
