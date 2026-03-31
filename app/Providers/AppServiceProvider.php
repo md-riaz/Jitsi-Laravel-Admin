@@ -6,6 +6,7 @@ use App\Models\Meeting;
 use App\Policies\MeetingPolicy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +25,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS URL generation when behind a reverse proxy / tunnel
+        if (request()->header('X-Forwarded-Proto') === 'https' || config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
+        // Dynamically add current request host to Sanctum stateful domains (tunnel/proxy support)
+        $host = request()->getHost();
+        if ($host) {
+            $stateful = config('sanctum.stateful', []);
+            if (!in_array($host, $stateful)) {
+                $stateful[] = $host;
+                config(['sanctum.stateful' => $stateful]);
+            }
+        }
+
         Gate::policy(Meeting::class, MeetingPolicy::class);
 
         // Inject meeting stats into both user dashboard views
