@@ -23,23 +23,10 @@ class CreateMeetingController extends Controller
             $organizations = Organization::orderBy('name')->get();
         }
 
-        $timezones = [
-            'UTC' => 'UTC',
-            'America/New_York' => 'Eastern Time (US)',
-            'America/Chicago' => 'Central Time (US)',
-            'America/Denver' => 'Mountain Time (US)',
-            'America/Los_Angeles' => 'Pacific Time (US)',
-            'America/Toronto' => 'Toronto',
-            'Europe/London' => 'London',
-            'Europe/Paris' => 'Paris',
-            'Europe/Berlin' => 'Berlin',
-            'Asia/Dubai' => 'Dubai',
-            'Asia/Kolkata' => 'Kolkata',
-            'Asia/Singapore' => 'Singapore',
-            'Asia/Tokyo' => 'Tokyo',
-            'Asia/Shanghai' => 'Shanghai',
-            'Australia/Sydney' => 'Sydney',
-        ];
+        $timezones = array_combine(
+            \DateTimeZone::listIdentifiers(),
+            \DateTimeZone::listIdentifiers()
+        );
 
         $defaultTimezone = 'UTC';
         $defaultVisibility = 'link_anyone';

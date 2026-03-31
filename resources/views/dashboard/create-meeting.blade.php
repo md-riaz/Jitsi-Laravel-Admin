@@ -315,7 +315,7 @@ function applyBrowserTimezoneDefault() {
     const timezoneSelect = document.getElementById('timezone');
     const hasOldTimezone = @json(old('timezone')) !== null;
 
-    if (hasOldTimezone || !window.Intl || !Intl.DateTimeFormat) {
+    if (!timezoneSelect || hasOldTimezone || !window.Intl || !Intl.DateTimeFormat) {
         return;
     }
 
@@ -325,11 +325,18 @@ function applyBrowserTimezoneDefault() {
         return;
     }
 
-    const supportedTimezone = Array.from(timezoneSelect.options).some(option => option.value === browserTimezone);
+    const existingOption = Array.from(timezoneSelect.options).find(option => option.value === browserTimezone);
 
-    if (supportedTimezone) {
+    if (existingOption) {
         timezoneSelect.value = browserTimezone;
+        return;
     }
+
+    const fallbackOption = document.createElement('option');
+    fallbackOption.value = browserTimezone;
+    fallbackOption.textContent = `${browserTimezone} (Browser)`;
+    timezoneSelect.prepend(fallbackOption);
+    timezoneSelect.value = browserTimezone;
 }
 
 // Initialize
