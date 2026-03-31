@@ -51,3 +51,31 @@ Results:
 - Updated `resources/views/dashboard/create-meeting.blade.php` so the browser timezone is still selected when it is not part of the server-side curated timezone list.
 - The page now injects a temporary `${browserTimezone} (Browser)` option on first load when needed, instead of silently falling back to `UTC`.
 - Verified with diagnostics on `resources/views/dashboard/create-meeting.blade.php`: no issues found.
+
+- [x] Restate goal + acceptance criteria
+  - Goal: Remove any remaining app-level lobby/admission controls from the public meeting page so Jitsi remains the only waiting-room source.
+  - Acceptance: No moderator lobby/admission buttons are rendered on the web meeting page, and no page JavaScript exposes app-layer lobby commands.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [x] Implement smallest safe slice
+- [ ] Run verification (diagnostics)
+- [ ] Summarize changes + verification story
+
+Working Notes:
+- The create meeting page does not contain lobby controls.
+- Remaining controls were still present on `resources/views/meeting/show.blade.php` as moderator-only client-side buttons (`toggleLobby`, `muteEveryoneNow`).
+- These controls conflict with the rule that Jitsi is the source of truth for waiting-room behavior.
+
+- [x] Restate goal + acceptance criteria
+  - Goal: Make the native `datetime-local` picker trigger visible on the create meeting page without removing the existing themed input background.
+  - Acceptance: The browser date/time picker affordance remains visible for the start and end fields.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [x] Implement smallest safe slice
+- [ ] Run verification (diagnostics)
+- [ ] Summarize changes + verification story
+
+Working Notes:
+- The page styles all inputs with themed background and foreground colors.
+- Native `datetime-local` picker icons can disappear when the browser renders a dark-themed control surface against custom input styling.
+- Minimal fix is CSS-only: keep the existing theme, but force a light color scheme for `datetime-local` controls so the native picker affordance stays visible.

@@ -783,13 +783,6 @@
                     </div>
                     <div id="jitsi-container" style="display: none;"></div>
                     <div id="meeting-status-banner" class="meeting-status-banner" role="status" aria-live="polite"></div>
-                    <div id="moderator-controls" style="display:none; margin-top:12px; background:#111827; color:#fff; padding:10px 12px; border-radius:10px;">
-                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                            <button type="button" class="btn-secondary" onclick="toggleLobby()">Toggle Lobby</button>
-                            <button type="button" class="btn-secondary" onclick="muteEveryoneNow()">Mute Everyone</button>
-                        </div>
-                        <div style="margin-top:10px; font-size:13px; color:#cbd5e1;">Waiting room and password changes for moderators are managed inside the Jitsi security controls.</div>
-                    </div>
                 @else
                     <div class="alert alert-error">
                         <svg fill="currentColor" viewBox="0 0 20 20">
@@ -1011,10 +1004,6 @@
                 jitsiApi = new JitsiMeetExternalAPI(domain, options);
                 hideBanner();
 
-                if (data.jitsi?.is_moderator || data.is_moderator) {
-                    document.getElementById('moderator-controls').style.display = 'block';
-                }
-
                 jitsiApi.addEventListener('videoConferenceJoined', () => {
                     reconnectAttempts = 0;
                     hideBanner();
@@ -1057,18 +1046,6 @@
                 console.error('Error joining meeting:', error);
                 showBanner('Failed to join meeting. Please retry.', 'error');
                 setJoinButtonDefault(button);
-            }
-        }
-
-        function muteEveryoneNow() {
-            if (jitsiApi) {
-                jitsiApi.executeCommand('muteEveryone');
-            }
-        }
-
-        function toggleLobby() {
-            if (jitsiApi) {
-                jitsiApi.executeCommand('toggleLobby', true);
             }
         }
 

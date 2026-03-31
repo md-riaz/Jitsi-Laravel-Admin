@@ -62,6 +62,13 @@
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
 }
+.form-group input[type="datetime-local"] {
+    color-scheme: light;
+}
+.form-group input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0.85;
+    cursor: pointer;
+}
 .form-group .help-text { font-size: 0.8125rem; color: var(--muted-foreground); margin-top: 5px; }
 .form-actions {
     display: flex;
@@ -283,9 +290,9 @@ function setMeetingType(type) {
         if (!startInput.value) {
             const d = new Date();
             d.setHours(d.getHours() + 1, 0, 0, 0);
-            startInput.value = d.toISOString().slice(0, 16);
+            startInput.value = toLocalDatetimeString(d);
             const e = new Date(d.getTime() + 60 * 60000);
-            endInput.value = e.toISOString().slice(0, 16);
+            endInput.value = toLocalDatetimeString(e);
         }
     }
 }
@@ -339,8 +346,25 @@ function applyBrowserTimezoneDefault() {
     timezoneSelect.value = browserTimezone;
 }
 
+function toLocalDatetimeString(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${d}T${h}:${min}`;
+}
+
+function enforceStartTimeMin() {
+    const startInput = document.getElementById('start_at');
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 10, 0, 0);
+    startInput.min = toLocalDatetimeString(now);
+}
+
 // Initialize
 applyBrowserTimezoneDefault();
+enforceStartTimeMin();
 setMeetingType(document.getElementById('meeting_type').value);
 toggleOrganizationRequirement();
 </script>

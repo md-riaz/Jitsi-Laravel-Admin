@@ -11,7 +11,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:18090
+      APP_URL: ${APP_URL:-http://localhost:18090}
       PORT: 8090
       RUN_MIGRATIONS: "true"
       RUN_SEEDERS: "true"
@@ -36,7 +36,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:18090
+      APP_URL: ${APP_URL:-http://localhost:18090}
       RUN_MIGRATIONS: "false"
       RUN_SEEDERS: "false"
       DB_CONNECTION: sqlite
@@ -62,7 +62,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:18090
+      APP_URL: ${APP_URL:-http://localhost:18090}
       RUN_MIGRATIONS: "false"
       RUN_SEEDERS: "false"
       DB_CONNECTION: sqlite
