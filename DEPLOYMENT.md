@@ -27,22 +27,81 @@ This guide covers deploying Jitsi Admin to production environments.
 
 ## Step-by-Step Deployment
 
-## Docker Deployment (GitHub URL)
+## Docker Deployment
 
-Use this option on platforms that deploy directly from a repository URL.
+Use this path when deploying to a fresh Ubuntu VPS with Docker, or to any platform that runs a Docker image directly.
 
-Important: this Docker setup deploys only the Laravel admin/orchestration application. It does not install Jitsi Meet, Prosody, Jicofo, or Jitsi Videobridge. You must point `JITSI_DOMAIN` at an existing external Jitsi deployment.
+Important:
+- this Docker setup deploys only the Laravel admin/orchestration application
+- it does not install Jitsi Meet, Prosody, Jicofo, or Jitsi Videobridge
+- `JITSI_DOMAIN` must point to an external Jitsi deployment
 
-1. Connect this GitHub repository in your Docker-capable host.
-2. Build from the root `Dockerfile`.
-3. Configure runtime env vars (`APP_KEY`, database credentials, mail, queue, Jitsi vars, etc.).
-4. Set `RUN_MIGRATIONS=true` only when startup migrations are desired.
-5. Publish host port `18090` to container port `8090` (or pass `PORT` from your platform if your host requires a different mapping).
+### Docker deployment checklist
 
-Example local validation:
+1. Install Docker Engine and Docker Compose plugin on the VPS.
+2. Clone this repository.
+3. Create a production `.env` from `.env.example`.
+4. Generate a fresh `APP_KEY`.
+5. Set real mail, Jitsi, and application URL values.
+6. Keep `RUN_MIGRATIONS=true` only for first boot.
+7. Keep `RUN_SEEDERS=false` for production.
+8. Put a reverse proxy or load balancer in front of the app.
+
+### Docker env file
+
+For production, do this:
 
 ```bash
-cp stack.env .env
+cp .env.example .env
+```
+
+Do not use `stack.env` as your production source of truth. It is intended as a sample/local Docker bootstrap file.
+
+Minimum production env values:
+
+```env
+APP_NAME="Jitsi Admin"
+APP_ENV=production
+APP_KEY=base64:GENERATE_A_FRESH_KEY
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+PORT=8090
+
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
+
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+SESSION_DRIVER=database
+
+MAIL_MAILER=smtp
+MAIL_HOST=[mail_host]
+MAIL_PORT=[mail_port]
+MAIL_USERNAME=[mail_username]
+MAIL_PASSWORD=[mail_password]
+MAIL_FROM_ADDRESS=[email]
+MAIL_FROM_NAME="Jitsi Admin"
+
+JITSI_DOMAIN=meet.your-domain.com
+JITSI_JWT_SECRET=[secret]
+JITSI_JWT_ISSUER=[issuer]
+JITSI_JWT_AUDIENCE=jitsi
+JITSI_JWT_SUB=meet.your-domain.com
+JITSI_WEBHOOK_SECRET=[webhook_secret]
+
+RUN_MIGRATIONS=true
+RUN_SEEDERS=false
+```
+
+Generate the app key with:
+
+```bash
+php artisan key:generate --show
+```
+
+### Start the Docker stack
+
+```bash
 docker compose up --build -d
 ```
 
@@ -53,7 +112,46 @@ The included `docker-compose.yml` starts three services:
 
 SQLite is used by default and persisted in the `app_database` Docker volume, so no separate database container is required.
 
-For first boot, keep `RUN_MIGRATIONS=true`. After the schema is created, switch it to `false` for normal restarts.
+### Reverse proxy and TLS
+
+For a real VPS deployment, do not expose the container directly as your final public endpoint unless your environment is intentionally simple and private.
+
+Recommended setup:
+- host Nginx, Caddy, Traefik, or a cloud load balancer terminates TLS on `443`
+- reverse proxy forwards requests to `127.0.0.1:18090`
+- `APP_URL` is set to your public HTTPS URL
+
+### First boot vs normal restarts
+
+For first boot:
+- `RUN_MIGRATIONS=true`
+- `RUN_SEEDERS=false`
+
+After first successful startup:
+- set `RUN_MIGRATIONS=false`
+- keep `RUN_SEEDERS=false`
+
+### Docker operations
+
+```bash
+# Show running services
+docker compose ps
+
+# App logs
+docker compose logs -f app
+
+# Queue logs
+docker compose logs -f queue
+
+# Scheduler logs
+docker compose logs -f scheduler
+
+# Run artisan inside app
+docker compose exec app php artisan about
+
+# Stop services
+docker compose down
+```
 
 ### 1. Server Preparation
 
@@ -63,9 +161,12 @@ sudo apt update && sudo apt upgrade -y
 
 # Install PHP 8.3 and extensions
 sudo add-apt-repository ppa:ondrej/php
+sudo apt install -y software-properties-common
+sudo apt update
 sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql \
     php8.3-pgsql php8.3-sqlite3 php8.3-curl \
-    php8.3-mbstring php8.3-xml php8.3-zip php8.3-gd
+    php8.3-mbstring php8.3-xml php8.3-zip php8.3-gd \
+    php8.3-bcmath php8.3-intl
 
 # Install Composer
 curl -sS https://getcomposer.org/installer | php

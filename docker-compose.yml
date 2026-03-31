@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - stack.env
+      - .env
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
@@ -32,7 +32,7 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - stack.env
+      - .env
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
@@ -58,7 +58,7 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - stack.env
+      - .env
     environment:
       APP_ENV: production
       APP_DEBUG: "false"

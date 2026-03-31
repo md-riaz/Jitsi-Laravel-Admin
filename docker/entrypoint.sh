@@ -19,6 +19,8 @@ wait_for_database() {
 }
 
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache database
+chown -R www-data:www-data storage bootstrap/cache database 2>/dev/null || true
+chmod -R ug+rwX storage bootstrap/cache database 2>/dev/null || true
 
 if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
   touch "${DB_DATABASE:-database/database.sqlite}"

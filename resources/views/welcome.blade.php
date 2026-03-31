@@ -8,6 +8,14 @@
         $appName = config('app.name', 'Jitsi Admin');
         $brandPrimary = env('LANDING_PRIMARY_COLOR', '#2563eb');
         $brandPrimaryHover = env('LANDING_PRIMARY_HOVER_COLOR', '#1d4ed8');
+        $loginUrl = \Illuminate\Support\Facades\Route::has('tyro-login.login')
+            ? route('tyro-login.login')
+            : url('/login');
+        $registerUrl = \Illuminate\Support\Facades\Route::has('register')
+            ? route('register')
+            : (\Illuminate\Support\Facades\Route::has('tyro-login.register')
+                ? route('tyro-login.register')
+                : url('/register'));
     @endphp
     <style>
         :root {
@@ -356,8 +364,8 @@
                     <a href="{{ url('/dashboard/my-meetings') }}">My Meetings</a>
                     <a href="{{ url('/dashboard/create-meeting') }}" class="btn btn-primary">New Meeting</a>
                 @else
-                    <a href="{{ route('tyro-login.login') }}">Login</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary" aria-label="Get started by creating an account">Get Started</a>
+                    <a href="{{ $loginUrl }}">Login</a>
+                    <a href="{{ $registerUrl }}" class="btn btn-primary" aria-label="Get started by creating an account">Get Started</a>
                 @endauth
             </div>
         </div>
@@ -372,8 +380,8 @@
                 <a href="{{ url('/dashboard/create-meeting') }}" class="btn btn-primary">Create Meeting</a>
                 <a href="{{ url('/dashboard/my-meetings') }}" class="btn btn-secondary">View Meetings</a>
             @else
-                <a href="{{ route('register') }}" class="btn btn-primary">Start Free Trial</a>
-                <a href="{{ route('tyro-login.login') }}" class="btn btn-secondary">Sign In</a>
+                <a href="{{ $registerUrl }}" class="btn btn-primary">Start Free Trial</a>
+                <a href="{{ $loginUrl }}" class="btn btn-secondary">Sign In</a>
             @endauth
         </div>
     </div>

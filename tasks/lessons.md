@@ -34,3 +34,13 @@
 - **Failure mode:** Assumed seeded demo data would exist after container deployment because migrations were running.
 - **Detection signal:** Docker startup only executed `php artisan migrate --force --no-interaction`, while `DatabaseSeeder` and demo seeders existed but were never invoked.
 - **Prevention rule:** When seeded data is expected in a containerized Laravel environment, wire seeding explicitly into startup with an opt-in env flag such as `RUN_SEEDERS=true`.
+
+## 2026-03-31 — Production docs must distinguish sample env from real deployment env
+- **Failure mode:** Deployment documentation suggested a sample Docker env file as a production starting point, creating risk around reused secrets, demo defaults, and misleading production behavior.
+- **Detection signal:** Deployment review showed `stack.env` was documented too close to a real production config and still defaulted to seeding behavior.
+- **Prevention rule:** For deployment docs, always make `.env.example` the canonical production template, mark sample Docker env files as local/demo-only, and explicitly document production-safe values for migrations and seeding.
+
+## 2026-03-31 — Public landing pages must not hard-fail on optional auth route names
+- **Failure mode:** The homepage directly called named auth routes from the Tyro login package, so if those routes were not registered or differed by environment, guests hit a 500 before seeing the app.
+- **Detection signal:** `resources/views/welcome.blade.php` called `route('tyro-login.login')` directly while route discovery did not confirm any application-side definition, and the root route only rendered that view.
+- **Prevention rule:** For public landing pages, avoid unconditional `route()` calls to package-provided auth names; guard with `Route::has(...)` and provide safe URL fallbacks so the page still renders during partial auth setup or route drift.

@@ -26,3 +26,10 @@ Results:
 - Updated `resources/views/meeting/show.blade.php` to collect guest display name and optional meeting password before public join, pass them to the API, and stop showing app-level admission controls.
 - Added minimal subscription enforcement in `Dashboard/CreateMeetingController` for expired org subscriptions or missing personal plans.
 - Verified with diagnostics on all touched files: no issues found.
+- Tightened `README.md` and `DEPLOYMENT.md` so Docker-on-VPS and manual Ubuntu deployment paths are clearly separated, production env guidance points to `.env.example`, and production seeding is explicitly disabled.
+- Sanitized `stack.env` into a safe sample file with placeholder secrets and `RUN_SEEDERS=false`.
+
+- [x] Investigate and fix homepage 500 for guest landing page
+  - Root cause: `resources/views/welcome.blade.php` depended on named auth routes that can be absent or drift by environment, which can throw during Blade rendering for `/`.
+  - Fix: guard auth route generation with `Route::has(...)` and safe URL fallbacks; harden container startup permissions so fresh Laravel exceptions can be logged.
+  - Verification: diagnostics requested for `resources/views/welcome.blade.php` and `docker/entrypoint.sh` after the change.

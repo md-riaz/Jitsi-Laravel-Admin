@@ -408,60 +408,117 @@ Want to explore these features hands-on? Follow the [Quick Start](#-quick-start)
 
 ## 🛠️ Production Deployment
 
-### Quick Start with Docker
+There are two supported deployment paths:
 
-This repo now includes a ready-to-run `docker-compose.yml` for a lean local stack:
-- `app` serves Laravel on container port `8090` and is published on host port `18090`
+- Docker on a VPS or Docker-capable host
+- Manual Ubuntu deployment with Nginx + PHP-FPM + Supervisor
+
+Important constraints:
+- this repository deploys only the Laravel admin/orchestration application
+- Jitsi Meet is an external system and is not installed by this repo
+- you must point `JITSI_DOMAIN` at an existing Jitsi deployment
+
+### Docker deployment on a fresh Ubuntu VPS
+
+Use Docker if you want the simplest production path with the least host-level PHP setup.
+
+What the included stack does:
+- `app` runs Nginx + PHP-FPM inside one container on port `8090`
 - `queue` runs `php artisan queue:work`
-- `scheduler` runs `php artisan schedule:run` every minute
-- SQLite is used through a persisted Docker volume, so no separate database service is required
+- `scheduler` runs Laravel scheduled tasks every minute
+- SQLite is the default database and is persisted in a Docker volume
 
-Important: this stack deploys only the admin/orchestration side. It does not install or run Jitsi Meet. Configure `JITSI_DOMAIN` to point to an external Jitsi instance.
+#### 1. Prepare the VPS
 
-#### 1. Configure environment
-
-Start from the provided Docker env file:
+Install Docker Engine and the Compose plugin on Ubuntu, then clone the repo.
 
 ```bash
-cp stack.env .env
+git clone https://github.com/md-riaz/Jitsi-Laravel-Admin.git
+cd Jitsi-Laravel-Admin
 ```
 
-Set at least these values before a real deployment:
+#### 2. Create a production env file
 
-Do not try to add Jitsi Meet containers to this compose stack. This repository only manages the Laravel admin side and integrates with Jitsi as an external system.
+For real deployments, start from `.env.example`, not `stack.env`.
+
+- `.env.example` is the safe template
+- `stack.env` is for local/demo-style Docker bootstrapping and should not be treated as production source of truth
+
+```bash
+cp .env.example .env
+```
+
+Set at least these values:
 
 ```env
-APP_KEY=base64:YOUR_APP_KEY_HERE
+APP_NAME="Jitsi Admin"
+APP_ENV=production
+APP_KEY=base64:GENERATE_A_FRESH_KEY
+APP_DEBUG=false
 APP_URL=https://your-domain.com
+
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
+
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+SESSION_DRIVER=database
+
+MAIL_MAILER=smtp
 MAIL_HOST=[mail_host]
 MAIL_PORT=[mail_port]
 MAIL_USERNAME=[mail_username]
 MAIL_PASSWORD=[mail_password]
 MAIL_FROM_ADDRESS=[email]
+MAIL_FROM_NAME="Jitsi Admin"
+
 JITSI_DOMAIN=meet.your-domain.com
 JITSI_JWT_SECRET=[secret]
 JITSI_JWT_ISSUER=[issuer]
 JITSI_JWT_AUDIENCE=jitsi
 JITSI_JWT_SUB=meet.your-domain.com
+JITSI_WEBHOOK_SECRET=[webhook_secret]
+
+RUN_MIGRATIONS=true
+RUN_SEEDERS=false
 ```
 
-SQLite is the default in this Docker setup, so you do not need to configure `DB_HOST`, `DB_PORT`, `DB_USERNAME`, or `DB_PASSWORD` unless you later switch to MySQL/PostgreSQL.
+Generate the app key with:
 
-#### 2. Build and run the stack
+```bash
+php artisan key:generate --show
+```
+
+Paste that value into `.env` as `APP_KEY`.
+
+#### 3. Start the stack
 
 ```bash
 docker compose up --build -d
 ```
 
-Access the application at: http://localhost:18090
+By default the app is exposed on host port `18090`.
 
-#### 3. First-run notes
+#### 4. Put a reverse proxy in front of it
 
-- `app` runs migrations automatically when `RUN_MIGRATIONS=true`
-- after the first successful boot, set `RUN_MIGRATIONS=false` in `.env` or your deployment platform
-- queue, cache, and session storage all use the database driver, which matches the app defaults
+For a real VPS deployment, terminate TLS in host Nginx, Caddy, Traefik, or your cloud load balancer and proxy to `127.0.0.1:18090`.
 
-#### 4. Common Docker operations
+Typical production flow:
+- public traffic on `443`
+- reverse proxy forwards to `127.0.0.1:18090`
+- `APP_URL` is set to your public HTTPS URL
+
+#### 5. First boot vs normal restarts
+
+On first boot:
+- keep `RUN_MIGRATIONS=true`
+- keep `RUN_SEEDERS=false` unless you explicitly want demo/sample data
+
+After the schema is created:
+- set `RUN_MIGRATIONS=false`
+- keep `RUN_SEEDERS=false`
+
+#### 6. Common Docker operations
 
 ```bash
 # View running services
@@ -470,8 +527,11 @@ docker compose ps
 # Follow app logs
 docker compose logs -f app
 
-# Follow queue worker logs
+# Follow queue logs
 docker compose logs -f queue
+
+# Follow scheduler logs
+docker compose logs -f scheduler
 
 # Run artisan inside the app container
 docker compose exec app php artisan about
@@ -480,204 +540,62 @@ docker compose exec app php artisan about
 docker compose down
 ```
 
-#### 5. Persistent data
+#### 7. Persistent data
 
 Docker named volumes are used for:
-- Laravel `storage`
-- Laravel `database`
+- `storage`
+- `database`
 
-If you want a full reset locally:
+If you want a full local reset:
 
 ```bash
 docker compose down -v
 ```
 
-**Option C: Platform-as-a-Service (Heroku, Railway, Render, etc.)**
+Do not run that on a real VPS unless you intentionally want to wipe persisted SQLite and app storage.
 
-Most platforms can deploy directly from GitHub:
+### Manual Ubuntu deployment
 
-1. Connect your GitHub repository
-2. Platform auto-detects the `Dockerfile`
-3. Set environment variables in the platform's dashboard:
-   - `APP_KEY` (generate with `php artisan key:generate --show`)
-   - `APP_ENV=production`
-   - `APP_DEBUG=false`
-   - `APP_URL` (your app's URL)
-   - Database credentials (if using platform's database)
-   - Mail settings (SMTP or platform's email service)
-   - Jitsi settings
-   - `RUN_MIGRATIONS=true` (for first deployment)
-4. Deploy!
+If you prefer a traditional VPS setup, deploy with Nginx, PHP-FPM, Supervisor, and Cron.
 
-### Environment Variables for Docker Production
+Use the full guide in [DEPLOYMENT.md](DEPLOYMENT.md).
 
-**Essential Variables (Must be set):**
+Minimum flow:
 
-```env
-APP_KEY=base64:YOUR_GENERATED_KEY_HERE
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-domain.com
-```
-
-**Database Variables:**
-
-For SQLite (easiest, perfect for small-medium deployments):
-```env
-DB_CONNECTION=sqlite
-DB_DATABASE=/var/www/html/database/database.sqlite
-```
-
-For PostgreSQL (recommended for larger deployments):
-```env
-DB_CONNECTION=pgsql
-DB_HOST=your-postgres-host
-DB_PORT=5432
-DB_DATABASE=your-database-name
-DB_USERNAME=your-username
-DB_PASSWORD=your-password
-```
-
-**Mail Variables (Required for invitations):**
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.your-provider.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@domain.com
-MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@your-domain.com
-MAIL_FROM_NAME="Jitsi Admin"
-```
-
-**Jitsi Variables:**
-
-```env
-JITSI_DOMAIN=meet.your-domain.com
-JITSI_JWT_SECRET=your-shared-secret
-JITSI_JWT_ISSUER=your-app
-JITSI_JWT_AUDIENCE=jitsi
-JITSI_JWT_SUB=meet.your-domain.com
-```
-
-**Queue & Session Variables:**
-
-```env
-QUEUE_CONNECTION=database
-CACHE_STORE=database
-SESSION_DRIVER=database
-```
-
-**Optional Variables:**
-
-```env
-PORT=8090                    # Container port (default: 8090)
-RUN_MIGRATIONS=true         # Run migrations on startup (set false after initial run)
-LOG_CHANNEL=stack           # Logging configuration
-LOG_LEVEL=info              # Log verbosity (debug, info, warning, error)
-```
-
-### Docker Health Checks & Best Practices
-
-#### Health Check
-
-Add health check to your docker-compose.yml:
-
-```yaml
-services:
-  app:
-    # ... other config ...
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-```
-
-#### Volume Permissions
-
-If you encounter permission issues:
-
-```bash
-# On host machine
-chmod -R 777 storage database
-```
-
-Or in Dockerfile (already included):
-```dockerfile
-RUN chown -R www-data:www-data storage bootstrap/cache
-```
-
-#### Queue Worker
-
-For production, run a dedicated queue worker:
-
-```bash
-# Option 1: Inside the same container
-docker exec -d your-container-name php artisan queue:work database --tries=3
-
-# Option 2: Separate service in docker-compose.yml
-services:
-  queue:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: php artisan queue:work database --tries=3 --sleep=3
-    environment:
-      # Same env vars as app service
-    depends_on:
-      - app
-```
-
-#### Logs
-
-View application logs:
-
-```bash
-docker logs -f container-name                    # Follow logs
-docker exec container-name tail -f storage/logs/laravel.log
-```
-
-### Manual Production Deployment (Non-Docker)
-
-If deploying without Docker:
-
-1. **Optimize**
 ```bash
 composer install --optimize-autoloader --no-dev
+npm install
+npm run build
+php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-npm run build
 ```
 
-2. **Environment**
-```env
-APP_ENV=production
-APP_DEBUG=false
-QUEUE_CONNECTION=database
-CACHE_STORE=database
-SESSION_DRIVER=database
-```
+You must also run:
+- a queue worker via Supervisor
+- `php artisan schedule:run` every minute via cron
+- Nginx in front of PHP-FPM
 
-3. **Queue Worker** (use Supervisor)
-```bash
-php artisan queue:work database --tries=3
-```
+### Platform-as-a-Service
 
-4. **Permissions**
-```bash
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
-```
+Most platforms that support Docker can deploy from this repository directly.
 
-See [SETUP.md](SETUP.md) for detailed deployment guide.
+Minimum env vars:
+- `APP_KEY`
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL`
+- database settings
+- mail settings
+- Jitsi settings
+- `RUN_MIGRATIONS=true` only for first deployment
+- `RUN_SEEDERS=false`
 
 ## 📚 Documentation
 
-- **[Setup Guide](SETUP.md)** - Detailed installation instructions
+- **[Deployment Guide](DEPLOYMENT.md)** - Canonical production deployment guide for Docker and manual Ubuntu installs
+- **[Setup Guide](SETUP.md)** - Local setup and installation notes
 - **[Project Spec](PROJECT_SPEC.md)** - Complete feature specifications
 - **[Architecture](ARCHITECTURE.md)** - System design and patterns
 - **[Domain Rules](DOMAIN_RULES.md)** - Business logic and constraints
