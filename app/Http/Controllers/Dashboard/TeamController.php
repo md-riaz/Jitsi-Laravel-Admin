@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Organization;
+use HasinHayder\Tyro\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class TeamController extends Controller
 {
@@ -92,9 +96,14 @@ class TeamController extends Controller
      */
     public function create()
     {
-        $this->authorizeOrgAdmin();
+        $admin = $this->authorizeOrgAdmin();
 
-        return view('dashboard.team.create');
+        $organizations = collect();
+        if (method_exists($admin, 'hasRole') && $admin->hasRole('super-admin')) {
+            $organizations = Organization::orderBy('name')->get(['id', 'name']);
+        }
+
+        return view('dashboard.team.create', compact('organizations'));
     }
 
     /**
@@ -104,11 +113,31 @@ class TeamController extends Controller
     {
         $admin = $this->authorizeOrgAdmin();
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:admin,host,member',
+            'provisioning_mode' => 'nullable|in:new,existing',
+            'organization_name' => 'nullable|string|max:255',
+            'organization_id' => 'nullable|uuid|exists:organizations,id',
+        ];
+
+        if (method_exists($admin, 'hasRole') && $admin->hasRole('super-admin')) {
+            $request->merge([
+                'provisioning_mode' => $request->input('provisioning_mode', 'new'),
+            ]);
+
+            if ($request->input('provisioning_mode') === 'existing') {
+                $rules['organization_id'] = 'required|uuid|exists:organizations,id';
+            } else {
+                $rules['organization_name'] = 'required|string|max:255';
+            }
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
+            'organization_name.required' => 'Please provide an organization name for the new organization.',
+            'organization_id.required' => 'Please select an existing organization.',
         ]);
 
         if ($validator->fails()) {
@@ -116,6 +145,56 @@ class TeamController extends Controller
         }
 
         $data = $validator->validated();
+
+        if (method_exists($admin, 'hasRole') && $admin->hasRole('super-admin')) {
+            $mode = $data['provisioning_mode'] ?? 'new';
+
+            if ($mode === 'new' && $data['role'] !== 'admin') {
+                return redirect()->back()
+                    ->withErrors(['role' => 'When creating a new organization, the first user must be an admin.'])
+                    ->withInput();
+            }
+
+            if ($mode === 'new') {
+                $organization = DB::transaction(function () use ($data) {
+                    $organization = $this->createOrganization($data['organization_name']);
+
+                    $newMember = User::create([
+                        'name' => $data['name'],
+                        'email' => $data['email'],
+                        'password' => Hash::make($data['password']),
+                        'account_type' => 'organization',
+                        'status' => 'active',
+                        'organization_id' => $organization->id,
+                    ]);
+
+                    $this->assignOrgRole($newMember, 'admin');
+                    $organization->users()->attach($newMember->id, ['role' => 'admin']);
+
+                    return $organization;
+                });
+
+                return redirect()->route('dashboard.team.create')
+                    ->with('success', 'Organization and initial admin created successfully for ' . $organization->name . '.');
+            }
+
+            $organization = Organization::findOrFail($data['organization_id']);
+
+            $newMember = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'account_type' => 'organization',
+                'status' => 'active',
+                'organization_id' => $organization->id,
+            ]);
+
+            $this->assignOrgRole($newMember, $data['role']);
+            $organization->users()->attach($newMember->id, ['role' => $data['role']]);
+
+            return redirect()->route('dashboard.team.create')
+                ->with('success', 'User created successfully for ' . $organization->name . '.');
+        }
 
         $newMember = User::create([
             'name' => $data['name'],
@@ -265,14 +344,33 @@ class TeamController extends Controller
         $teamMember->account_type = 'single';
         $teamMember->save();
 
-        $teamMember->removeRole('org-admin');
-        $teamMember->removeRole('member');
+        $teamMember->removeRole(Role::where('slug', 'org-admin')->firstOrFail());
+        $teamMember->removeRole(Role::where('slug', 'member')->firstOrFail());
         if (!$teamMember->hasRole('host')) {
-            $teamMember->assignRole('host');
+            $teamMember->assignRole(Role::where('slug', 'host')->firstOrFail());
         }
 
         return redirect()->route('dashboard.team.index')
             ->with('success', 'Team member removed from organization successfully!');
+    }
+
+    private function createOrganization(string $name): Organization
+    {
+        $name = trim($name);
+        $baseSlug = Str::slug($name);
+        $slug = $baseSlug !== '' ? $baseSlug : Str::lower(Str::random(8));
+        $suffix = 1;
+
+        while (Organization::where('slug', $slug)->exists()) {
+            $slug = $baseSlug !== '' ? $baseSlug . '-' . $suffix : Str::lower(Str::random(8));
+            $suffix++;
+        }
+
+        return Organization::create([
+            'name' => $name,
+            'slug' => $slug,
+            'is_active' => true,
+        ]);
     }
 
     /**
@@ -281,11 +379,14 @@ class TeamController extends Controller
     private function assignOrgRole(User $user, string $role): void
     {
         if ($role === 'admin') {
-            $user->assignRole('org-admin');
+            $roleModel = Role::where('slug', 'org-admin')->firstOrFail();
+            $user->assignRole($roleModel);
         } elseif ($role === 'host') {
-            $user->assignRole('host');
+            $roleModel = Role::where('slug', 'host')->firstOrFail();
+            $user->assignRole($roleModel);
         } else {
-            $user->assignRole('member');
+            $roleModel = Role::where('slug', 'member')->firstOrFail();
+            $user->assignRole($roleModel);
         }
     }
 
@@ -295,17 +396,17 @@ class TeamController extends Controller
     private function syncOrgRole(User $user, string $role): void
     {
         if ($role === 'admin') {
-            $user->removeRole('host');
-            $user->removeRole('member');
-            $user->assignRole('org-admin');
+            $user->removeRole(Role::where('slug', 'host')->firstOrFail());
+            $user->removeRole(Role::where('slug', 'member')->firstOrFail());
+            $user->assignRole(Role::where('slug', 'org-admin')->firstOrFail());
         } elseif ($role === 'host') {
-            $user->removeRole('org-admin');
-            $user->removeRole('member');
-            $user->assignRole('host');
+            $user->removeRole(Role::where('slug', 'org-admin')->firstOrFail());
+            $user->removeRole(Role::where('slug', 'member')->firstOrFail());
+            $user->assignRole(Role::where('slug', 'host')->firstOrFail());
         } else {
-            $user->removeRole('org-admin');
-            $user->removeRole('host');
-            $user->assignRole('member');
+            $user->removeRole(Role::where('slug', 'org-admin')->firstOrFail());
+            $user->removeRole(Role::where('slug', 'host')->firstOrFail());
+            $user->assignRole(Role::where('slug', 'member')->firstOrFail());
         }
     }
 }

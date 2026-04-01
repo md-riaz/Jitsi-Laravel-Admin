@@ -4,8 +4,8 @@
 <div class="auth-container split-left">
     <div class="background-panel" style="background: #1d4ed8;">
         <div class="background-panel-content">
-            <h1>Choose Your Account Type</h1>
-            <p>Select between a personal account for individual meetings or an organization account to join your team.</p>
+            <h1>Start Your Organization</h1>
+            <p>Create your organization and its first admin account in one onboarding flow.</p>
         </div>
     </div>
 
@@ -27,59 +27,23 @@
             </div>
 
             <!-- Registration Form -->
-            <form method="POST" action="{{ route('register.submit') }}" id="registrationForm">
+            <form method="POST" action="{{ route('register.submit') }}">
                 @csrf
+                <input type="hidden" name="account_type" value="organization">
 
-                <!-- Account Type Selection -->
                 <div class="form-group">
-                    <label class="form-label">Account Type *</label>
-                    <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
-                        <label style="flex: 1; cursor: pointer;">
-                            <input type="radio" name="account_type" value="single" {{ old('account_type', 'single') == 'single' ? 'checked' : '' }} style="margin-right: 0.5rem;" onchange="toggleOrganizationField()">
-                            <span style="font-weight: 500;">Personal Account</span>
-                            <p style="margin: 0.25rem 0 0 1.5rem; font-size: 0.875rem; color: #6b7280;">For individual use and personal meetings</p>
-                        </label>
-                    </div>
-                    <div style="display: flex; gap: 1rem;">
-                        <label style="flex: 1; cursor: pointer;">
-                            <input type="radio" name="account_type" value="organization" {{ old('account_type') == 'organization' ? 'checked' : '' }} style="margin-right: 0.5rem;" onchange="toggleOrganizationField()">
-                            <span style="font-weight: 500;">Organization Account</span>
-                            <p style="margin: 0.25rem 0 0 1.5rem; font-size: 0.875rem; color: #6b7280;">Join an existing organization – requires Org Admin approval</p>
-                        </label>
-                    </div>
-                    @error('account_type')
-                    <span class="error-message">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Organization Selection (conditional) -->
-                <div class="form-group" id="organization_field" style="display: none;">
-                    <label for="organization_id" class="form-label">Select Organization *</label>
-                    @if($organizations->isEmpty())
-                        <p style="font-size: 0.875rem; color: #ef4444; margin-top: 0.25rem;">
-                            No active organizations are available. Please contact your administrator.
-                        </p>
-                    @else
-                        <select id="organization_id" name="organization_id" class="form-input @error('organization_id') is-invalid @enderror">
-                            <option value="">— Select an organization —</option>
-                            @foreach($organizations as $org)
-                                <option value="{{ $org->id }}" {{ old('organization_id') == $org->id ? 'selected' : '' }}>
-                                    {{ $org->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    @endif
-                    @error('organization_id')
+                    <label for="organization_name" class="form-label">Organization Name *</label>
+                    <input type="text" id="organization_name" name="organization_name" class="form-input @error('organization_name') is-invalid @enderror" value="{{ old('organization_name') }}" required autocomplete="organization" placeholder="Acme Inc.">
+                    @error('organization_name')
                     <span class="error-message">{{ $message }}</span>
                     @enderror
                     <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.4rem;">
-                        Your registration will be reviewed by the organization admin before you can log in.
+                        We'll create this organization and make you its first org admin immediately.
                     </p>
                 </div>
 
-                <!-- Subscription Plan (personal accounts only) -->
-                <div class="form-group" id="subscription_plan_field">
-                    <label class="form-label">Subscription Plan</label>
+                <div class="form-group">
+                    <label class="form-label">Starting Plan</label>
                     @if($freePlan)
                     <div style="border: 2px solid #6366f1; border-radius: 8px; padding: 1rem; background: #f5f3ff;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -98,13 +62,9 @@
                     </div>
                     @else
                     <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; background: #f9fafb;">
-                        <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Free plan will be assigned to your account.</p>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">The default organization plan will be applied after setup.</p>
                     </div>
                     @endif
-                    <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem;">
-                        Personal accounts start on the <strong>Free Plan</strong>.
-                        To upgrade, <a href="mailto:sales@example.com" style="color: #4f46e5;">contact our sales team</a>.
-                    </p>
                 </div>
 
                 <!-- Name Field -->
@@ -160,27 +120,4 @@
     </div>
 </div>
 
-<script>
-function toggleOrganizationField() {
-    const accountType = document.querySelector('input[name="account_type"]:checked').value;
-    const orgField = document.getElementById('organization_field');
-    const orgSelect = document.getElementById('organization_id');
-    const planField = document.getElementById('subscription_plan_field');
-
-    if (accountType === 'organization') {
-        orgField.style.display = 'block';
-        if (orgSelect) orgSelect.setAttribute('required', 'required');
-        if (planField) planField.style.display = 'none';
-    } else {
-        orgField.style.display = 'none';
-        if (orgSelect) orgSelect.removeAttribute('required');
-        if (planField) planField.style.display = 'block';
-    }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    toggleOrganizationField();
-});
-</script>
 @endsection

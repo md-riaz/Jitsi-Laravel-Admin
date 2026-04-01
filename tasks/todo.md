@@ -79,3 +79,70 @@ Working Notes:
 - The page styles all inputs with themed background and foreground colors.
 - Native `datetime-local` picker icons can disappear when the browser renders a dark-themed control surface against custom input styling.
 - Minimal fix is CSS-only: keep the existing theme, but force a light color scheme for `datetime-local` controls so the native picker affordance stays visible.
+
+- [x] Restate goal + acceptance criteria
+  - Goal: Add only the task 1 bug-condition exploration test for organization-account onboarding.
+  - Acceptance: The exploration test covers public registration and super-admin provisioning for non-super-admin onboarding and encodes the invariant that onboarding must create an organization plus initial user.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [x] Implement smallest safe slice
+- [ ] Run verification (skipped by user request)
+- [ ] Summarize changes + verification story
+
+Working Notes:
+- `.kiro/specs/organization-account-onboarding/.config.kiro` marks this as a bugfix spec.
+- User explicitly requested coding only: no PHPUnit, Pest, artisan test, or other verification commands.
+- Existing exploration coverage already lived in `tests/Feature/OrganizationAccountOnboardingBugConditionTest.php`, so the safest change is to tighten that file rather than introduce parallel test scaffolding.
+
+- [ ] Restate goal + acceptance criteria
+  - Goal: Update onboarding tests to avoid hanging and ensure dependencies and role assignments are seeded correctly.
+  - Acceptance: Debug output reduced, data providers minimized, org-admin role seeded for RegisterController flows, assignRole/removeRole use Role models; targeted phpunit run completes or instrumentation identifies stall step.
+- [ ] Locate existing implementation / patterns
+- [ ] Design: minimal approach + key decisions
+- [ ] Implement smallest safe slice
+- [ ] Run verification (phpunit for onboarding bug condition test)
+- [ ] Summarize changes + verification story
+
+- [x] Restate goal + acceptance criteria
+  - Goal: Ensure super-admin provisioning creates a new organization + initial org admin (like public registration), without relying on client-provided creator flags.
+  - Acceptance: When a super-admin adds a user, organization_name is required server-side and only admin role is accepted; the flow creates organization + initial user with org-admin role.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [x] Implement smallest safe slice
+- [x] Run verification (diagnostics)
+- [ ] Summarize changes + verification story
+
+Working Notes:
+- Enforce super-admin onboarding requirements server-side (no creator_type dependency).
+- Keep org-admin assignment aligned with public registration.
+
+Results:
+- Updated TeamController validation to require organization_name for super-admin provisioning server-side, without relying on creator_type.
+- Enforced super-admin provisioning to always create a new organization with an initial org admin, mirroring public registration.
+- Diagnostics: app/Http/Controllers/Dashboard/TeamController.php clean.
+
+- [ ] Restate goal + acceptance criteria
+  - Goal: Align super-admin and org-admin dashboard/user-provisioning behavior with organization-based model.
+  - Acceptance: Super-admin no longer sees org-user menu items (subscription, my meetings, calendar); super-admin is redirected away from those org-user pages if accessed directly; add-user form clearly shows org context for org-admin and lets super-admin either create a new organization+first admin or provision into an existing organization.
+- [ ] Locate existing implementation / patterns
+- [ ] Design: minimal approach + key decisions
+- [ ] Implement smallest safe slice
+- [ ] Run verification (diagnostics)
+- [ ] Summarize changes + verification story
+
+Working Notes:
+- Keep platform admin (super-admin) separated from org-user experience.
+- Preserve existing super-admin path for creating a brand-new organization + initial admin.
+- Add optional existing-organization provisioning path for super-admin to create profiles directly into an org.
+
+Results:
+- Hid organization-user menu items from super-admin in `resources/views/vendor/tyro-dashboard/partials/admin-sidebar.blade.php` (My Subscription, Create Meeting, My Meetings, Calendar).
+- Added `app/Http/Middleware/RedirectSuperAdminFromOrganizationPages.php` and registered it in `bootstrap/app.php` to block direct super-admin access to organization-user pages.
+- Extended `TeamController@create` to load organizations for super-admin provisioning.
+- Extended `TeamController@store` with provisioning modes:
+  - `new`: create new organization + initial admin.
+  - `existing`: create user inside selected existing organization.
+- Updated `resources/views/dashboard/team/create.blade.php`:
+  - Super-admin now gets provisioning mode toggle + existing organization selector.
+  - Org-admin now sees clear readonly organization context.
+- Diagnostics clean for all touched files.

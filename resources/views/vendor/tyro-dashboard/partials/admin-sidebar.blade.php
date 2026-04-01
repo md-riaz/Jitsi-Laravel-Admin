@@ -51,12 +51,15 @@
                 </svg>
                 My Profile
             </a>
+            @if(!auth()->user()?->hasRole('super-admin'))
             <a href="{{ route('dashboard.subscription') }}" class="sidebar-link {{ request()->routeIs('dashboard.subscription') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
                 My Subscription
             </a>
+            @endif
+            @if(!auth()->user()?->hasRole('super-admin'))
             <a href="{{ route('dashboard.create-meeting') }}" class="sidebar-link {{ request()->routeIs('dashboard.create-meeting') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v2a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2v2z" />
@@ -75,6 +78,7 @@
                 </svg>
                 Calendar
             </a>
+            @endif
 
             @if(!empty($commonMenuItems))
                 @foreach($commonMenuItems as $item)
@@ -135,6 +139,12 @@
                 </a>
             @else
                 {{-- Super-admin: platform-wide user/role/privilege management --}}
+                <a href="{{ route('dashboard.team.create') }}" class="sidebar-link {{ request()->routeIs('dashboard.team.create') ? 'active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5V4H2v16h5m10 0v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4m10 0H7m5-10a3 3 0 110-6 3 3 0 010 6z" />
+                    </svg>
+                    Organization Provisioning
+                </a>
                 <a href="{{ route('tyro-dashboard.users.index') }}" class="sidebar-link {{ request()->routeIs('tyro-dashboard.users.*') ? 'active' : '' }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -181,7 +191,12 @@
 
         </div>
 
-        @if(!empty($allResources ?? config('tyro-dashboard.resources')))
+        @php
+            $isPlatformAdmin = auth()->check()
+                && method_exists(auth()->user(), 'hasRole')
+                && (auth()->user()->hasRole('super-admin') || auth()->user()->hasRole('platform-admin'));
+        @endphp
+        @if($isPlatformAdmin && !empty($allResources ?? config('tyro-dashboard.resources')))
         <div class="sidebar-section">
             <div class="sidebar-section-title">Resources</div>
             @foreach($allResources ?? config('tyro-dashboard.resources', []) as $key => $resource)

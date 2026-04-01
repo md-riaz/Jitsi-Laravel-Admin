@@ -541,6 +541,7 @@
         }
 
         .spinner {
+            color: #ffffff;
             animation: spin 1s linear infinite;
         }
 

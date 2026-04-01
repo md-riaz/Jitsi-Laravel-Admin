@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->appendToGroup('web', \App\Http\Middleware\RedirectMemberFromAdminDashboard::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\RedirectOrgAdminFromSuperAdminUserManagement::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\RedirectSuperAdminFromOrganizationPages::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckOrganizationActive::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckUserStatus::class);
         $middleware->alias([

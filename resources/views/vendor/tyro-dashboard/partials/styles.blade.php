@@ -1876,8 +1876,8 @@
     .spinner {
         width: 16px;
         height: 16px;
-        border: 2px solid var(--border);
-        border-top-color: var(--foreground);
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        border-top-color: currentColor;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }

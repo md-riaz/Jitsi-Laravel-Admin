@@ -567,13 +567,13 @@
         width: 1.25rem;
         height: 1.25rem;
         border: 2px solid transparent;
-        border-top-color: currentColor;
+        border-top-color: #374151;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }
 
     html.dark .btn.loading::after {
-        border-top-color: #111827;
+        border-top-color: #e5e7eb;
     }
 
     @keyframes spin {

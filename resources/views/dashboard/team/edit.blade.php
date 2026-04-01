@@ -11,11 +11,109 @@
 @endsection
 
 @section('content')
+<style>
+.team-edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.team-edit-form-grid {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.team-role-options,
+.team-actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.team-role-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.team-role-card-content {
+    flex: 1;
+}
+
+.team-actions-stack {
+    gap: 1.25rem;
+}
+
+.team-status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+}
+
+.team-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+.team-status-dot-danger { background: var(--destructive); }
+.team-status-dot-success { background: var(--success); }
+
+.team-divider {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+.team-hidden {
+    display: none;
+}
+
+.team-button-full {
+    width: 100%;
+}
+
+.team-flex-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.team-flex-1 {
+    flex: 1;
+}
+
+.team-danger-card {
+    border-color: color-mix(in srgb, var(--destructive), transparent 55%);
+}
+
+.team-danger-card .card-header {
+    border-bottom-color: color-mix(in srgb, var(--destructive), transparent 55%);
+}
+
+.team-danger-title {
+    color: var(--destructive);
+}
+
+@media (max-width: 1024px) {
+    .team-edit-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <div class="page-header">
     <div class="page-header-row">
         <div>
             <h1 class="page-title">Edit User</h1>
-            <p class="page-description" style="font-size: 1rem;">Update {{ $teamMember->name }}'s profile, role, and account status.</p>
+            <p class="page-description">Update {{ $teamMember->name }}'s profile, role, and account status.</p>
         </div>
         <a href="{{ route('dashboard.team.index') }}" class="btn btn-secondary">
             &larr; Back to Users
@@ -24,24 +122,28 @@
 </div>
 
 @if($errors->any())
-    <div style="padding: 16px; margin-bottom: 20px; background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; border-radius: 6px;">
-        <strong>Error!</strong>
-        <ul style="margin: 8px 0 0 20px;">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+    <div class="alert alert-error">
+        <div class="alert-content">
+            <div class="alert-title">Error!</div>
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     </div>
 @endif
 
 @if(session('error'))
-    <div style="padding: 16px; margin-bottom: 20px; background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; border-radius: 6px;">
-        <strong>Error!</strong> {{ session('error') }}
+    <div class="alert alert-error">
+        <div class="alert-content">
+            <div class="alert-title">Error!</div>
+            <p class="alert-message">{{ session('error') }}</p>
+        </div>
     </div>
 @endif
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-    <!-- Left: User Profile & Role -->
+<div class="team-edit-grid">
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">User Information</h3>
@@ -51,139 +153,109 @@
                 @csrf
                 @method('PUT')
 
-                <div style="display: grid; gap: 20px;">
-                    <!-- Name -->
+                <div class="team-edit-form-grid">
                     <div>
-                        <label for="name" style="display: block; margin-bottom: 8px; font-weight: 500;">Full Name *</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $teamMember->name) }}" required
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                               placeholder="Full name">
+                        <label for="name" class="form-label">Full Name *</label>
+                        <input type="text" id="name" name="name" value="{{ old('name', $teamMember->name) }}" required class="form-input" placeholder="Full name">
                     </div>
 
-                    <!-- Email -->
                     <div>
-                        <label for="email" style="display: block; margin-bottom: 8px; font-weight: 500;">Email *</label>
-                        <input type="email" id="email" name="email" value="{{ old('email', $teamMember->email) }}" required
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                               placeholder="email@example.com">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" id="email" name="email" value="{{ old('email', $teamMember->email) }}" required class="form-input" placeholder="[email]">
                     </div>
 
-                    <!-- New Password -->
                     <div>
-                        <label for="password" style="display: block; margin-bottom: 8px; font-weight: 500;">
-                            New Password <span style="color: #9ca3af; font-weight: normal;">(leave blank to keep current)</span>
+                        <label for="password" class="form-label">
+                            New Password <span class="form-label-optional">(leave blank to keep current)</span>
                         </label>
-                        <input type="password" id="password" name="password" minlength="8"
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                               placeholder="Minimum 8 characters">
+                        <input type="password" id="password" name="password" minlength="8" class="form-input" placeholder="Minimum 8 characters">
                     </div>
 
-                    <!-- Confirm Password -->
                     <div>
-                        <label for="password_confirmation" style="display: block; margin-bottom: 8px; font-weight: 500;">Confirm New Password</label>
-                        <input type="password" id="password_confirmation" name="password_confirmation" minlength="8"
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
-                               placeholder="Re-enter new password">
+                        <label for="password_confirmation" class="form-label">Confirm New Password</label>
+                        <input type="password" id="password_confirmation" name="password_confirmation" minlength="8" class="form-input" placeholder="Re-enter new password">
                     </div>
 
-                    <!-- Role -->
                     <div>
-                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Role *</label>
+                        <label class="form-label">Role *</label>
                         @php
                             $currentRole = $teamMember->organization->users()->where('user_id', $teamMember->id)->first()?->pivot->role ?? 'member';
                         @endphp
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <label style="display: flex; align-items: start; gap: 12px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
-                                <input type="radio" name="role" value="member" {{ old('role', $currentRole) == 'member' ? 'checked' : '' }} required style="margin-top: 4px;">
-                                <div>
-                                    <strong style="display: block;">Member</strong>
-                                    <small style="color: #6b7280;">Can join meetings; cannot create or manage meetings.</small>
+                        <div class="team-role-options">
+                            <label class="team-role-card">
+                                <input type="radio" name="role" value="member" {{ old('role', $currentRole) == 'member' ? 'checked' : '' }} required>
+                                <div class="team-role-card-content">
+                                    <strong>Member</strong>
+                                    <p class="form-hint">Can join meetings; cannot create or manage meetings.</p>
                                 </div>
                             </label>
-                            <label style="display: flex; align-items: start; gap: 12px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
-                                <input type="radio" name="role" value="host" {{ old('role', $currentRole) == 'host' ? 'checked' : '' }} required style="margin-top: 4px;">
-                                <div>
-                                    <strong style="display: block;">Host</strong>
-                                    <small style="color: #6b7280;">Can create and manage their own meetings and invite participants.</small>
+                            <label class="team-role-card">
+                                <input type="radio" name="role" value="host" {{ old('role', $currentRole) == 'host' ? 'checked' : '' }} required>
+                                <div class="team-role-card-content">
+                                    <strong>Host</strong>
+                                    <p class="form-hint">Can create and manage their own meetings and invite participants.</p>
                                 </div>
                             </label>
-                            <label style="display: flex; align-items: start; gap: 12px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
-                                <input type="radio" name="role" value="admin" {{ old('role', $currentRole) == 'admin' ? 'checked' : '' }} required style="margin-top: 4px;">
-                                <div>
-                                    <strong style="display: block;">Admin</strong>
-                                    <small style="color: #6b7280;">Can manage users, create meetings, and manage all organization settings.</small>
+                            <label class="team-role-card">
+                                <input type="radio" name="role" value="admin" {{ old('role', $currentRole) == 'admin' ? 'checked' : '' }} required>
+                                <div class="team-role-card-content">
+                                    <strong>Admin</strong>
+                                    <p class="form-hint">Can manage users, create meetings, and manage all organization settings.</p>
                                 </div>
                             </label>
                         </div>
                     </div>
 
-                    <!-- Buttons -->
-                    <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                        <a href="{{ route('dashboard.team.index') }}"
-                           style="padding: 10px 24px; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; background: white;">
-                            Cancel
-                        </a>
-                        <button type="submit"
-                                style="padding: 10px 24px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                            Save Changes
-                        </button>
+                    <div class="team-divider">
+                        <a href="{{ route('dashboard.team.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Right: Account Status & Actions -->
-    <div style="display: flex; flex-direction: column; gap: 20px;">
-
-        <!-- Account Status -->
+    <div class="team-actions-stack">
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Account Status</h3>
             </div>
             <div class="card-body">
                 @if(method_exists($teamMember, 'isSuspended') && $teamMember->isSuspended())
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></span>
-                        <strong style="color: #991b1b;">Suspended</strong>
+                    <div class="team-status-row">
+                        <span class="team-status-dot team-status-dot-danger"></span>
+                        <strong class="team-danger-title">Suspended</strong>
                     </div>
                     @if(method_exists($teamMember, 'getSuspensionReason') && $teamMember->getSuspensionReason())
-                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 16px;">
-                            <strong>Reason:</strong> {{ $teamMember->getSuspensionReason() }}
-                        </p>
+                        <p class="form-hint"><strong>Reason:</strong> {{ $teamMember->getSuspensionReason() }}</p>
                     @endif
                     <form action="{{ route('dashboard.team.unsuspend', $teamMember->id) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-secondary" style="width: 100%;">
-                            Unsuspend User
-                        </button>
+                        <button type="submit" class="btn btn-secondary team-button-full">Unsuspend User</button>
                     </form>
                 @else
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-                        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></span>
-                        <strong style="color: #065f46;">Active</strong>
+                    <div class="team-status-row">
+                        <span class="team-status-dot team-status-dot-success"></span>
+                        <strong>Active</strong>
                     </div>
                     @if(method_exists($teamMember, 'suspend'))
-                        <button type="button" class="btn btn-danger" style="width: 100%;"
-                                onclick="document.getElementById('suspendSection').style.display = 'block'; this.style.display = 'none';">
+                        <button type="button" class="btn btn-destructive team-button-full" onclick="document.getElementById('suspendSection').classList.remove('team-hidden'); this.classList.add('team-hidden');">
                             Suspend User
                         </button>
-                        <div id="suspendSection" style="display:none; margin-top:12px;">
+                        <div id="suspendSection" class="team-hidden" style="margin-top: 0.75rem;">
                             <form action="{{ route('dashboard.team.suspend', $teamMember->id) }}" method="POST">
                                 @csrf
-                                <div style="margin-bottom: 12px;">
-                                    <label style="display: block; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500;">
-                                        Reason <span style="color: #9ca3af;">(optional)</span>
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        Reason <span class="form-label-optional">(optional)</span>
                                     </label>
-                                    <textarea name="reason" rows="3" placeholder="Enter a reason for suspension…"
-                                              style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                                    <textarea name="reason" rows="3" placeholder="Enter a reason for suspension…" class="form-textarea"></textarea>
                                 </div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button type="button" class="btn btn-secondary" style="flex: 1;"
-                                            onclick="document.getElementById('suspendSection').style.display = 'none'; document.querySelector('.btn-danger').style.display = '';">
+                                <div class="team-flex-row">
+                                    <button type="button" class="btn btn-secondary team-flex-1" onclick="document.getElementById('suspendSection').classList.add('team-hidden'); this.closest('.card-body').querySelector('.btn.btn-destructive').classList.remove('team-hidden');">
                                         Cancel
                                     </button>
-                                    <button type="submit" class="btn btn-danger" style="flex: 1;">Confirm Suspend</button>
+                                    <button type="submit" class="btn btn-destructive team-flex-1">Confirm Suspend</button>
                                 </div>
                             </form>
                         </div>
@@ -192,22 +264,16 @@
             </div>
         </div>
 
-        <!-- Login As -->
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Impersonation</h3>
             </div>
             <div class="card-body">
-                <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 16px;">
-                    Log in as this user to troubleshoot issues or verify their experience. You can return to your account via the banner at the top of the page.
-                </p>
-                <form action="{{ route('dashboard.team.login-as', $teamMember->id) }}" method="POST"
-                      id="login-as-form">
+                <p class="form-hint">Log in as this user to troubleshoot issues or verify their experience. You can return to your account via the banner at the top of the page.</p>
+                <form action="{{ route('dashboard.team.login-as', $teamMember->id) }}" method="POST" id="login-as-form">
                     @csrf
-                    <button type="button" class="btn btn-secondary" style="width: 100%;"
-                            data-name="{{ e($teamMember->name) }}"
-                            onclick="if(confirm('Log in as ' + this.dataset.name + '?')) document.getElementById('login-as-form').submit();">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline-block; margin-right: 6px; vertical-align: middle;">
+                    <button type="button" class="btn btn-secondary team-button-full" data-name="{{ e($teamMember->name) }}" onclick="if(confirm('Log in as ' + this.dataset.name + '?')) document.getElementById('login-as-form').submit();">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
                         Login As {{ $teamMember->name }}
@@ -216,28 +282,21 @@
             </div>
         </div>
 
-        <!-- Danger Zone: Remove from Org -->
-        <div class="card" style="border-color: #fca5a5;">
-            <div class="card-header" style="border-bottom-color: #fca5a5;">
-                <h3 class="card-title" style="color: #991b1b;">Danger Zone</h3>
+        <div class="card team-danger-card">
+            <div class="card-header">
+                <h3 class="card-title team-danger-title">Danger Zone</h3>
             </div>
             <div class="card-body">
-                <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 16px;">
-                    Removing this user from the organization will revoke their org access. Their account will remain but they will no longer belong to this organization.
-                </p>
-                <form action="{{ route('dashboard.team.destroy', $teamMember->id) }}" method="POST"
-                      id="remove-from-org-form">
+                <p class="form-hint">Removing this user from the organization will revoke their org access. Their account will remain but they will no longer belong to this organization.</p>
+                <form action="{{ route('dashboard.team.destroy', $teamMember->id) }}" method="POST" id="remove-from-org-form">
                     @csrf
                     @method('DELETE')
-                    <button type="button" class="btn btn-danger" style="width: 100%;"
-                            data-name="{{ e($teamMember->name) }}"
-                            onclick="if(confirm('Remove ' + this.dataset.name + ' from the organization? This cannot be undone.')) document.getElementById('remove-from-org-form').submit();">
+                    <button type="button" class="btn btn-destructive team-button-full" data-name="{{ e($teamMember->name) }}" onclick="if(confirm('Remove ' + this.dataset.name + ' from the organization? This cannot be undone.')) document.getElementById('remove-from-org-form').submit();">
                         Remove from Organization
                     </button>
                 </form>
             </div>
         </div>
-
     </div>
 </div>
 @endsection
