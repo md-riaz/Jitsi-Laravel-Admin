@@ -143,6 +143,23 @@
     </div>
 @endif
 
+@php
+    $organization = $teamMember->organization;
+    $memberIsOwner = $organization
+        && $organization->owner_id !== null
+        && (int) $organization->owner_id === (int) $teamMember->id;
+
+    $currentUser = auth()->user();
+    $currentUserIsSuperAdmin = $currentUser && method_exists($currentUser, 'hasRole') && $currentUser->hasRole('super-admin');
+    $currentUserIsOwner = $organization
+        && $organization->owner_id !== null
+        && $currentUser
+        && (int) $organization->owner_id === (int) $currentUser->id;
+
+    $memberIsOrgAdmin = $teamMember->hasRole('org-admin');
+    $ownerRestricted = $memberIsOwner || (!$currentUserIsSuperAdmin && !$currentUserIsOwner && $memberIsOrgAdmin);
+@endphp
+
 <div class="team-edit-grid">
     <div class="card">
         <div class="card-header">
@@ -181,23 +198,28 @@
                         @php
                             $currentRole = $teamMember->organization->users()->where('user_id', $teamMember->id)->first()?->pivot->role ?? 'member';
                         @endphp
+                        @if($memberIsOwner)
+                            <p class="form-hint" style="margin-bottom: 0.5rem;">This account is the organization owner. Role changes are blocked.</p>
+                        @elseif(!$currentUserIsOwner && $memberIsOrgAdmin)
+                            <p class="form-hint" style="margin-bottom: 0.5rem;">Only the organization owner can change another admin's role.</p>
+                        @endif
                         <div class="team-role-options">
                             <label class="team-role-card">
-                                <input type="radio" name="role" value="member" {{ old('role', $currentRole) == 'member' ? 'checked' : '' }} required>
+                                <input type="radio" name="role" value="member" {{ old('role', $currentRole) == 'member' ? 'checked' : '' }} required {{ $ownerRestricted ? 'disabled' : '' }}>
                                 <div class="team-role-card-content">
                                     <strong>Member</strong>
                                     <p class="form-hint">Can join meetings; cannot create or manage meetings.</p>
                                 </div>
                             </label>
                             <label class="team-role-card">
-                                <input type="radio" name="role" value="host" {{ old('role', $currentRole) == 'host' ? 'checked' : '' }} required>
+                                <input type="radio" name="role" value="host" {{ old('role', $currentRole) == 'host' ? 'checked' : '' }} required {{ $ownerRestricted ? 'disabled' : '' }}>
                                 <div class="team-role-card-content">
                                     <strong>Host</strong>
                                     <p class="form-hint">Can create and manage their own meetings and invite participants.</p>
                                 </div>
                             </label>
                             <label class="team-role-card">
-                                <input type="radio" name="role" value="admin" {{ old('role', $currentRole) == 'admin' ? 'checked' : '' }} required>
+                                <input type="radio" name="role" value="admin" {{ old('role', $currentRole) == 'admin' ? 'checked' : '' }} required {{ $ownerRestricted ? 'disabled' : '' }}>
                                 <div class="team-role-card-content">
                                     <strong>Admin</strong>
                                     <p class="form-hint">Can manage users, create meetings, and manage all organization settings.</p>
@@ -208,7 +230,7 @@
 
                     <div class="team-divider">
                         <a href="{{ route('dashboard.team.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary" {{ $ownerRestricted ? 'disabled' : '' }}>Save Changes</button>
                     </div>
                 </div>
             </form>
@@ -221,7 +243,9 @@
                 <h3 class="card-title">Account Status</h3>
             </div>
             <div class="card-body">
-                @if(method_exists($teamMember, 'isSuspended') && $teamMember->isSuspended())
+                @if($ownerRestricted)
+                    <p class="form-hint">Owner boundary protection is active. Suspension actions are disabled for this account.</p>
+                @elseif(method_exists($teamMember, 'isSuspended') && $teamMember->isSuspended())
                     <div class="team-status-row">
                         <span class="team-status-dot team-status-dot-danger"></span>
                         <strong class="team-danger-title">Suspended</strong>
@@ -269,16 +293,20 @@
                 <h3 class="card-title">Impersonation</h3>
             </div>
             <div class="card-body">
-                <p class="form-hint">Log in as this user to troubleshoot issues or verify their experience. You can return to your account via the banner at the top of the page.</p>
-                <form action="{{ route('dashboard.team.login-as', $teamMember->id) }}" method="POST" id="login-as-form">
-                    @csrf
-                    <button type="button" class="btn btn-secondary team-button-full" data-name="{{ e($teamMember->name) }}" onclick="if(confirm('Log in as ' + this.dataset.name + '?')) document.getElementById('login-as-form').submit();">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        Login As {{ $teamMember->name }}
-                    </button>
-                </form>
+                @if($ownerRestricted)
+                    <p class="form-hint">Owner boundary protection is active. Impersonation is disabled for this account.</p>
+                @else
+                    <p class="form-hint">Log in as this user to troubleshoot issues or verify their experience. You can return to your account via the banner at the top of the page.</p>
+                    <form action="{{ route('dashboard.team.login-as', $teamMember->id) }}" method="POST" id="login-as-form">
+                        @csrf
+                        <button type="button" class="btn btn-secondary team-button-full" data-name="{{ e($teamMember->name) }}" onclick="if(confirm('Log in as ' + this.dataset.name + '?')) document.getElementById('login-as-form').submit();">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Login As {{ $teamMember->name }}
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
 
@@ -287,14 +315,18 @@
                 <h3 class="card-title team-danger-title">Danger Zone</h3>
             </div>
             <div class="card-body">
-                <p class="form-hint">Removing this user from the organization will revoke their org access. Their account will remain but they will no longer belong to this organization.</p>
-                <form action="{{ route('dashboard.team.destroy', $teamMember->id) }}" method="POST" id="remove-from-org-form">
-                    @csrf
-                    @method('DELETE')
-                    <button type="button" class="btn btn-destructive team-button-full" data-name="{{ e($teamMember->name) }}" onclick="if(confirm('Remove ' + this.dataset.name + ' from the organization? This cannot be undone.')) document.getElementById('remove-from-org-form').submit();">
-                        Remove from Organization
-                    </button>
-                </form>
+                @if($ownerRestricted)
+                    <p class="form-hint">Owner boundary protection is active. Removal is disabled for this account.</p>
+                @else
+                    <p class="form-hint">Removing this user from the organization will revoke their org access. Their account will remain but they will no longer belong to this organization.</p>
+                    <form action="{{ route('dashboard.team.destroy', $teamMember->id) }}" method="POST" id="remove-from-org-form">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" class="btn btn-destructive team-button-full" data-name="{{ e($teamMember->name) }}" onclick="if(confirm('Remove ' + this.dataset.name + ' from the organization? This cannot be undone.')) document.getElementById('remove-from-org-form').submit();">
+                            Remove from Organization
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
     </div>

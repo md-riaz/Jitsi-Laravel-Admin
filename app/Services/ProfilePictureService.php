@@ -12,9 +12,11 @@ class ProfilePictureService
     /** Allowed MIME types mapped to safe extensions */
     private const ALLOWED_MIME_TYPES = [
         'image/jpeg' => 'jpg',
-        'image/jpg'  => 'jpg',
-        'image/png'  => 'png',
-        'image/gif'  => 'gif',
+        'image/jpg' => 'jpg',
+        'image/pjpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/x-png' => 'png',
+        'image/gif' => 'gif',
     ];
 
     /**
@@ -22,9 +24,19 @@ class ProfilePictureService
      */
     public function upload(User $user, UploadedFile $file): string
     {
-        // Validate MIME type against allowed types using the actual detected MIME type
-        $mimeType = $file->getMimeType();
-        if (!isset(self::ALLOWED_MIME_TYPES[$mimeType])) {
+        // Validate MIME type against allowed types with a safe fallback based on guessed extension
+        $mimeType = $file->getMimeType() ?? '';
+        $guessedExtension = strtolower((string) $file->guessExtension());
+
+        $extension = self::ALLOWED_MIME_TYPES[$mimeType]
+            ?? match ($guessedExtension) {
+                'jpeg', 'jpg' => 'jpg',
+                'png' => 'png',
+                'gif' => 'gif',
+                default => null,
+            };
+
+        if ($extension === null) {
             throw new \InvalidArgumentException('Unsupported image type. Only JPEG, PNG, and GIF are allowed.');
         }
 
@@ -34,7 +46,6 @@ class ProfilePictureService
         }
 
         // Generate a secure, unpredictable filename using a random string
-        $extension = self::ALLOWED_MIME_TYPES[$mimeType];
         $basename = $user->id . '_' . Str::random(16) . '.' . $extension;
 
         // Store the file in the public disk under avatars/

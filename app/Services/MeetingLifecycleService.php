@@ -113,15 +113,24 @@ class MeetingLifecycleService
             ->where('status', 'live')
             ->where('active_participant_count', 0)
             ->whereNull('end_at')
-            ->whereNotNull('last_activity_at')
-            ->where('last_activity_at', '<=', $cutoff)
+            ->where(function ($query) use ($cutoff): void {
+                $query->where('last_activity_at', '<=', $cutoff)
+                    ->orWhere(function ($fallbackQuery) use ($cutoff): void {
+                        $fallbackQuery->whereNull('last_activity_at')
+                            ->where('created_at', '<=', $cutoff);
+                    });
+            })
             ->get();
 
         $count = 0;
         foreach ($meetings as $meeting) {
+            $inactiveSince = $meeting->last_activity_at ?: $meeting->created_at;
+
             $this->endMeeting($meeting, 'empty_room', [
                 'grace_seconds' => $graceSeconds,
                 'last_activity_at' => optional($meeting->last_activity_at)?->toIso8601String(),
+                'inactive_since' => optional($inactiveSince)?->toIso8601String(),
+                'used_created_at_fallback' => $meeting->last_activity_at === null,
             ], true);
             $count++;
         }

@@ -54,12 +54,6 @@
     display: inline;
 }
 
-.team-status-pending {
-    background: color-mix(in srgb, var(--warning), transparent 86%);
-    color: color-mix(in srgb, var(--warning), black 30%);
-    border: 1px solid color-mix(in srgb, var(--warning), transparent 45%);
-}
-
 .team-status-suspended {
     background: color-mix(in srgb, var(--destructive), transparent 88%);
     color: color-mix(in srgb, var(--destructive), black 25%);
@@ -169,7 +163,6 @@
                 <select name="status" class="form-select">
                     <option value="">All Status</option>
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                 </select>
             </div>
             <div class="team-index-actions">
@@ -203,6 +196,23 @@
                     </thead>
                     <tbody>
                         @foreach($teamMembers as $member)
+                        @php
+                            $memberIsOwner = $member->organization
+                                && $member->organization->owner_id !== null
+                                && (int) $member->organization->owner_id === (int) $member->id;
+
+                            $currentUser = auth()->user();
+                            $currentUserIsOwner = $organization
+                                && $organization->owner_id !== null
+                                && $currentUser
+                                && (int) $organization->owner_id === (int) $currentUser->id;
+
+                            $currentUserIsSuperAdmin = $currentUser && method_exists($currentUser, 'hasRole') && $currentUser->hasRole('super-admin');
+                            $memberIsOrgAdmin = $member->hasRole('org-admin');
+                            $canManageMember = $member->id !== auth()->id()
+                                && !$memberIsOwner
+                                && ($currentUserIsSuperAdmin || $currentUserIsOwner || !$memberIsOrgAdmin);
+                        @endphp
                         <tr>
                             <td>
                                 <div class="team-user-cell">
@@ -211,6 +221,9 @@
                                 </div>
                                 @if($member->id === auth()->id())
                                     <span class="badge badge-info" style="margin-top: 0.25rem;">You</span>
+                                @endif
+                                @if($memberIsOwner)
+                                    <span class="badge badge-warning" style="margin-top: 0.25rem;">Owner</span>
                                 @endif
                             </td>
                             <td>
@@ -223,9 +236,7 @@
                                 @endif
                             </td>
                             <td>
-                                @if($member->status === 'pending')
-                                    <span class="badge team-status-pending">Pending</span>
-                                @elseif(method_exists($member, 'isSuspended') && $member->isSuspended())
+                                @if(method_exists($member, 'isSuspended') && $member->isSuspended())
                                     <span class="badge team-status-suspended">Suspended</span>
                                 @else
                                     <span class="badge team-status-active">Active</span>
@@ -233,7 +244,7 @@
                             </td>
                             <td>{{ $member->created_at ? $member->created_at->format('M d, Y') : '—' }}</td>
                             <td>
-                                @if($member->id !== auth()->id())
+                                @if($canManageMember)
                                     <div class="team-row-actions">
                                         <a href="{{ route('dashboard.team.edit', $member->id) }}" class="btn btn-sm btn-secondary" title="Edit user">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,7 +294,13 @@
                                         </form>
                                     </div>
                                 @else
-                                    <span class="team-no-action">—</span>
+                                    @if($memberIsOwner)
+                                        <span class="team-no-action">Owner account is protected</span>
+                                    @elseif($member->id === auth()->id())
+                                        <span class="team-no-action">—</span>
+                                    @else
+                                        <span class="team-no-action">Only owner can manage admin accounts</span>
+                                    @endif
                                 @endif
                             </td>
                         </tr>

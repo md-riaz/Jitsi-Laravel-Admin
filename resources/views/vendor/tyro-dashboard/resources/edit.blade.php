@@ -90,6 +90,62 @@
     </div>
 </div>
 
+@if($resource === 'mail_templates')
+<div class="card" style="margin-bottom: 1rem;">
+    <div class="card-body">
+        <h3 style="margin: 0 0 0.75rem 0;">Available placeholders</h3>
+        @php
+            $availablePlaceholders = method_exists($item, 'allowedPlaceholders') ? $item->allowedPlaceholders() : [];
+            $previewDefaults = [
+                'meeting_title' => 'Weekly Product Sync',
+                'meeting_date' => now()->addDay()->format('M d, Y'),
+                'meeting_time' => now()->addDay()->format('g:i A'),
+                'meeting_datetime' => now()->addDay()->format('M d, Y g:i A'),
+                'meeting_duration_minutes' => '45',
+                'organizer_name' => 'Alex Morgan',
+                'invite_url' => url('/invite/demo-token'),
+                'meeting_url' => url('/meet/demo-meeting'),
+                'join_early_minutes' => '10',
+                'minutes_until_start' => '15',
+                'cancellation_reason' => 'Schedule conflict',
+                'changes_html' => '<ul><li>Time changed from 2:00 PM to 2:30 PM</li></ul>',
+            ];
+            $previewVariables = [];
+            foreach ($availablePlaceholders as $token) {
+                $previewVariables[$token] = $previewDefaults[$token] ?? '[sample_' . $token . ']';
+            }
+            $previewSubject = app(\App\Services\MailTemplateService::class)->interpolateRaw((string) ($item->subject_template ?? ''), $previewVariables);
+            $previewBodyHtml = app(\App\Services\MailTemplateService::class)->interpolateRaw((string) ($item->body_html ?? ''), $previewVariables);
+        @endphp
+
+        @if(empty($availablePlaceholders))
+            <p style="margin: 0; color: var(--text-secondary);">No placeholders defined for this template.</p>
+        @else
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                @foreach($availablePlaceholders as $placeholder)
+                    <code style="background: var(--muted); padding: 4px 8px; border-radius: 6px;">{{ '{{' . $placeholder . '}}' }}</code>
+                @endforeach
+            </div>
+        @endif
+
+        <h3 style="margin: 0 0 0.75rem 0;">Server preview (current saved content)</h3>
+        <div style="margin-bottom: 0.75rem;">
+            <strong>Subject:</strong>
+            <div style="margin-top: 0.25rem; padding: 0.625rem; border: 1px solid var(--border); border-radius: 8px; background: var(--muted);">
+                {{ $previewSubject }}
+            </div>
+        </div>
+        <div>
+            <strong>Body:</strong>
+            <div style="margin-top: 0.25rem; padding: 0.875rem; border: 1px solid var(--border); border-radius: 8px; background: #fff;">
+                {!! $previewBodyHtml !!}
+            </div>
+        </div>
+        <p style="margin: 0.75rem 0 0 0; color: var(--text-secondary); font-size: 0.875rem;">Preview updates after save in this first pass.</p>
+    </div>
+</div>
+@endif
+
 <div class="card">
     <div class="card-body">
         <form action="{{ route('tyro-dashboard.resources.update', [$resource, $item->id]) }}" method="POST" enctype="multipart/form-data">

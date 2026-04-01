@@ -92,14 +92,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user account is pending approval
-     */
-    public function isPending(): bool
-    {
-        return $this->status === 'pending';
-    }
-
-    /**
      * Check if user account is active
      */
     public function isActive(): bool

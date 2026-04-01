@@ -146,3 +146,21 @@ Results:
   - Super-admin now gets provisioning mode toggle + existing organization selector.
   - Org-admin now sees clear readonly organization context.
 - Diagnostics clean for all touched files.
+
+- [x] Restate goal + acceptance criteria
+  - Goal: Remove invite user page flow entry points without touching meeting invite mechanics.
+  - Acceptance: No admin sidebar link to invitation pages, no invitation/referral cards on admin dashboard, and invitation feature flag disabled.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [x] Implement smallest safe slice
+- [x] Run verification (diagnostics)
+- [x] Summarize changes + verification story
+
+Working Notes:
+- Kept scope strictly to invite-user page flow entry points only.
+- Did not modify meeting invite domain behavior/routes/services.
+
+Results:
+- Removed the “Invitation Links” menu entry from `resources/views/vendor/tyro-dashboard/partials/admin-sidebar.blade.php`.
+- Removed invitation/referral stat cards from `resources/views/vendor/tyro-dashboard/dashboard/admin.blade.php`.
+- Disabled dashboard invitation feature flag in `config/tyro-dashboard.php` by setting `features.invitation_system` to `false`.

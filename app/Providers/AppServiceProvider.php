@@ -97,16 +97,5 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Inject pending user count for org admins (sidebar)
-        View::composer('vendor.tyro-dashboard.partials.admin-sidebar', function ($view) {
-            $user = Auth::user();
-            $pendingCount = 0;
-            if ($user && method_exists($user, 'hasRole') && $user->hasRole('org-admin') && $user->organization_id) {
-                $pendingCount = \App\Models\User::where('organization_id', $user->organization_id)
-                    ->where('status', 'pending')
-                    ->count();
-            }
-            $view->with('sidebarPendingCount', $pendingCount);
-        });
     }
 }

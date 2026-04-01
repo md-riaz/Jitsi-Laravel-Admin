@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\ProfilePictureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use Throwable;
 
 class ProfilePictureController extends Controller
 {
@@ -22,15 +24,32 @@ class ProfilePictureController extends Controller
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $user = $request->user();
-        $path = $this->profilePictureService->upload($user, $request->file('avatar'));
+        try {
+            $user = $request->user();
+            $path = $this->profilePictureService->upload($user, $request->file('avatar'));
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile picture uploaded successfully',
-            'avatar_url' => $user->fresh()->avatar_url,
-            'avatar_path' => $path,
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture uploaded successfully',
+                'avatar_url' => $user->fresh()->avatar_url,
+                'avatar_path' => $path,
+            ]);
+        } catch (InvalidArgumentException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'errors' => [
+                    'avatar' => [$exception->getMessage()],
+                ],
+            ], 422);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to upload profile picture right now. Please try again.',
+            ], 500);
+        }
     }
 
     /**

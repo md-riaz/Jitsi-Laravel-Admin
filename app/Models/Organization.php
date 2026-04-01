@@ -14,6 +14,15 @@ class Organization extends Model
     use HasFactory;
     use HasUuids;
 
+    protected static function booted(): void
+    {
+        static::updating(function (Organization $organization): void {
+            if ($organization->isDirty('owner_id') && $organization->getOriginal('owner_id') !== null) {
+                $organization->owner_id = $organization->getOriginal('owner_id');
+            }
+        });
+    }
+
     protected $fillable = [
         'name',
         'slug',
@@ -28,6 +37,7 @@ class Organization extends Model
         'logo_path',
         'primary_color',
         'secondary_color',
+        'owner_id',
     ];
 
     protected $casts = [
@@ -71,6 +81,28 @@ class Organization extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->owner_id !== null && (int) $this->owner_id === (int) $user->id;
+    }
+
+    public function assignOwnerIfMissing(User $user): bool
+    {
+        if ($this->owner_id !== null) {
+            return false;
+        }
+
+        $this->owner_id = $user->id;
+        $this->save();
+
+        return true;
     }
 
     public function meetings(): HasMany

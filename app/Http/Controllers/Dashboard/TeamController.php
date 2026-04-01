@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Organization;
 use HasinHayder\Tyro\Models\Role;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +54,52 @@ class TeamController extends Controller
         }
 
         return $member;
+    }
+
+    private function isOrganizationOwnerAccount(User $user): bool
+    {
+        return $user->organization
+            && $user->organization->owner_id !== null
+            && (int) $user->organization->owner_id === (int) $user->id;
+    }
+
+    private function isOrganizationOwner(User $user, Organization $organization): bool
+    {
+        return $organization->owner_id !== null && (int) $organization->owner_id === (int) $user->id;
+    }
+
+    private function denyTeamAction(string $message): RedirectResponse
+    {
+        return redirect()->back()->with('error', $message);
+    }
+
+    private function ensureAllowedTeamAction(User $admin, User $teamMember, string $actionLabel, ?string $targetRole = null): ?RedirectResponse
+    {
+        if ($this->isOrganizationOwnerAccount($teamMember)) {
+            return $this->denyTeamAction('This account is the organization owner and cannot be ' . $actionLabel . '.');
+        }
+
+        if (method_exists($admin, 'hasRole') && $admin->hasRole('super-admin')) {
+            return null;
+        }
+
+        $organization = $teamMember->organization;
+        if (!$organization) {
+            return $this->denyTeamAction('Unable to validate organization ownership boundary for this user.');
+        }
+
+        $adminIsOwner = $this->isOrganizationOwner($admin, $organization);
+        $targetIsAdmin = method_exists($teamMember, 'hasRole') && $teamMember->hasRole('org-admin');
+
+        if (!$adminIsOwner && $targetIsAdmin) {
+            return $this->denyTeamAction('Only the organization owner can manage admin accounts.');
+        }
+
+        if ($targetRole === 'admin' && !$adminIsOwner) {
+            return $this->denyTeamAction('Only the organization owner can promote users to admin.');
+        }
+
+        return null;
     }
 
     /**
@@ -157,7 +204,7 @@ class TeamController extends Controller
 
             if ($mode === 'new') {
                 $organization = DB::transaction(function () use ($data) {
-                    $organization = $this->createOrganization($data['organization_name']);
+                    $organization = $this->createOrganization($data['organization_name'], null);
 
                     $newMember = User::create([
                         'name' => $data['name'],
@@ -170,6 +217,7 @@ class TeamController extends Controller
 
                     $this->assignOrgRole($newMember, 'admin');
                     $organization->users()->attach($newMember->id, ['role' => 'admin']);
+                    $organization->assignOwnerIfMissing($newMember);
 
                     return $organization;
                 });
@@ -235,6 +283,10 @@ class TeamController extends Controller
             return redirect()->back()->with('error', 'You cannot edit your own account here.');
         }
 
+        if ($denial = $this->ensureAllowedTeamAction($admin, $teamMember, 'edited')) {
+            return $denial;
+        }
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $teamMember->id,
@@ -250,6 +302,10 @@ class TeamController extends Controller
 
         $data = $validator->validated();
 
+        if ($denial = $this->ensureAllowedTeamAction($admin, $teamMember, 'role changed', $data['role'])) {
+            return $denial;
+        }
+
         $teamMember->name = $data['name'];
         $teamMember->email = $data['email'];
         if (!empty($data['password'])) {
@@ -258,7 +314,7 @@ class TeamController extends Controller
         $teamMember->save();
 
         // Update role in pivot table
-        $admin->organization->users()->updateExistingPivot($teamMember->id, ['role' => $data['role']]);
+        $teamMember->organization?->users()->updateExistingPivot($teamMember->id, ['role' => $data['role']]);
 
         // Sync system roles
         $this->syncOrgRole($teamMember, $data['role']);
@@ -279,6 +335,10 @@ class TeamController extends Controller
             return redirect()->back()->with('error', 'You cannot suspend yourself.');
         }
 
+        if ($denial = $this->ensureAllowedTeamAction($admin, $teamMember, 'suspended')) {
+            return $denial;
+        }
+
         $reason = $request->input('reason', '');
 
         if (method_exists($teamMember, 'suspend')) {
@@ -296,6 +356,10 @@ class TeamController extends Controller
     {
         $admin = $this->authorizeOrgAdmin();
         $teamMember = $this->resolveOrgMember($admin, $id);
+
+        if ($denial = $this->ensureAllowedTeamAction($admin, $teamMember, 'unsuspended')) {
+            return $denial;
+        }
 
         if (method_exists($teamMember, 'unsuspend')) {
             $teamMember->unsuspend();
@@ -315,6 +379,10 @@ class TeamController extends Controller
 
         if ($teamMember->id === $admin->id) {
             return redirect()->back()->with('error', 'You cannot impersonate yourself.');
+        }
+
+        if ($denial = $this->ensureAllowedTeamAction($admin, $teamMember, 'impersonated')) {
+            return $denial;
         }
 
         // Store the admin's ID so the impersonation banner can display it
@@ -338,7 +406,11 @@ class TeamController extends Controller
             return redirect()->back()->with('error', 'You cannot remove yourself from the team.');
         }
 
-        $admin->organization->users()->detach($teamMember->id);
+        if ($denial = $this->ensureAllowedTeamAction($admin, $teamMember, 'removed')) {
+            return $denial;
+        }
+
+        $teamMember->organization?->users()->detach($teamMember->id);
 
         $teamMember->organization_id = null;
         $teamMember->account_type = 'single';
@@ -354,7 +426,7 @@ class TeamController extends Controller
             ->with('success', 'Team member removed from organization successfully!');
     }
 
-    private function createOrganization(string $name): Organization
+    private function createOrganization(string $name, ?int $ownerId): Organization
     {
         $name = trim($name);
         $baseSlug = Str::slug($name);
@@ -370,6 +442,7 @@ class TeamController extends Controller
             'name' => $name,
             'slug' => $slug,
             'is_active' => true,
+            'owner_id' => $ownerId,
         ]);
     }
 

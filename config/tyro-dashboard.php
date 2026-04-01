@@ -93,7 +93,7 @@ return [
         'privilege_management' => true,
         'settings_management' => true,
         'profile_management' => true,
-        'invitation_system' => env('TYRO_DASHBOARD_ENABLE_INVITATION', true),
+        'invitation_system' => false,
         'activity_log' => false, // Future feature
         'profile_photo_upload' => env('TYRO_DASHBOARD_ENABLE_PROFILE_PHOTO', false),
         'gravatar' => env('TYRO_DASHBOARD_ENABLE_GRAVATAR', false),

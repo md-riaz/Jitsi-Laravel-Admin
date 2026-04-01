@@ -67,6 +67,7 @@ class RegisterController extends Controller
             $orgAdminRole = Role::where('slug', 'org-admin')->firstOrFail();
             $user->assignRole($orgAdminRole);
             $organization->users()->attach($user->id, ['role' => 'admin']);
+            $organization->assignOwnerIfMissing($user);
 
             return $organization->setRelation('users', collect([$user]));
         });
@@ -77,14 +78,6 @@ class RegisterController extends Controller
 
         return redirect()->route('dashboard.my-meetings')
             ->with('success', 'Organization account created successfully!');
-    }
-
-    /**
-     * Show the pending-approval page for users awaiting Org Admin approval.
-     */
-    public function pendingApproval()
-    {
-        return view('auth.pending-approval');
     }
 
     private function createOrganization(array $attributes): Organization

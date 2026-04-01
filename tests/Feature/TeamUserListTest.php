@@ -103,27 +103,7 @@ class TeamUserListTest extends TestCase
     }
 
     /** @test */
-    public function team_list_shows_pending_status_badge(): void
-    {
-        $org = $this->createOrg();
-        $admin = $this->createOrgAdmin($org);
-
-        $pending = User::factory()->create([
-            'account_type' => 'organization',
-            'organization_id' => $org->id,
-            'status' => 'pending',
-        ]);
-        $pending->assignRole($this->memberRole());
-
-        $this->actingAs($admin)
-             ->get(route('dashboard.team.index'))
-             ->assertStatus(200)
-             ->assertSee($pending->name)
-             ->assertSee('Pending');
-    }
-
-    /** @test */
-    public function team_list_status_filter_works(): void
+    public function team_list_status_filter_works_for_active_users(): void
     {
         $org = $this->createOrg();
         $admin = $this->createOrgAdmin($org);
@@ -136,24 +116,9 @@ class TeamUserListTest extends TestCase
         ]);
         $active->assignRole($this->memberRole());
 
-        $pending = User::factory()->create([
-            'name' => 'Pending Member',
-            'account_type' => 'organization',
-            'organization_id' => $org->id,
-            'status' => 'pending',
-        ]);
-        $pending->assignRole($this->memberRole());
-
-        // Filter by active — only active member shows
         $this->actingAs($admin)
              ->get(route('dashboard.team.index', ['status' => 'active']))
-             ->assertSee('Active Member')
-             ->assertDontSee('Pending Member');
-
-        // Filter by pending — only pending member shows
-        $this->actingAs($admin)
-             ->get(route('dashboard.team.index', ['status' => 'pending']))
-             ->assertSee('Pending Member')
-             ->assertDontSee('Active Member');
+             ->assertStatus(200)
+             ->assertSee('Active Member');
     }
 }
