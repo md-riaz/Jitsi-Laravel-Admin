@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -68,6 +69,20 @@ class User extends Authenticatable
         return $this->belongsTo(Organization::class);
     }
 
+    public function ownedOrganizations(): HasMany
+    {
+        return $this->hasMany(Organization::class, 'owner_id');
+    }
+
+    public function isOwnerOfOrganization(?Organization $organization): bool
+    {
+        if (!$organization) {
+            return false;
+        }
+
+        return $organization->owner_id !== null && (int) $organization->owner_id === (int) $this->id;
+    }
+
     /**
      * Get the subscription plan for personal users.
      * Org users inherit the plan from their organization.
@@ -89,6 +104,14 @@ class User extends Authenticatable
         }
 
         return $this->subscriptionPlan;
+    }
+
+    /**
+     * Check if user account is pending approval
+     */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
     }
 
     /**

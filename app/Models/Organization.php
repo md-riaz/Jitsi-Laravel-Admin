@@ -8,20 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\User;
 
 class Organization extends Model
 {
     use HasFactory;
     use HasUuids;
-
-    protected static function booted(): void
-    {
-        static::updating(function (Organization $organization): void {
-            if ($organization->isDirty('owner_id') && $organization->getOriginal('owner_id') !== null) {
-                $organization->owner_id = $organization->getOriginal('owner_id');
-            }
-        });
-    }
 
     protected $fillable = [
         'name',
@@ -83,28 +75,6 @@ class Organization extends Model
         return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
     }
 
-    public function owner(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'owner_id');
-    }
-
-    public function isOwnedBy(User $user): bool
-    {
-        return $this->owner_id !== null && (int) $this->owner_id === (int) $user->id;
-    }
-
-    public function assignOwnerIfMissing(User $user): bool
-    {
-        if ($this->owner_id !== null) {
-            return false;
-        }
-
-        $this->owner_id = $user->id;
-        $this->save();
-
-        return true;
-    }
-
     public function meetings(): HasMany
     {
         return $this->hasMany(Meeting::class);
@@ -113,6 +83,16 @@ class Organization extends Model
     public function subscriptionPlan(): BelongsTo
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->owner_id !== null && (int) $this->owner_id === (int) $user->id;
     }
 
     /**
