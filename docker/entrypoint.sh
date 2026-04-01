@@ -33,8 +33,6 @@ if [ "${APP_ENV:-production}" = "production" ] && [ -z "${APP_KEY:-}" ]; then
   exit 1
 fi
 
-php artisan optimize:clear --no-interaction || true
-
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   php artisan migrate --force --no-interaction
 fi
@@ -43,6 +41,8 @@ if [ "${RUN_SEEDERS:-false}" = "true" ]; then
   php artisan db:seed --force --no-interaction
 fi
 
+# Run after migrations so cache/session/job tables exist for database-backed drivers.
+php artisan optimize:clear --no-interaction || true
 php artisan storage:link --no-interaction || true
 
 if [ "$#" -gt 0 ]; then

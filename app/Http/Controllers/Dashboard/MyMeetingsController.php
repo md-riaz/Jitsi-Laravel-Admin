@@ -13,40 +13,43 @@ class MyMeetingsController extends Controller
     {
         $user = $request->user();
 
-        $upcomingMeetings = Meeting::where(function ($query) use ($user) {
-            $query->where('created_by', $user->id)
-                ->orWhereHas('participants', function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                });
-        })
-        ->where(function ($query) {
-            // Include instant meetings (null end_at) or meetings with end_at in the future
-            $query->whereNull('end_at')
-                ->orWhere('end_at', '>', now());
-        })
-        ->orderBy('start_at')
-        ->with(['organization', 'creator', 'participants'])
-        ->get();
+        $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
+        $isOrgAdmin = method_exists($user, 'hasRole') && $user->hasRole('org-admin') && !$isSuperAdmin;
 
-        $pastMeetings = Meeting::where(function ($query) use ($user) {
-            $query->where('created_by', $user->id)
-                ->orWhereHas('participants', function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                });
-        })
-        ->whereNotNull('end_at')
-        ->where('end_at', '<=', now())
-        ->orderByDesc('start_at')
-        ->with(['organization', 'creator', 'participants'])
-        ->limit(10)
-        ->get();
+        $baseQuery = Meeting::query();
 
-        $meetingIds = Meeting::where(function ($query) use ($user) {
-            $query->where('created_by', $user->id)
-                ->orWhereHas('participants', function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                });
-        })->pluck('id');
+        if ($isSuperAdmin) {
+            // platform-wide visibility
+        } elseif ($isOrgAdmin && $user->organization_id) {
+            $baseQuery->where('organization_id', $user->organization_id);
+        } else {
+            $baseQuery->where(function ($query) use ($user) {
+                $query->where('created_by', $user->id)
+                    ->orWhereHas('participants', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+            });
+        }
+
+        $upcomingMeetings = (clone $baseQuery)
+            ->where(function ($query) {
+                // Include instant meetings (null end_at) or meetings with end_at in the future
+                $query->whereNull('end_at')
+                    ->orWhere('end_at', '>', now());
+            })
+            ->orderBy('start_at')
+            ->with(['organization', 'creator', 'participants'])
+            ->get();
+
+        $pastMeetings = (clone $baseQuery)
+            ->whereNotNull('end_at')
+            ->where('end_at', '<=', now())
+            ->orderByDesc('start_at')
+            ->with(['organization', 'creator', 'participants'])
+            ->limit(10)
+            ->get();
+
+        $meetingIds = (clone $baseQuery)->pluck('id');
 
         $events = MeetingEvent::whereIn('meeting_id', $meetingIds)->get();
         $joinEvents = $events->where('type', 'participant_joined');
@@ -58,8 +61,12 @@ class MyMeetingsController extends Controller
             return null;
         })->filter();
 
+        $totalMeetings = $isOrgAdmin
+            ? $meetingIds->count()
+            : (clone $baseQuery)->where('created_by', $user->id)->count();
+
         $analytics = [
-            'total_meetings' => $meetingIds->count(),
+            'total_meetings' => $totalMeetings,
             'live_now' => $upcomingMeetings->filter(fn($m) => $m->canJoinAt(now()))->count(),
             'avg_participants' => $pastMeetings->count() > 0
                 ? round($pastMeetings->avg(fn($m) => $m->participants->count()), 1)

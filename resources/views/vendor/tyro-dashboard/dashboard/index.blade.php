@@ -336,7 +336,7 @@
         <div class="ml-list-item">
             <div class="ml-info">
                 <div class="ml-title">{{ $m->title }}</div>
-                <div class="ml-sub">{{ $m->isInstantMeeting() ? 'Instant meeting' : 'Started ' . $m->start_at->diffForHumans() }} · {{ $m->participants->count() }} in room</div>
+                <div class="ml-sub">{{ $m->isInstantMeeting() ? 'Instant meeting' : 'Started ' . optional($m->start_at)->diffForHumans() }} · {{ $m->participants->where('left_at', null)->count() ?: $m->participants->count() }} in room</div>
             </div>
             <div class="ml-actions">
                 <span class="badge-live-dot">Live</span>

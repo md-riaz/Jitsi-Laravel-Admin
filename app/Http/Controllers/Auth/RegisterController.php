@@ -67,6 +67,14 @@ class RegisterController extends Controller
             $orgAdminRole = Role::where('slug', 'org-admin')->firstOrFail();
             $user->assignRole($orgAdminRole);
             $organization->users()->attach($user->id, ['role' => 'admin']);
+
+            $freePlan = SubscriptionPlan::where('slug', 'free')->where('is_active', true)->first();
+            if ($freePlan) {
+                $organization->subscription_plan_id = $freePlan->id;
+                $organization->subscription_starts_at = $organization->subscription_starts_at ?? now();
+                $organization->subscription_status = 'active';
+            }
+
             $organization->owner_id = $user->id;
             $organization->save();
 

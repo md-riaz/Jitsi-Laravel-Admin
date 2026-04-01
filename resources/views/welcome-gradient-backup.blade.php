@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jitsi Admin - Meeting Orchestration Platform</title>
+    <title>Alora Admin - Meeting Orchestration Platform</title>
     <style>
         * {
             margin: 0;
@@ -167,7 +167,7 @@
     <nav class="navbar">
         <div class="logo">
             <div class="logo-icon">🎥</div>
-            <span>Jitsi Admin</span>
+            <span>Alora Admin</span>
         </div>
         <div class="nav-links">
             @auth
@@ -228,7 +228,7 @@
     </div>
 
     <footer class="footer">
-        <p>&copy; 2026 Jitsi Admin. Powered by Jitsi Meet & Laravel.</p>
+        <p>&copy; 2026 Alora Admin. Powered by Jitsi Meet & Laravel.</p>
         <p style="margin-top: 10px; opacity: 0.8;">Professional Meeting Orchestration Platform</p>
     </footer>
 </body>

@@ -97,13 +97,39 @@
         }
     });
 
-    // Auto-dismiss flash messages
+    // Auto-dismiss flash messages (default 10s) + manual dismiss button
     document.addEventListener('DOMContentLoaded', function() {
         const alerts = document.querySelectorAll('.alert');
-        const dismissTime = {{ config('tyro-dashboard.notifications.auto_dismiss_seconds', 5) * 1000 }};
-        
+        const dismissTime = {{ config('tyro-dashboard.notifications.auto_dismiss_seconds', 10) * 1000 }};
+
         alerts.forEach(alert => {
+            if (!alert.querySelector('[data-alert-dismiss]')) {
+                const dismissBtn = document.createElement('button');
+                dismissBtn.type = 'button';
+                dismissBtn.setAttribute('data-alert-dismiss', '1');
+                dismissBtn.setAttribute('aria-label', 'Dismiss notification');
+                dismissBtn.textContent = '×';
+                dismissBtn.style.marginLeft = 'auto';
+                dismissBtn.style.background = 'transparent';
+                dismissBtn.style.border = '0';
+                dismissBtn.style.fontSize = '1.1rem';
+                dismissBtn.style.fontWeight = '700';
+                dismissBtn.style.cursor = 'pointer';
+                dismissBtn.style.lineHeight = '1';
+                dismissBtn.style.padding = '0 0 0 10px';
+                dismissBtn.addEventListener('click', () => {
+                    alert.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-8px)';
+                    setTimeout(() => alert.remove(), 250);
+                });
+                alert.appendChild(dismissBtn);
+            }
+
             setTimeout(() => {
+                if (!document.body.contains(alert)) {
+                    return;
+                }
                 alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 alert.style.opacity = '0';
                 alert.style.transform = 'translateY(-10px)';
@@ -235,8 +261,8 @@
         return showModal(title, message, 'confirm', options);
     }
 
-    function showAlert(message, title = 'Success', options = {}) {
-        return showModal(title, message, 'alert', { variant: 'success', ...options });
+    function showAlert(message, title = 'Notification', options = {}) {
+        return showModal(title, message, 'alert', { variant: 'info', ...options });
     }
 
     function showSuccess(message, title = 'Success') {

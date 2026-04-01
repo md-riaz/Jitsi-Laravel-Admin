@@ -56,7 +56,10 @@ class InviteController extends Controller
             'invite_token' => $token,
         ]);
         
-        // Redirect to meeting page
-        return redirect()->route('meeting.show', ['meeting' => $meeting->id]);
+        // Redirect to meeting page with invite token for guest join flow
+        return redirect()->route('meeting.show', [
+            'meeting' => $meeting->id,
+            'invite_token' => $token,
+        ]);
     }
 }

@@ -277,6 +277,21 @@ return [
                 'revoked_at' => ['type' => 'datetime-local', 'label' => 'Revoked At', 'rules' => 'nullable|date', 'help_text' => 'Set a date to revoke this invite'],
             ],
         ],
+        'mail_templates' => [
+            'model' => 'App\\Models\\MailTemplate',
+            'title' => 'Mail Templates',
+            'roles' => ['super-admin'],
+            'disable_create' => true,
+            'fields' => [
+                'template_key' => ['type' => 'text', 'label' => 'Template Key', 'searchable' => true, 'readonly' => true],
+                'name' => ['type' => 'text', 'label' => 'Name', 'searchable' => true, 'readonly' => true],
+                'mailable_class' => ['type' => 'text', 'label' => 'Mailable Class', 'readonly' => true],
+                'view_name' => ['type' => 'text', 'label' => 'Fallback View', 'readonly' => true],
+                'subject_template' => ['type' => 'textarea', 'label' => 'Subject Template', 'rules' => 'required|string'],
+                'body_html' => ['type' => 'richtext', 'label' => 'Body HTML', 'rules' => 'required|string'],
+                'is_active' => ['type' => 'checkbox', 'label' => 'Active', 'default' => true],
+            ],
+        ],
         'meeting_events' => [
             'model' => 'App\\Models\\MeetingEvent',
             'title' => 'Audit Events',

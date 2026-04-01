@@ -164,3 +164,33 @@ Results:
 - Removed the “Invitation Links” menu entry from `resources/views/vendor/tyro-dashboard/partials/admin-sidebar.blade.php`.
 - Removed invitation/referral stat cards from `resources/views/vendor/tyro-dashboard/dashboard/admin.blade.php`.
 - Disabled dashboard invitation feature flag in `config/tyro-dashboard.php` by setting `features.invitation_system` to `false`.
+
+- [x] Restate goal + acceptance criteria
+  - Goal: Plan-only phase for reported bugfixes and UX improvements; no code changes in this phase.
+  - Acceptance: Produce a concrete implementation board listing what is already implemented vs what remains, with exact files and verification protocol.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [x] Write implementation plan artifact
+- [x] Implement smallest safe slice (next phase)
+- [x] Run verification (after implementation)
+- [x] Summarize changes + verification story (after implementation)
+
+Working Notes:
+- User requested planning first; implementation intentionally deferred.
+- Plan must respect PROJECT_SPEC/DOMAIN_RULES and Tyro dashboard constraints.
+- High-priority likely fixes: guest exit redirect, org-admin stats scoping, host/member dashboard 500, branding consistency.
+
+Results:
+- Added `docs/plans/2026-04-01-dashboard-bugs-and-improvements.md` with current-state inventory and a task-by-task execution board.
+
+Working Notes (2026-04-01 dashboard continuation):
+- Fixed subscription defaulting in public registration by assigning active free plan when available.
+- Hardened live meeting rows against null `start_at` formatting on dashboard views.
+- Standardized live participant display to prefer active in-room count (`left_at IS NULL`) with fallback to total participants.
+
+Results (2026-04-01 dashboard continuation):
+- Updated `app/Http/Controllers/Auth/RegisterController.php` to persist free-plan defaults for newly created organizations.
+- Updated `resources/views/vendor/tyro-dashboard/dashboard/index.blade.php` for null-safe start-time formatting and active participant count.
+- Updated `resources/views/vendor/tyro-dashboard/dashboard/user.blade.php` for null-safe start-time formatting.
+- Updated `resources/views/dashboard/my-meetings.blade.php` to display active participant counts in meeting cards.
+- Diagnostics clean on all touched files.

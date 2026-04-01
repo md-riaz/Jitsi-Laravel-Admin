@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name', 'Jitsi Admin') }} - Professional Meeting Management</title>
+    <title>{{ config('app.name', 'Alora Admin') }} - Professional Meeting Management</title>
     @php
-        $appName = config('app.name', 'Jitsi Admin');
+        $appName = config('app.name', 'Alora Admin');
         $brandPrimary = env('LANDING_PRIMARY_COLOR', '#2563eb');
         $brandPrimaryHover = env('LANDING_PRIMARY_HOVER_COLOR', '#1d4ed8');
         $loginUrl = \Illuminate\Support\Facades\Route::has('tyro-login.login')

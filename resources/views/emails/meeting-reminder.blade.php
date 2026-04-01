@@ -96,7 +96,7 @@
         </div>
         
         <div class="footer">
-            <p>Automated reminder from Jitsi Admin</p>
+            <p>Automated reminder from Alora Admin</p>
         </div>
     </div>
 </body>

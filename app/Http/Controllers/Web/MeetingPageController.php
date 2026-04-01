@@ -18,6 +18,10 @@ class MeetingPageController extends Controller
 
     public function show(Request $request, Meeting $meeting): View
     {
+        if ($request->filled('invite_token')) {
+            $request->session()->put('invite_token', (string) $request->query('invite_token'));
+        }
+
         $now = Carbon::now();
         $canJoin = $meeting->canJoinAt($now);
 

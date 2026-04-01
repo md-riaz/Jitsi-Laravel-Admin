@@ -299,7 +299,7 @@
                 <div class="meeting-list-info">
                     <div class="meeting-list-title">{{ $meeting->title }}</div>
                     <div class="meeting-list-sub">
-                        {{ $meeting->isInstantMeeting() ? 'Instant meeting' : 'Started ' . $meeting->start_at->diffForHumans() }}
+                        {{ $meeting->isInstantMeeting() ? 'Instant meeting' : 'Started ' . optional($meeting->start_at)->diffForHumans() }}
                         · {{ $meeting->participants->where('left_at', null)->count() ?: $meeting->participants->count() }} in room
                     </div>
                 </div>

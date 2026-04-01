@@ -11,12 +11,11 @@
 @endsection
 
 @push('styles')
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 @endpush
 
 @push('scripts')
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -24,19 +23,10 @@
         @if (($field['type'] ?? '') === 'richtext')
             (function () {
                 var key = '{{ $key }}';
-                if (document.getElementById('editor-' + key)) {
-                    var quill = new Quill('#editor-' + key, {
-                        theme: 'snow'
-                    });
-                    var textarea = document.getElementById(key);
-
-                    // Set initial content
-                    if (textarea.value) {
-                        quill.root.innerHTML = textarea.value;
-                    }
-
-                    quill.on('text-change', function () {
-                        textarea.value = quill.root.innerHTML;
+                var textarea = document.getElementById(key);
+                if (textarea) {
+                    ClassicEditor.create(textarea).catch(function (error) {
+                        console.error('CKEditor init failed for field: ' + key, error);
                     });
                 }
             })();
@@ -123,7 +113,7 @@
         @else
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
                 @foreach($availablePlaceholders as $placeholder)
-                    <code style="background: var(--muted); padding: 4px 8px; border-radius: 6px;">{{ '{{' . $placeholder . '}}' }}</code>
+                    <code style="background: var(--muted); padding: 4px 8px; border-radius: 6px;">{{ '{' . '{' . $placeholder . '}' . '}' }}</code>
                 @endforeach
             </div>
         @endif
@@ -177,16 +167,15 @@
             @endif
 
             <div class="form-group" style="margin-bottom: 1rem;">
+                @if(!(($field['type'] ?? '') === 'checkbox' && !isset($options[$key]) && !isset($field['options'])))
                 <label for="{{ $key }}" class="form-label">{{ $field['label'] }}</label>
+                @endif
 
                 @if($field['type'] === 'textarea')
                 <textarea name="{{ $key }}" id="{{ $key }}" class="form-input @error($key) is-invalid @enderror" rows="5" placeholder="{{ $field['placeholder'] ?? '' }}" {{ ($field['readonly'] ?? false) ? 'readonly' : '' }} @if(isset($field['attributes'])) @foreach($field['attributes'] as $attr => $value) {{ $attr }}="{{ $value }}" @endforeach @endif>{{ old($key, $item->$key) }}</textarea>
 
                 @elseif($field['type'] === 'richtext')
-                <div class="richtext-wrapper">
-                    <div id="editor-{{ $key }}" style="height: 200px; background: #fff;"></div>
-                    <textarea name="{{ $key }}" id="{{ $key }}" style="display:none">{{ old($key, $item->$key) }}</textarea>
-                </div>
+                <textarea name="{{ $key }}" id="{{ $key }}" class="form-input @error($key) is-invalid @enderror" rows="10" placeholder="{{ $field['placeholder'] ?? '' }}" {{ ($field['readonly'] ?? false) ? 'readonly' : '' }} @if(isset($field['attributes'])) @foreach($field['attributes'] as $attr => $value) {{ $attr }}="{{ $value }}" @endforeach @endif>{{ old($key, $item->$key) }}</textarea>
 
                 @elseif($field['type'] === 'markdown')
                 <textarea name="{{ $key }}" id="{{ $key }}" class="@error($key) is-invalid @enderror" placeholder="{{ $field['placeholder'] ?? '' }}">{{ old($key, $item->$key) }}</textarea>
@@ -279,6 +268,13 @@
                     @endif
                 </div>
 
+                @elseif($field['type'] === 'checkbox' && !isset($options[$key]) && !isset($field['options']))
+                <div class="form-check" style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="hidden" name="{{ $key }}" value="0">
+                    <input type="checkbox" name="{{ $key }}" id="{{ $key }}" value="1" style="margin:0; width:16px; height:16px;" {{ old($key, $item->$key) ? 'checked' : '' }}>
+                    <label for="{{ $key }}" style="margin:0;">{{ $field['label'] }}</label>
+                </div>
+
                 @elseif($field['type'] === 'checkbox' && (isset($options[$key]) || isset($field['options'])))
                 <div class="checkbox-group">
                     @if(isset($options[$key]))
@@ -329,9 +325,10 @@
                 @endif
 
                 @elseif($field['type'] === 'boolean')
-                <div class="form-check">
-                    <input type="checkbox" name="{{ $key }}" id="{{ $key }}" value="1" {{ old($key, $item->$key) ? 'checked' : '' }}>
-                    <label for="{{ $key }}">Yes</label>
+                <div class="form-check" style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="hidden" name="{{ $key }}" value="0">
+                    <input type="checkbox" name="{{ $key }}" id="{{ $key }}" value="1" style="margin:0; width:16px; height:16px;" {{ old($key, $item->$key) ? 'checked' : '' }}>
+                    <label for="{{ $key }}" style="margin:0;">{{ $field['label'] }}</label>
                 </div>
 
                 @else

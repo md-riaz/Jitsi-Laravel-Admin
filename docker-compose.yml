@@ -13,8 +13,8 @@ services:
       APP_DEBUG: "false"
       APP_URL: ${APP_URL:-http://localhost:18090}
       PORT: 8090
-      RUN_MIGRATIONS: "true"
-      RUN_SEEDERS: "true"
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
+      RUN_SEEDERS: ${RUN_SEEDERS:-false}
       DB_CONNECTION: sqlite
       DB_DATABASE: /var/www/html/database/database.sqlite
       QUEUE_CONNECTION: database

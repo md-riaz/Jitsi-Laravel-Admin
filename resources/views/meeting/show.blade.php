@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $meeting->title }} - Jitsi Admin</title>
+    <title>{{ $meeting->title }} - Alora Admin</title>
     <link rel="preconnect" href="https://{{ config('services.jitsi.domain') }}">
     <script src="https://{{ config('services.jitsi.domain') }}/external_api.js" defer></script>
     <style>
@@ -607,7 +607,7 @@
         <div class="header-container">
             <a href="{{ url('/') }}" class="logo">
                 <div class="logo-icon">J</div>
-                <span>Jitsi Admin</span>
+                <span>Alora Admin</span>
             </a>
             <div class="header-actions">
                 @auth
@@ -811,7 +811,7 @@
 
             <!-- Footer -->
             <div class="meeting-footer">
-                <p>Powered by <strong>Jitsi Admin</strong></p>
+                <p>Powered by <strong>Alora Admin</strong></p>
                 <div class="footer-links">
                     <a href="{{ url('/') }}">Home</a>
                     @guest
@@ -920,11 +920,14 @@
                 const joinPath = isAuthenticated ? `/meetings/${meetingId}/join` : `/meetings/${meetingId}/join-guest`;
                 const authPasswordInput = document.getElementById('auth_password');
                 const authPassword = authPasswordInput ? authPasswordInput.value : '';
+                const inviteToken = new URLSearchParams(window.location.search).get('invite_token') || @json(session('invite_token'));
                 const requestBody = isAuthenticated ? {
-                    password: authPassword || undefined
+                    password: authPassword || undefined,
+                    invite_token: inviteToken || undefined
                 } : {
                     display_name: guestDisplayName,
-                    password: guestPassword || undefined
+                    password: guestPassword || undefined,
+                    invite_token: inviteToken || undefined
                 };
 
                 const response = await fetch(`${apiBase}${joinPath}`, {
@@ -1035,7 +1038,7 @@
                     await trackMeetingLeave();
                     window.location.href = isAuthenticated
                         ? @json(route('dashboard.my-meetings'))
-                        : @json(route('meeting.show', $meeting->id));
+                        : @json(url('/'));
                 });
 
                 // Also track on page unload (closing browser/tab)

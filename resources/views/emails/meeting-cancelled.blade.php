@@ -85,7 +85,7 @@
         </div>
         
         <div class="footer">
-            <p>Notification from Jitsi Admin</p>
+            <p>Notification from Alora Admin</p>
         </div>
     </div>
 </body>

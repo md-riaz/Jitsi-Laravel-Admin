@@ -102,10 +102,12 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('avatar', file);
 
         try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
             const response = await fetch(@json(url('/api/profile/avatar')), {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
                 },
                 credentials: 'same-origin',
@@ -134,10 +136,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
             const response = await fetch(@json(url('/api/profile/avatar')), {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
