@@ -59,10 +59,5 @@ Route::get('/meet/{meeting}/download-ics', [\App\Http\Controllers\Web\MeetingPag
 Route::get('/invite/{token}', [\App\Http\Controllers\Web\InviteController::class, 'show'])->name('invite.show');
 Route::post('/invite/{token}/accept', [\App\Http\Controllers\Web\InviteController::class, 'accept'])->name('invite.accept');
 
-// Pending User Management Routes (for organization admins)
-Route::get('dashboard/pending-users', [\App\Http\Controllers\Dashboard\PendingUsersController::class, 'index'])->middleware(['auth'])->name('dashboard.pending-users.index');
-Route::post('dashboard/pending-users/{id}/approve', [\App\Http\Controllers\Dashboard\PendingUsersController::class, 'approve'])->middleware(['auth'])->name('dashboard.pending-users.approve');
-Route::delete('dashboard/pending-users/{id}/reject', [\App\Http\Controllers\Dashboard\PendingUsersController::class, 'reject'])->middleware(['auth'])->name('dashboard.pending-users.reject');
-
 // Alias expected by Laravel auth middleware when unauthenticated
 Route::get('/_login', fn () => redirect()->route('tyro-login.login'))->name('login');

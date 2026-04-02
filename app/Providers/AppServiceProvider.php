@@ -27,8 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS URL generation when behind a reverse proxy / tunnel
-        if (request()->header('X-Forwarded-Proto') === 'https' || config('app.env') === 'production') {
+        // Force HTTPS URL generation only when the current request is actually secure
+        $forwardedProto = strtolower((string) request()->header('X-Forwarded-Proto', ''));
+        if (request()->isSecure() || $forwardedProto === 'https') {
             URL::forceScheme('https');
         }
 
@@ -155,12 +156,22 @@ class AppServiceProvider extends ServiceProvider
                 $existingStats = (array) $existingStats;
             }
 
-            $view->with('stats', array_merge($existingStats, [
+            $organizationScopedStats = [
                 'total_users' => $organizationUsers->count(),
                 'suspended_users' => $suspendedUsers->count(),
                 'recent_users' => $organizationUsers->take(5)->values(),
                 'role_distribution' => $roleDistribution,
-            ]));
+            ];
+
+            $view->with('stats', array_merge(
+                array_diff_key($existingStats, array_flip([
+                    'total_roles',
+                    'total_privileges',
+                    'total_invitations',
+                    'total_referrals',
+                ])),
+                $organizationScopedStats,
+            ));
         });
 
         // Inject billing notification data for org admins (dashboard views only)
@@ -186,16 +197,5 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Inject pending user count for org admins (sidebar)
-        View::composer('vendor.tyro-dashboard.partials.admin-sidebar', function ($view) {
-            $user = Auth::user();
-            $pendingCount = 0;
-            if ($user && method_exists($user, 'hasRole') && $user->hasRole('org-admin') && $user->organization_id) {
-                $pendingCount = \App\Models\User::where('organization_id', $user->organization_id)
-                    ->where('status', 'pending')
-                    ->count();
-            }
-            $view->with('sidebarPendingCount', $pendingCount);
-        });
     }
 }

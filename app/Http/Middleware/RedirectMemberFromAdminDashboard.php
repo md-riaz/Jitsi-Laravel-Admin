@@ -9,18 +9,21 @@ use Symfony\Component\HttpFoundation\Response;
 class RedirectMemberFromAdminDashboard
 {
     /**
-     * Redirect members to My Meetings when they access the admin dashboard home.
-     * Members have no use for the admin statistics page.
+     * Redirect non-admin organization users away from the admin dashboard home.
+     * Hosts and members should land on the user-facing meetings page instead.
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if ($user && $user->hasRole('member') && !$user->hasRole('org-admin') && !$user->hasRole('super-admin') && !$user->hasRole('host')) {
-            // Only redirect on the exact dashboard home, not on sub-pages
-            if ($request->routeIs('tyro-dashboard.index')) {
-                return redirect()->route('dashboard.my-meetings');
-            }
+        if (
+            $user
+            && $request->routeIs('tyro-dashboard.index')
+            && !$user->hasRole('org-admin')
+            && !$user->hasRole('super-admin')
+            && ($user->hasRole('member') || $user->hasRole('host'))
+        ) {
+            return redirect()->route('dashboard.my-meetings');
         }
 
         return $next($request);

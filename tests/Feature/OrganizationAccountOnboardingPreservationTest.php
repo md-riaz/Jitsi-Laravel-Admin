@@ -90,11 +90,22 @@ class OrganizationAccountOnboardingPreservationTest extends TestCase
         ]);
         $member->assignRole($this->role('member', 'Member'));
 
+        $host = User::factory()->create([
+            'account_type' => 'organization',
+            'organization_id' => $organization->id,
+            'status' => 'active',
+        ]);
+        $host->assignRole($this->role('host', 'Host'));
+
         $this->actingAs($orgAdmin)
             ->get(route('tyro-dashboard.index'))
             ->assertOk();
 
         $this->actingAs($member)
+            ->get(route('tyro-dashboard.index'))
+            ->assertRedirect(route('dashboard.my-meetings'));
+
+        $this->actingAs($host)
             ->get(route('tyro-dashboard.index'))
             ->assertRedirect(route('dashboard.my-meetings'));
 

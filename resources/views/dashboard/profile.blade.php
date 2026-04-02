@@ -34,7 +34,7 @@
                     <div style="margin-bottom: 1rem;">
                         <label for="avatar" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Choose a new profile picture</label>
                         <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png,image/jpg,image/gif"
-                               style="display: block; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 100%; max-width: 400px;">
+                               class="form-input" style="max-width: 400px;">
                         <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">JPG, PNG, or GIF. Max size 2MB.</p>
                     </div>
                     <div style="display: flex; gap: 1rem;">

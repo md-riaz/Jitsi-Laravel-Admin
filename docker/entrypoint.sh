@@ -19,8 +19,11 @@ wait_for_database() {
 }
 
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache database
+mkdir -p /var/lib/nginx/tmp/client_body
 chown -R www-data:www-data storage bootstrap/cache database 2>/dev/null || true
 chmod -R ug+rwX storage bootstrap/cache database 2>/dev/null || true
+chown -R nginx:nginx /var/lib/nginx/tmp /var/lib/nginx/tmp/client_body 2>/dev/null || true
+chmod -R 700 /var/lib/nginx/tmp /var/lib/nginx/tmp/client_body 2>/dev/null || true
 
 if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
   touch "${DB_DATABASE:-database/database.sqlite}"

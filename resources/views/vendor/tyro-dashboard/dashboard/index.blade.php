@@ -39,7 +39,10 @@
     </div>
 </div>
 
-@if(($isAdmin ?? false) && method_exists($user, 'hasRole') && $user->hasRole('super-admin'))
+@php($isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin'))
+@php($isOrgAdmin = method_exists($user, 'hasRole') && $user->hasRole('org-admin') && ! $isSuperAdmin)
+
+@if(($isAdmin ?? false) && $isSuperAdmin)
 <!-- Stats Grid -->
 <div class="stats-grid">
     <a href="{{ route('tyro-dashboard.users.index') }}" class="stat-card" style="text-decoration:none; color:inherit;">
@@ -141,6 +144,113 @@
     </div>
 
     <!-- Role Distribution -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Role Distribution</h3>
+            <a href="{{ route('tyro-dashboard.roles.index') }}" class="btn btn-sm btn-ghost">Manage Roles</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            @if(isset($stats['role_distribution']) && $stats['role_distribution']->count())
+            <div class="table-container">
+                <table class="table">
+                    <tbody>
+                        @foreach($stats['role_distribution'] as $roleStat)
+                        <tr>
+                            <td>
+                                <span class="badge badge-primary">{{ $roleStat['name'] }}</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <strong>{{ $roleStat['count'] }}</strong> users
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="empty-state">
+                <p class="empty-state-description">No roles found.</p>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+@elseif(($isAdmin ?? false) && $isOrgAdmin)
+<div class="stats-grid">
+    <a href="{{ route('tyro-dashboard.users.index') }}" class="stat-card" style="text-decoration:none; color:inherit;">
+        <div class="stat-icon stat-icon-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Organization Users</div>
+            <div class="stat-value">{{ number_format($stats['total_users'] ?? 0) }}</div>
+        </div>
+    </a>
+
+    <a href="{{ route('tyro-dashboard.users.index', ['status' => 'suspended']) }}" class="stat-card" style="text-decoration:none; color:inherit;">
+        <div class="stat-icon stat-icon-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Suspended Users</div>
+            <div class="stat-value">{{ number_format($stats['suspended_users'] ?? 0) }}</div>
+        </div>
+    </a>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Users</h3>
+            <a href="{{ route('tyro-dashboard.users.index') }}" class="btn btn-sm btn-ghost">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            @if(isset($stats['recent_users']) && $stats['recent_users']->count())
+            <div class="table-container">
+                <table class="table">
+                    <tbody>
+                        @foreach($stats['recent_users'] as $recentUser)
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-cell-avatar" style="{{ ($recentUser->profile_photo_path || $recentUser->use_gravatar) ? 'background: none; padding: 0;' : '' }}">
+                                        @if($recentUser->profile_photo_path || ($recentUser->use_gravatar && $recentUser->email))
+                                            <img src="{{ $recentUser->profile_photo_url }}" alt="{{ $recentUser->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                        @else
+                                            {{ strtoupper(substr($recentUser->name, 0, 1)) }}
+                                        @endif
+                                    </div>
+                                    <div class="user-cell-info">
+                                        <div class="user-cell-name">{{ $recentUser->name }}</div>
+                                        <div class="user-cell-email">{{ $recentUser->email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align: right;">
+                                @if(method_exists($recentUser, 'isSuspended') && $recentUser->isSuspended())
+                                    <span class="badge badge-danger">Suspended</span>
+                                @else
+                                    <span class="badge badge-success">Active</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="empty-state">
+                <p class="empty-state-description">No users found.</p>
+            </div>
+            @endif
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Role Distribution</h3>

@@ -123,15 +123,6 @@
                     </svg>
                     User Management
                 </a>
-                <a href="{{ route('dashboard.pending-users.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.pending-users.*') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Pending Approvals
-                    @if($sidebarPendingCount ?? 0)
-                        <span style="margin-left: auto; background: #f59e0b; color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px;">{{ $sidebarPendingCount }}</span>
-                    @endif
-                </a>
             @else
                 {{-- Super-admin: platform-wide user/role/privilege management --}}
                 <a href="{{ route('dashboard.team.create') }}" class="sidebar-link {{ request()->routeIs('dashboard.team.create') ? 'active' : '' }}">

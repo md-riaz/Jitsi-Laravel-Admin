@@ -30,10 +30,6 @@ class MeetingPolicy
             return true;
         }
 
-        if ((string) $meeting->created_by === (string) $user->id) {
-            return true;
-        }
-
         if ($meeting->participants()->where('user_id', $user->id)->whereIn('role', ['host', 'cohost'])->exists()) {
             return true;
         }

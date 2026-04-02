@@ -35,6 +35,7 @@ class MeetingAccessPolicyService
         }
 
         $inviteValidated = false;
+        $guestAccessAllowed = $meeting->allow_guests || $visibility === 'link_anyone';
 
         // Invite-only enforcement — applies to ALL users (guests AND authenticated)
         if ($visibility === 'invite_only') {
@@ -68,7 +69,7 @@ class MeetingAccessPolicyService
         }
 
         // Guest gate from computed policy (invite_only with valid invite is allowed)
-        if (!$user && !$meeting->allow_guests && !($visibility === 'invite_only' && $inviteValidated)) {
+        if (!$user && !$guestAccessAllowed && !($visibility === 'invite_only' && $inviteValidated)) {
             return $this->deny('ERR_GUEST_NOT_ALLOWED', 'Guest access is not allowed for this meeting.');
         }
 
