@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
-            const response = await fetch(@json(url('/api/profile/avatar')), {
+            const response = await fetch(@json(route('dashboard.profile.avatar.upload')), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': token,
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
-            const response = await fetch(@json(url('/api/profile/avatar')), {
+            const response = await fetch(@json(route('dashboard.profile.avatar.delete')), {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': token,

@@ -33,6 +33,10 @@ Route::middleware(['auth', 'org-admin-or-super-admin'])->group(function () {
 });
 
 Route::view('dashboard/profile', 'dashboard.profile')->middleware(['auth'])->name('dashboard.profile');
+Route::middleware(['auth'])->group(function () {
+    Route::post('dashboard/profile/avatar', [\App\Http\Controllers\Api\ProfilePictureController::class, 'upload'])->name('dashboard.profile.avatar.upload');
+    Route::delete('dashboard/profile/avatar', [\App\Http\Controllers\Api\ProfilePictureController::class, 'delete'])->name('dashboard.profile.avatar.delete');
+});
 Route::get('dashboard/subscription', [\App\Http\Controllers\Dashboard\SubscriptionController::class, 'show'])->middleware(['auth'])->name('dashboard.subscription');
 Route::get('dashboard/meetings/{meeting}/diagnostics', [\App\Http\Controllers\Dashboard\MeetingDiagnosticsController::class, 'show'])
     ->middleware(['auth'])

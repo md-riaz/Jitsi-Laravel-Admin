@@ -120,7 +120,8 @@ class MeetingSummaryController extends Controller
         // Fallback from events for guests not persisted in participant table
         $eventGroups = $events->whereIn('type', ['participant_joined', 'participant_left'])
             ->groupBy(function ($e) {
-                $payload = $e->payload ?: [];
+                $payload = is_array($e->payload) ? $e->payload : [];
+
                 return (string) ($payload['user_id'] ?? (($payload['user_name'] ?? 'Guest') . '|' . ($payload['ip_address'] ?? 'n/a')));
             });
 
@@ -129,9 +130,12 @@ class MeetingSummaryController extends Controller
             if ($already) {
                 continue;
             }
+
+            $firstEvent = $group->first();
+            $firstPayload = is_array($firstEvent?->payload) ? $firstEvent->payload : [];
             $join = optional($group->firstWhere('type', 'participant_joined'))->created_at;
             $leave = optional($group->lastWhere('type', 'participant_left'))->created_at;
-            $name = optional($group->first())->payload['user_name'] ?? 'Guest';
+            $name = (string) ($firstPayload['user_name'] ?? 'Guest');
 
             $rows->push([
                 'name' => $name,

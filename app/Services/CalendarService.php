@@ -13,8 +13,11 @@ class CalendarService
 
         // Handle instant meetings
         if ($meeting->isInstantMeeting()) {
-            $dtstart = now()->utc()->format('Ymd\THis\Z');
-            $dtend = now()->addHour()->utc()->format('Ymd\THis\Z');
+            $start = $meeting->actual_started_at ?? $meeting->start_at ?? now();
+            $end = $meeting->actual_ended_at ?? $meeting->end_at ?? $start->addHour();
+
+            $dtstart = $start->utc()->format('Ymd\THis\Z');
+            $dtend = $end->utc()->format('Ymd\THis\Z');
         } else {
             // Format dates for iCalendar (YYYYMMDDTHHMMSS format in UTC)
             $dtstart = $meeting->start_at->utc()->format('Ymd\THis\Z');

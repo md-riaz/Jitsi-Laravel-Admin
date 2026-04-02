@@ -69,7 +69,7 @@ class MyMeetingsController extends Controller
             'total_meetings' => $totalMeetings,
             'live_now' => $upcomingMeetings->filter(fn($m) => $m->canJoinAt(now()))->count(),
             'avg_participants' => $pastMeetings->count() > 0
-                ? round($pastMeetings->avg(fn($m) => $m->participants->count()), 1)
+                ? round($pastMeetings->avg(fn($m) => (int) $m->active_participant_count), 1)
                 : 0,
             'avg_duration_minutes' => $durations->count() > 0 ? round($durations->avg(), 1) : 0,
             'join_events_30d' => $joinEvents->filter(fn($e) => $e->created_at >= now()->subDays(30))->count(),

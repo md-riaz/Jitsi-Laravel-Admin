@@ -1036,7 +1036,9 @@
 
                     showBanner('Leaving meeting...', '');
                     await trackMeetingLeave();
-                    window.location.href = @json(route('tyro-dashboard.index'));
+                    window.location.href = isAuthenticated
+                        ? @json(route('tyro-dashboard.index'))
+                        : @json(url('/'));
                 });
 
                 // Also track on page unload (closing browser/tab)

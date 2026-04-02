@@ -49,3 +49,23 @@
 - **Failure mode:** Tried multiple exact string replacements against a Blade file after prior edits without first re-reading the full current file.
 - **Detection signal:** `strReplace` failed repeatedly because the target text no longer matched the updated file exactly.
 - **Prevention rule:** After one or two exact-replace misses on the same file, re-read the full file and patch against the current contents instead of retrying stale text.
+
+## 2026-04-02 — Guest exit redirects must respect authentication state
+- **Failure mode:** Changed the embedded meeting exit redirect to a dashboard-only destination, which breaks the intended guest flow because guests do not have dashboard access.
+- **Detection signal:** User clarified that unauthenticated guests should return to the main URL after completing or exiting a meeting.
+- **Prevention rule:** When changing post-meeting redirects, always separate authenticated and guest destinations and verify the route is reachable for both audiences.
+
+## 2026-04-02 — Instant meeting displays need lifecycle fields, not instant heuristics
+- **Failure mode:** Instant meeting UI and calendar displays treated live meetings as timeless and used `now()` or historical participant relations, producing incorrect times and zero live counts.
+- **Detection signal:** `MeetingLifecycleService` already maintained `actual_started_at` and `active_participant_count`, while dashboard/calendar views still relied on `isInstantMeeting()`, `now()`, and `participants->count()`.
+- **Prevention rule:** For live instant-meeting displays, use lifecycle-backed fields like `actual_started_at` and `active_participant_count`; reserve relationship counts for historical attendance and avoid `now()` as a display fallback when persisted lifecycle data exists.
+
+## 2026-04-02 — Dashboard diagnostics pages must tolerate sparse runtime data
+- **Failure mode:** Admin/debug pages assumed meeting event payloads and derived user avatar values were always fully populated, creating avoidable 500s on pages meant for inspection.
+- **Detection signal:** `MeetingSummaryController` directly indexed into `payload['user_name']`, and diagnostics JWT generation depended on a strict string-return avatar helper.
+- **Prevention rule:** For summary/diagnostic pages, treat event payloads and derived profile fields as optional; normalize to safe arrays/strings before rendering or generating debug artifacts.
+
+## 2026-04-02 — Server-rendered dashboard pages should not depend on Sanctum API auth for same-page mutations
+- **Failure mode:** A normal `auth`-protected dashboard page posted avatar uploads to `auth:sanctum` API routes, creating an avoidable auth boundary mismatch for a simple session-backed profile action.
+- **Detection signal:** `resources/views/dashboard/profile.blade.php` was rendered from `routes/web.php` under `auth`, while its JS `fetch()` calls targeted `/api/profile/avatar` in `routes/api.php` under `auth:sanctum`.
+- **Prevention rule:** For server-rendered dashboard pages performing same-session mutations, prefer matching `web` routes with `auth` middleware unless the feature genuinely needs a cross-client API surface.

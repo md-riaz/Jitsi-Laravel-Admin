@@ -90,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
                 )->sortBy('start_at')->values(),
                 'liveMeetings'      => $allMeetings->filter(fn ($m) => $m->canJoinAt(now())),
                 'totalMeetings'     => $totalMeetings,
-                'totalParticipants' => $allMeetings->sum(fn ($m) => $m->participants->count()),
+                'totalParticipants' => $allMeetings->sum(fn ($m) => (int) $m->active_participant_count),
             ]);
         };
 

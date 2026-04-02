@@ -39,14 +39,15 @@ class CalendarController extends Controller
 
         // Format meetings for FullCalendar
         $events = $meetings->map(function ($meeting) {
-            // Determine if this is an instant meeting
             $isInstant = $meeting->isInstantMeeting();
+            $start = $isInstant ? ($meeting->actual_started_at ?? $meeting->start_at ?? now()) : $meeting->start_at;
+            $end = $isInstant ? ($meeting->actual_ended_at ?? $meeting->end_at ?? $start->copy()->addHour()) : $meeting->end_at;
 
             return [
                 'id' => $meeting->id,
                 'title' => $meeting->title,
-                'start' => $isInstant ? now()->toIso8601String() : $meeting->start_at->toIso8601String(),
-                'end' => $isInstant ? now()->addHour()->toIso8601String() : $meeting->end_at->toIso8601String(),
+                'start' => $start->toIso8601String(),
+                'end' => $end->toIso8601String(),
                 'url' => route('meeting.show', $meeting->id),
                 'backgroundColor' => $meeting->canJoinAt(now()) ? '#10b981' : '#667eea',
                 'borderColor' => $meeting->canJoinAt(now()) ? '#10b981' : '#667eea',

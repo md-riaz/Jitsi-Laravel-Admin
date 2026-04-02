@@ -156,6 +156,6 @@ class User extends Authenticatable
      */
     public function getJitsiAvatarUrl(): string
     {
-        return $this->avatar_url;
+        return (string) ($this->avatar_url ?? '');
     }
 }
