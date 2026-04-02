@@ -110,6 +110,8 @@ The included `docker-compose.yml` starts three services:
 - `queue` for database-backed jobs
 - `scheduler` for Laravel scheduled commands
 
+The Docker entrypoint also runs `php artisan storage:link --no-interaction || true`, so the public storage symlink is created automatically in the container startup path.
+
 SQLite is used by default and persisted in the `app_database` Docker volume, so no separate database container is required.
 
 ### Reverse proxy and TLS
@@ -207,6 +209,9 @@ sudo php artisan key:generate
 
 # Run migrations
 sudo php artisan migrate --force
+
+# Create public storage symlink for uploaded files
+sudo php artisan storage:link
 
 # Seed database (if needed)
 sudo php artisan db:seed --force

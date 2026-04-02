@@ -94,7 +94,10 @@ php artisan key:generate
 ```bash
 touch database/database.sqlite
 php artisan migrate --seed
+php artisan storage:link
 ```
+
+If you deploy manually without Docker, `php artisan storage:link` is required so uploaded files on the `public` disk are reachable through `/storage/...` URLs. The included Docker entrypoint already runs this automatically.
 
 **Demo credentials:**
 

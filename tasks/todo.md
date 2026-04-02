@@ -99,3 +99,29 @@ Results:
 - Updated `resources/views/dashboard/profile.blade.php` to submit upload/delete requests to the new web routes instead of the Sanctum API endpoints.
 - Verified `routes/web.php`, `resources/views/dashboard/profile.blade.php`, and `app/Http/Controllers/Api/ProfilePictureController.php` with diagnostics; no issues were reported.
 - Confirmed a separate environment issue remains: `public/storage` is missing, so avatar images still require `php artisan storage:link` to be publicly reachable.
+
+## 2026-04-02 — Document storage symlink and deploy Docker stack
+- [x] Restate goal + acceptance criteria
+  - Goal: document avatar storage symlink requirements clearly and deploy the app with Docker.
+  - Acceptance criteria: README/setup/deployment docs mention `php artisan storage:link` for manual deploys and clarify Docker handles it automatically.
+  - Acceptance criteria: Docker stack is started successfully and service status is confirmed.
+- [x] Locate existing implementation / patterns
+- [x] Design: minimal approach + key decisions
+- [ ] Implement smallest safe slice
+- [ ] Run verification (docs review/docker status)
+- [ ] Summarize changes + verification story
+
+Working Notes:
+- `docker/entrypoint.sh` already runs `php artisan storage:link --no-interaction || true`.
+- `README.md`, `SETUP.md`, and `DEPLOYMENT.md` currently do not mention the storage symlink requirement for manual/non-Docker deployments.
+- Keep the docs change narrow and avoid changing unrelated deployment guidance.
+- [x] Implement smallest safe slice
+- [x] Run verification (docs review/docker status)
+- [x] Summarize changes + verification story
+
+Results:
+- Updated `README.md` and `SETUP.md` to document that manual/non-Docker setups must run `php artisan storage:link` so uploaded files on the `public` disk are reachable via `/storage/...` URLs.
+- Updated `DEPLOYMENT.md` to state that Docker already runs `php artisan storage:link --no-interaction || true` during container startup and to add the manual deploy symlink step to the non-Docker deployment flow.
+- Started the Docker stack with `docker compose up --build -d`.
+- Verified with `docker compose ps` that `app`, `queue`, and `scheduler` are up.
+- Verified with container logs that startup completed and that each container reported `The [public/storage] link has been connected to [storage/app/public]`.

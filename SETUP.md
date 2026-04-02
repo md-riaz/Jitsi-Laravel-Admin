@@ -62,7 +62,10 @@ TYRO_DASHBOARD_LOGO=/images/logo.svg
 ```bash
 php artisan migrate --force
 php artisan db:seed
+php artisan storage:link
 ```
+
+If you are setting up the app manually, `php artisan storage:link` is required so uploaded files stored on the `public` disk are served from `/storage/...`. The Docker deployment path already runs this automatically during container startup.
 
 This will create:
 - Roles and privileges (super-admin, org-admin, host, member)
