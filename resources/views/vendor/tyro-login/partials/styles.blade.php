@@ -335,28 +335,76 @@
         margin-top: 0.375rem;
     }
 
-    .error-list {
+    .auth-toast-stack {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: min(420px, calc(100vw - 2rem));
+        z-index: 10000;
+        pointer-events: none;
+    }
+
+    .auth-toast {
+        position: relative;
+        padding: 1rem 3rem 1rem 1.25rem;
+        border-radius: 0.75rem;
+        border: 1px solid;
+        box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
+        background-color: var(--background);
+        pointer-events: auto;
+    }
+
+    .auth-toast-success {
+        background-color: color-mix(in srgb, var(--success), transparent 90%);
+        border-color: var(--success);
+        color: var(--success);
+    }
+
+    .auth-toast-error {
         background-color: color-mix(in srgb, var(--destructive), transparent 90%);
-        border: 1px solid var(--destructive);
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .error-list ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    }
-
-    .error-list li {
+        border-color: var(--destructive);
         color: var(--destructive);
-        font-size: 0.875rem;
-        margin-bottom: 0.25rem;
     }
 
-    .error-list li:last-child {
-        margin-bottom: 0;
+    .auth-toast-message {
+        font-size: 0.875rem;
+        margin: 0;
+        color: inherit;
+    }
+
+    .auth-toast-dismiss {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 0;
+        border-radius: 9999px;
+        color: currentColor;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .auth-toast-dismiss:hover {
+        background-color: rgb(255 255 255 / 0.35);
+        opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+        .auth-toast-stack {
+            top: 1rem;
+            right: 1rem;
+            left: 1rem;
+            width: auto;
+        }
     }
 
     /* Form Footer */

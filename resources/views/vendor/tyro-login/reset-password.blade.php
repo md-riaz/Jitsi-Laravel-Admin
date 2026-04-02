@@ -38,15 +38,6 @@
                 <p class="email-address">{{ $email }}</p>
             </div>
 
-            <!-- Error Message -->
-            @if(session('error'))
-            <div class="error-list">
-                <ul>
-                    <li>{{ session('error') }}</li>
-                </ul>
-            </div>
-            @endif
-
             <!-- Reset Password Form -->
             <form method="POST" action="{{ route('tyro-login.password.update') }}">
                 @csrf

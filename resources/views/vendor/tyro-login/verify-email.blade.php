@@ -45,13 +45,6 @@
                 <p class="email-address">{{ $email }}</p>
             </div>
 
-            <!-- Success Message -->
-            @if(session('success'))
-            <div class="success-message">
-                <p>{{ session('success') }}</p>
-            </div>
-            @endif
-
             <!-- Instructions -->
             <div class="verify-instructions">
                 <p>Click the link in your email to verify your account. If you don't see the email, check your spam folder.</p>
@@ -108,30 +101,6 @@
         font-weight: 600;
         font-size: 1rem;
         margin-top: 0.25rem;
-    }
-
-    .success-message {
-        background-color: #ecfdf5;
-        border: 1px solid #a7f3d0;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-
-    html.dark .success-message {
-        background-color: #052e16;
-        border-color: #166534;
-    }
-
-    .success-message p {
-        color: #059669;
-        font-size: 0.875rem;
-        margin: 0;
-    }
-
-    html.dark .success-message p {
-        color: #34d399;
     }
 
     .verify-instructions {

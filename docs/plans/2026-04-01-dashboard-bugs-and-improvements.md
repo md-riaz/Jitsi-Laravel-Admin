@@ -38,7 +38,7 @@
   - Dashboard composer + role-aware view data chain
 - Guest link behavior must align with settings and token flow in all entry paths.
   - Access/join endpoints + invite route integration
-- Branding replacement is incomplete (`Jitsi Admin` -> `Alora Admin`).
+- Branding replacement is incomplete (`Alora Admin` standardization still needs to be completed everywhere it appears).
   - Views, emails, metadata/title fallbacks
 - Sidebar/menu ordering must be aligned to UX request.
   - Tyro sidebar partials
@@ -228,7 +228,7 @@
 **Step 4: Commit**
 - `feat: org-admin org-wide meeting visibility with creator attribution`
 
-### Task 11: Branding standardization (`Jitsi Admin` -> `Alora Admin`)
+### Task 11: Branding standardization (`Alora Admin` rollout)
 
 **Files:**
 - Search/modify all views and mail templates under `resources/views/**`

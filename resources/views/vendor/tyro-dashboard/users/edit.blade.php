@@ -53,6 +53,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="organization_display" class="form-label">Organization</label>
+                    <input type="text" id="organization_display" class="form-input" value="{{ $editUser->organization_id && $editUser->organization ? $editUser->organization->name : 'None (Personal)' }}" readonly>
+                </div>
+
+                <div class="form-group">
                     <label for="password" class="form-label">
                         New Password <span class="form-label-optional">(leave blank to keep current)</span>
                     </label>

@@ -32,13 +32,6 @@
                 <p>{{ $subtitle }}</p>
             </div>
 
-            <!-- Success Message -->
-            @if(session('success'))
-            <div class="success-message-box">
-                <p>{{ session('success') }}</p>
-            </div>
-            @endif
-
             <!-- OTP Form -->
             <form method="POST" action="{{ route('tyro-login.otp.submit') }}">
                 @csrf
@@ -99,30 +92,6 @@
         text-align: center;
         display: block;
         width: 100%;
-    }
-
-    .success-message-box {
-        background-color: #ecfdf5;
-        border: 1px solid #a7f3d0;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-
-    html.dark .success-message-box {
-        background-color: #052e16;
-        border-color: #166534;
-    }
-
-    .success-message-box p {
-        color: #059669;
-        font-size: 0.9375rem;
-        margin: 0;
-    }
-
-    html.dark .success-message-box p {
-        color: #34d399;
     }
 
     .otp-input-container {

@@ -44,3 +44,8 @@
 - **Failure mode:** The homepage directly called named auth routes from the Tyro login package, so if those routes were not registered or differed by environment, guests hit a 500 before seeing the app.
 - **Detection signal:** `resources/views/welcome.blade.php` called `route('tyro-login.login')` directly while route discovery did not confirm any application-side definition, and the root route only rendered that view.
 - **Prevention rule:** For public landing pages, avoid unconditional `route()` calls to package-provided auth names; guard with `Route::has(...)` and provide safe URL fallbacks so the page still renders during partial auth setup or route drift.
+
+## 2026-04-02 — Use full-file reads after repeated exact-replace failures
+- **Failure mode:** Tried multiple exact string replacements against a Blade file after prior edits without first re-reading the full current file.
+- **Detection signal:** `strReplace` failed repeatedly because the target text no longer matched the updated file exactly.
+- **Prevention rule:** After one or two exact-replace misses on the same file, re-read the full file and patch against the current contents instead of retrying stale text.

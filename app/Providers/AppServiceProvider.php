@@ -97,6 +97,72 @@ class AppServiceProvider extends ServiceProvider
         View::composer('vendor.tyro-dashboard.dashboard.user', $meetingComposer);
         View::composer('vendor.tyro-dashboard.dashboard.index', $meetingComposer);
 
+        View::composer([
+            'vendor.tyro-dashboard.dashboard.admin',
+            'vendor.tyro-dashboard.dashboard.index',
+        ], function ($view) {
+            $user = Auth::user();
+
+            if (! $user || ! method_exists($user, 'hasRole')) {
+                return;
+            }
+
+            $isOrgAdmin = $user->hasRole('org-admin') && ! $user->hasRole('super-admin');
+            if (! $isOrgAdmin || ! $user->organization_id) {
+                return;
+            }
+
+            $organizationUsersQuery = User::query()
+                ->where('organization_id', $user->organization_id)
+                ->whereDoesntHave('tyroRoles', function ($query) {
+                    $query->where('slug', 'super-admin');
+                });
+
+            $organizationUsers = (clone $organizationUsersQuery)
+                ->with('tyroRoles')
+                ->latest()
+                ->get();
+
+            $suspendedUsers = $organizationUsers->filter(function ($organizationUser) {
+                if (method_exists($organizationUser, 'isSuspended')) {
+                    return $organizationUser->isSuspended();
+                }
+
+                return $organizationUser->status === 'suspended';
+            });
+
+            $roleDistribution = $organizationUsers
+                ->flatMap(function ($organizationUser) {
+                    return $organizationUser->tyroRoles
+                        ->unique('id')
+                        ->map(fn ($role) => [
+                            'id' => $role->id,
+                            'name' => $role->name,
+                            'user_id' => $organizationUser->id,
+                        ]);
+                })
+                ->groupBy('id')
+                ->map(fn ($roles, $roleId) => [
+                    'id' => $roleId,
+                    'name' => $roles->first()['name'],
+                    'count' => $roles->pluck('user_id')->unique()->count(),
+                ])
+                ->sortByDesc('count')
+                ->values();
+
+            $existingStats = $view->getData()['stats'] ?? [];
+            if (! is_array($existingStats)) {
+                $existingStats = (array) $existingStats;
+            }
+
+            $view->with('stats', array_merge($existingStats, [
+                'total_users' => $organizationUsers->count(),
+                'suspended_users' => $suspendedUsers->count(),
+                'recent_users' => $organizationUsers->take(5)->values(),
+                'role_distribution' => $roleDistribution,
+            ]));
+        });
+
         // Inject billing notification data for org admins (dashboard views only)
         View::composer('vendor.tyro-dashboard.*', function ($view) {
             $user = Auth::user();

@@ -32,22 +32,6 @@
                 <p>{{ $pageContent['subtitle'] ?? 'Enter your email and we\'ll send you a reset link.' }}</p>
             </div>
 
-            <!-- Success Message -->
-            @if(session('success'))
-            <div class="success-message">
-                <p>{{ session('success') }}</p>
-            </div>
-            @endif
-
-            <!-- Error Message -->
-            @if(session('error'))
-            <div class="error-list">
-                <ul>
-                    <li>{{ session('error') }}</li>
-                </ul>
-            </div>
-            @endif
-
             <!-- Forgot Password Form -->
             <form method="POST" action="{{ route('tyro-login.password.email') }}">
                 @csrf
@@ -77,30 +61,4 @@
         </div>
     </div>
 </div>
-
-<style>
-    .success-message {
-        background-color: #ecfdf5;
-        border: 1px solid #a7f3d0;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-
-    html.dark .success-message {
-        background-color: #052e16;
-        border-color: #166534;
-    }
-
-    .success-message p {
-        color: #059669;
-        font-size: 0.875rem;
-        margin: 0;
-    }
-
-    html.dark .success-message p {
-        color: #34d399;
-    }
-</style>
 @endsection

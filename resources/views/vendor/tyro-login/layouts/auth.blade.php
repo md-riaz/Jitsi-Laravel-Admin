@@ -17,6 +17,20 @@
 </head>
 
 <body>
+    <div class="auth-toast-stack" id="authToastStack">
+        @if(session('success'))
+            <div class="auth-toast auth-toast-success">
+                <p class="auth-toast-message">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="auth-toast auth-toast-error">
+                <p class="auth-toast-message">{{ session('error') }}</p>
+            </div>
+        @endif
+    </div>
+
     <!-- Theme Toggle Button -->
     <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
         <svg class="sun-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -62,6 +76,32 @@
         // Form validation enhancement
         document.addEventListener('DOMContentLoaded', function () {
             const forms = document.querySelectorAll('form');
+            const toasts = document.querySelectorAll('.auth-toast');
+            const dismissTime = 10000;
+
+            function dismissToast(toast) {
+                toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(() => toast.remove(), 250);
+            }
+
+            toasts.forEach(toast => {
+                const dismissBtn = document.createElement('button');
+                dismissBtn.type = 'button';
+                dismissBtn.className = 'auth-toast-dismiss';
+                dismissBtn.setAttribute('aria-label', 'Dismiss notification');
+                dismissBtn.innerHTML = '&times;';
+                dismissBtn.addEventListener('click', () => dismissToast(toast));
+                toast.appendChild(dismissBtn);
+
+                setTimeout(() => {
+                    if (!document.body.contains(toast)) {
+                        return;
+                    }
+                    dismissToast(toast);
+                }, dismissTime);
+            });
 
             forms.forEach(form => {
                 form.addEventListener('submit', function (e) {

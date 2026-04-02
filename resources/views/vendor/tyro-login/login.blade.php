@@ -38,12 +38,6 @@
                 @endif
             </div>
 
-            <!-- Success Message -->
-            @if(session('success'))
-            <div class="alert alert-success" style="padding: 0.875rem 1rem; margin-bottom: 1.5rem; background-color: #d1fae5; border: 1px solid #6ee7b7; border-radius: 0.5rem; color: #065f46; font-size: 0.9375rem;">
-                {{ session('success') }}
-            </div>
-            @endif
             <!-- Login Form -->
             <form method="POST" action="{{ route('tyro-login.login.submit') }}">
                 @csrf

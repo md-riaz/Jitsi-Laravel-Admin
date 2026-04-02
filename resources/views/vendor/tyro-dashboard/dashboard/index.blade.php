@@ -39,7 +39,7 @@
     </div>
 </div>
 
-@if($isAdmin ?? false)
+@if(($isAdmin ?? false) && method_exists($user, 'hasRole') && $user->hasRole('super-admin'))
 <!-- Stats Grid -->
 <div class="stats-grid">
     <a href="{{ route('tyro-dashboard.users.index') }}" class="stat-card" style="text-decoration:none; color:inherit;">

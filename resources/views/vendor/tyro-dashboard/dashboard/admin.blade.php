@@ -40,6 +40,7 @@
     </div>
 </div>
 
+@if(method_exists($user, 'hasRole') && $user->hasRole('super-admin'))
 <!-- Stats Grid -->
 <div class="stats-grid">
     <a href="{{ route('tyro-dashboard.users.index') }}" class="stat-card" style="text-decoration:none; color:inherit;">
@@ -89,8 +90,6 @@
             <div class="stat-value">{{ number_format($stats['suspended_users'] ?? 0) }}</div>
         </div>
     </a>
-
-
 </div>
 
 <div class="grid-2">
@@ -176,4 +175,5 @@
         </div>
     </div>
 </div>
+@endif
 @endsection

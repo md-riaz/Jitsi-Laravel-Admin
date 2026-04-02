@@ -1,6 +1,6 @@
 # Jitsi Room Lifecycle Integration
 
-This document describes how to replicate the same instant-meeting lifecycle behavior on other Jitsi Admin instances without modifying Jitsi core.
+This document describes how to replicate the same instant-meeting lifecycle behavior on other Alora Admin instances without modifying Jitsi core.
 
 ## Goal
 

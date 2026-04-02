@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Models\MeetingEvent;
 use App\Models\MeetingParticipant;
+use App\Models\User;
 use App\Services\JitsiJwtService;
 use App\Services\MeetingAccessPolicyService;
 use App\Services\MeetingLifecycleService;
@@ -79,11 +80,7 @@ class MeetingJoinController extends Controller
             ], 403);
         }
 
-        $isModerator = $user && (
-            $meeting->created_by === $user->id ||
-            $meeting->participants()->where('user_id', $user->id)->where('role', 'host')->exists() ||
-            $meeting->participants()->where('user_id', $user->id)->where('role', 'cohost')->exists()
-        );
+        $isModerator = $user ? $this->isModerator($meeting, $user->id) : false;
 
         $displayName = $user?->name
             ?? $request->input('display_name')
@@ -259,7 +256,19 @@ class MeetingJoinController extends Controller
 
     private function isModerator(Meeting $meeting, int $userId): bool
     {
-        return (int) $meeting->created_by === $userId
-            || $meeting->participants()->where('user_id', $userId)->whereIn('role', ['host', 'cohost'])->exists();
+        $user = User::find($userId);
+
+        if ($user
+            && method_exists($user, 'hasRole')
+            && $user->hasRole('org-admin')
+            && (int) $user->organization_id === (int) $meeting->organization_id
+        ) {
+            return true;
+        }
+
+        return $meeting->participants()
+            ->where('user_id', $userId)
+            ->where('role', 'host')
+            ->exists();
     }
 }

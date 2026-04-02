@@ -829,6 +829,12 @@
         font-weight: 400;
     }
 
+    .form-group:has(.form-input[required], .form-select[required], .form-textarea[required]) .form-label::after {
+        content: ' *';
+        color: var(--destructive);
+        font-weight: 600;
+    }
+
     .form-input,
     .form-select,
     .form-textarea {
@@ -1126,15 +1132,30 @@
         color: var(--primary-foreground);
     }
 
-    /* Alerts - shadcn style */
+    /* Alert toasts */
+    .alert-toast-stack {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: min(420px, calc(100vw - 2rem));
+        z-index: 10000;
+        pointer-events: none;
+    }
+
     .alert {
-        padding: 1rem 1.25rem;
+        position: relative;
+        padding: 1rem 3rem 1rem 1.25rem;
         border-radius: 10px;
         border: 1px solid;
-        margin-bottom: 1.25rem;
         display: flex;
         align-items: flex-start;
         gap: 0.875rem;
+        box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
+        background-color: var(--background);
+        pointer-events: auto;
     }
 
     .alert svg {
@@ -1180,6 +1201,38 @@
         background-color: color-mix(in srgb, var(--info), transparent 90%);
         border-color: var(--info);
         color: var(--info);
+    }
+
+    .alert-dismiss {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 0;
+        border-radius: 9999px;
+        color: currentColor;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .alert-dismiss:hover {
+        background-color: rgb(255 255 255 / 0.35);
+        opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+        .alert-toast-stack {
+            top: 1rem;
+            right: 1rem;
+            left: 1rem;
+            width: auto;
+        }
     }
 
     /* Pagination */
