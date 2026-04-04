@@ -148,7 +148,7 @@ class Meeting extends Model
     public function canJoinAt(CarbonInterface $now): bool
     {
         // Instant meetings (no start/end time) can always be joined if status is live
-        if ($this->start_at === null || $this->end_at === null) {
+        if ($this->isInstantMeeting()) {
             return $this->status === 'live';
         }
 
@@ -156,6 +156,33 @@ class Meeting extends Model
         $closesAt = $this->end_at->addMinutes($this->join_late_minutes);
 
         return $now->betweenIncluded($opensAt, $closesAt);
+    }
+
+    public function isLiveNow(CarbonInterface $now): bool
+    {
+        return $this->canJoinAt($now);
+    }
+
+    public function isUpcomingAt(CarbonInterface $now): bool
+    {
+        if ($this->isLiveNow($now)) {
+            return false;
+        }
+
+        if ($this->isInstantMeeting()) {
+            return $this->status !== 'ended';
+        }
+
+        return $this->end_at !== null && $this->end_at->isFuture();
+    }
+
+    public function isPastAt(CarbonInterface $now): bool
+    {
+        if ($this->isInstantMeeting()) {
+            return $this->status === 'ended' || $this->actual_ended_at !== null;
+        }
+
+        return $this->end_at !== null && $this->end_at->lte($now);
     }
 
     public function isInstantMeeting(): bool

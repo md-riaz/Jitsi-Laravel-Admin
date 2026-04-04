@@ -472,7 +472,6 @@
             </div>
         @else
             @foreach($upcomingMeetings->take(5) as $m)
-            @php $isLive = $m->canJoinAt(now()); @endphp
             <div class="ml-list-item">
                 @if($m->start_at)
                 <div class="ml-time">
@@ -490,13 +489,12 @@
                     </div>
                 </div>
                 <div class="ml-actions">
-                    @if($isLive)
-                        <span class="badge-live-dot">Live</span>
-                        <a href="{{ route('meeting.show', $m->id) }}" class="btn btn-sm btn-primary" target="_blank">Join</a>
+                    @if($m->isInstantMeeting())
+                        <span class="badge-sch">Instant</span>
                     @else
                         <span class="badge-sch">Upcoming</span>
-                        <a href="{{ route('meeting.show', $m->id) }}" class="btn btn-sm btn-ghost" target="_blank">Details</a>
                     @endif
+                    <a href="{{ route('meeting.show', $m->id) }}" class="btn btn-sm btn-ghost" target="_blank">Details</a>
                 </div>
             </div>
             @endforeach

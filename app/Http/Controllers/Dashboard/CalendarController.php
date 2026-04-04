@@ -22,12 +22,23 @@ class CalendarController extends Controller
         $start = $request->input('start');
         $end = $request->input('end');
 
-        // Get user's meetings (either created by user or user is a participant)
-        $meetings = Meeting::where(function ($query) use ($user) {
-            $query->where('created_by', $user->id)
-                  ->orWhereHas('participants', function ($q) use ($user) {
-                      $q->where('user_id', $user->id);
-                  });
+        $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
+        $isOrgAdmin = method_exists($user, 'hasRole') && $user->hasRole('org-admin') && ! $isSuperAdmin;
+
+        $meetings = Meeting::query()
+        ->when(! $isSuperAdmin, function ($query) use ($user, $isOrgAdmin) {
+            $query->where(function ($scope) use ($user, $isOrgAdmin) {
+                if ($isOrgAdmin && $user->organization_id) {
+                    $scope->where('organization_id', $user->organization_id);
+
+                    return;
+                }
+
+                $scope->where('created_by', $user->id)
+                    ->orWhereHas('participants', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+            });
         })
         ->when($start, function ($query) use ($start) {
             return $query->where('start_at', '>=', $start);
@@ -43,17 +54,19 @@ class CalendarController extends Controller
             $start = $isInstant ? ($meeting->actual_started_at ?? $meeting->start_at ?? now()) : $meeting->start_at;
             $end = $isInstant ? ($meeting->actual_ended_at ?? $meeting->end_at ?? $start->copy()->addHour()) : $meeting->end_at;
 
+            $isLive = $meeting->isLiveNow(now());
+
             return [
                 'id' => $meeting->id,
                 'title' => $meeting->title,
                 'start' => $start->toIso8601String(),
                 'end' => $end->toIso8601String(),
                 'url' => route('meeting.show', $meeting->id),
-                'backgroundColor' => $meeting->canJoinAt(now()) ? '#10b981' : '#667eea',
-                'borderColor' => $meeting->canJoinAt(now()) ? '#10b981' : '#667eea',
+                'backgroundColor' => $isLive ? '#10b981' : '#667eea',
+                'borderColor' => $isLive ? '#10b981' : '#667eea',
                 'extendedProps' => [
                     'description' => $meeting->description,
-                    'status' => $meeting->canJoinAt(now()) ? 'live' : 'upcoming',
+                    'status' => $isLive ? 'live' : ($meeting->isPastAt(now()) ? 'ended' : 'upcoming'),
                     'isInstant' => $isInstant,
                 ],
             ];

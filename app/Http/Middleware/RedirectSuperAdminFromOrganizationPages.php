@@ -19,7 +19,7 @@ class RedirectSuperAdminFromOrganizationPages
             $user
             && method_exists($user, 'hasRole')
             && $user->hasRole('super-admin')
-            && $request->routeIs('dashboard.subscription', 'dashboard.my-meetings', 'dashboard.calendar*', 'dashboard.create-meeting*')
+            && $request->routeIs('dashboard.subscription', 'dashboard.create-meeting*')
         ) {
             return redirect()
                 ->route('tyro-dashboard.index')

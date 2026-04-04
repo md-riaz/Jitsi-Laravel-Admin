@@ -81,15 +81,15 @@ class AppServiceProvider extends ServiceProvider
                 ->with(['organization', 'participants', 'creator'])
                 ->get();
 
-            $totalMeetings = $isOrgAdmin
+            $totalMeetings = ($isSuperAdmin || $isOrgAdmin)
                 ? $allMeetings->count()
                 : $allMeetings->where('created_by', $user->id)->count();
 
+            $now = now();
+
             $view->with([
-                'upcomingMeetings'  => $allMeetings->filter(
-                    fn ($m) => ($m->end_at === null || $m->end_at->isFuture()) && $m->status !== 'live'
-                )->sortBy('start_at')->values(),
-                'liveMeetings'      => $allMeetings->filter(fn ($m) => $m->canJoinAt(now())),
+                'upcomingMeetings'  => $allMeetings->filter(fn ($m) => $m->isUpcomingAt($now))->sortBy('start_at')->values(),
+                'liveMeetings'      => $allMeetings->filter(fn ($m) => $m->isLiveNow($now))->values(),
                 'totalMeetings'     => $totalMeetings,
                 'totalParticipants' => $allMeetings->sum(fn ($m) => (int) $m->active_participant_count),
             ]);

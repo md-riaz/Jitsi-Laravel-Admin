@@ -356,13 +356,12 @@
                         </div>
                     </div>
                     <div class="meeting-list-actions">
-                        @if($meeting->canJoinAt(now()))
-                            <span class="badge-live">Live</span>
-                            <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-primary" target="_blank">Join</a>
+                        @if($meeting->isInstantMeeting())
+                            <span class="badge-upcoming">Instant</span>
                         @else
                             <span class="badge-upcoming">Upcoming</span>
-                            <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-ghost" target="_blank">Details</a>
                         @endif
+                        <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-ghost" target="_blank">Details</a>
                     </div>
                 </div>
                 @endforeach

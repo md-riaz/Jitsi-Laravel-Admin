@@ -23,13 +23,21 @@ class MeetingController extends Controller
     {
         $user = $request->user();
 
+        $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
+        $isOrgAdmin = method_exists($user, 'hasRole') && $user->hasRole('org-admin') && ! $isSuperAdmin;
+
         $items = Meeting::query()
-            ->where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                    ->orWhereHas('participants', fn($p) => $p->where('user_id', $user->id));
-                if ($user->organization_id) {
-                    $q->orWhere('organization_id', $user->organization_id);
-                }
+            ->when(! $isSuperAdmin, function ($query) use ($user, $isOrgAdmin) {
+                $query->where(function ($q) use ($user, $isOrgAdmin) {
+                    if ($isOrgAdmin && $user->organization_id) {
+                        $q->where('organization_id', $user->organization_id);
+
+                        return;
+                    }
+
+                    $q->where('created_by', $user->id)
+                        ->orWhereHas('participants', fn ($p) => $p->where('user_id', $user->id));
+                });
             })
             ->with(['organization:id,name'])
             ->orderByDesc('created_at')

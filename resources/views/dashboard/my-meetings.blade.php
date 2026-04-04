@@ -267,6 +267,50 @@
     <div class="card"><div class="card-body"><div class="meeting-stat-label">Join Events (30d)</div><div class="meeting-stat-value">{{ $analytics['join_events_30d'] ?? 0 }}</div></div></div>
 </div>
 
+@if($liveMeetings->count())
+<div class="card card-spaced" style="border: 2px solid color-mix(in srgb, var(--success), transparent 70%);">
+    <div class="card-header" style="border-bottom: 1px solid color-mix(in srgb, var(--success), transparent 82%); background: color-mix(in srgb, var(--success), white 94%);">
+        <h3 class="card-title" style="color: color-mix(in srgb, var(--success), black 22%);">Live Meetings</h3>
+        <span class="section-count">{{ $liveMeetings->count() }}</span>
+    </div>
+    <div class="card-body">
+        <div class="meeting-cards-grid">
+            @foreach($liveMeetings as $meeting)
+            <div class="meeting-card live">
+                <div class="meeting-card-top">
+                    <div>
+                        <div class="meeting-card-title">{{ $meeting->title }}</div>
+                        @if($meeting->description)
+                            <div class="meeting-card-desc">{{ Str::limit($meeting->description, 70) }}</div>
+                        @endif
+                    </div>
+                    <span class="badge-live">Live</span>
+                </div>
+                <div class="meeting-card-meta">
+                    <span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        {{ $meeting->actual_started_at ? 'Started ' . $meeting->actual_started_at->diffForHumans() : ($meeting->isInstantMeeting() ? 'Instant meeting' : 'Started ' . optional($meeting->start_at)->diffForHumans()) }}
+                    </span>
+                    <span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        {{ (int) $meeting->active_participant_count }} in room
+                    </span>
+                </div>
+                <div class="meeting-card-footer">
+                    <span class="muted-small">{{ $meeting->organization && $meeting->organization->name ? $meeting->organization->name : 'No organization' }}</span>
+                    <div class="meeting-card-actions">
+                        <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost">Summary</a>
+                        <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
+                        <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-primary" target="_blank">Join Now</a>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="card card-spaced">
     <div class="card-header">
         <h3 class="card-title">Upcoming Meetings</h3>
@@ -284,8 +328,7 @@
         @else
             <div class="meeting-cards-grid">
                 @foreach($upcomingMeetings as $meeting)
-                @php $isLive = $meeting->canJoinAt(now()); @endphp
-                <div class="meeting-card {{ $isLive ? 'live' : '' }}">
+                <div class="meeting-card">
                     <div class="meeting-card-top">
                         <div>
                             <div class="meeting-card-title">{{ $meeting->title }}</div>
@@ -293,9 +336,7 @@
                                 <div class="meeting-card-desc">{{ Str::limit($meeting->description, 70) }}</div>
                             @endif
                         </div>
-                        @if($isLive)
-                            <span class="badge-live">Live</span>
-                        @elseif($meeting->isInstantMeeting())
+                        @if($meeting->isInstantMeeting())
                             <span class="badge-instant">Instant</span>
                         @else
                             <span class="badge-upcoming">Upcoming</span>
@@ -341,8 +382,8 @@
                                 Copy Link
                                 <span class="copied-tip">Copied!</span>
                             </button>
-                            <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm {{ $isLive ? 'btn-primary' : 'btn-secondary' }}" target="_blank">
-                                {{ $isLive ? 'Join Now' : 'View' }}
+                            <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" target="_blank">
+                                View
                             </a>
                         </div>
                     </div>

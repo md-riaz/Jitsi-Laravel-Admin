@@ -31,25 +31,20 @@ class MyMeetingsController extends Controller
             });
         }
 
-        $upcomingMeetings = (clone $baseQuery)
-            ->where(function ($query) {
-                // Include instant meetings (null end_at) or meetings with end_at in the future
-                $query->whereNull('end_at')
-                    ->orWhere('end_at', '>', now());
-            })
+        $allMeetings = (clone $baseQuery)
             ->orderBy('start_at')
             ->with(['organization', 'creator', 'participants'])
             ->get();
 
-        $pastMeetings = (clone $baseQuery)
-            ->whereNotNull('end_at')
-            ->where('end_at', '<=', now())
-            ->orderByDesc('start_at')
-            ->with(['organization', 'creator', 'participants'])
-            ->limit(10)
-            ->get();
+        $now = now();
+        $liveMeetings = $allMeetings->filter(fn ($meeting) => $meeting->isLiveNow($now))->values();
+        $upcomingMeetings = $allMeetings->filter(fn ($meeting) => $meeting->isUpcomingAt($now))->values();
+        $pastMeetings = $allMeetings->filter(fn ($meeting) => $meeting->isPastAt($now))
+            ->sortByDesc('start_at')
+            ->take(10)
+            ->values();
 
-        $meetingIds = (clone $baseQuery)->pluck('id');
+        $meetingIds = $allMeetings->pluck('id');
 
         $events = MeetingEvent::whereIn('meeting_id', $meetingIds)->get();
         $joinEvents = $events->where('type', 'participant_joined');
@@ -61,13 +56,13 @@ class MyMeetingsController extends Controller
             return null;
         })->filter();
 
-        $totalMeetings = $isOrgAdmin
+        $totalMeetings = $isSuperAdmin || $isOrgAdmin
             ? $meetingIds->count()
             : (clone $baseQuery)->where('created_by', $user->id)->count();
 
         $analytics = [
             'total_meetings' => $totalMeetings,
-            'live_now' => $upcomingMeetings->filter(fn($m) => $m->canJoinAt(now()))->count(),
+            'live_now' => $liveMeetings->count(),
             'avg_participants' => $pastMeetings->count() > 0
                 ? round($pastMeetings->avg(fn($m) => (int) $m->active_participant_count), 1)
                 : 0,
@@ -75,6 +70,6 @@ class MyMeetingsController extends Controller
             'join_events_30d' => $joinEvents->filter(fn($e) => $e->created_at >= now()->subDays(30))->count(),
         ];
 
-        return view('dashboard.my-meetings', compact('upcomingMeetings', 'pastMeetings', 'analytics'));
+        return view('dashboard.my-meetings', compact('liveMeetings', 'upcomingMeetings', 'pastMeetings', 'analytics'));
     }
 }
