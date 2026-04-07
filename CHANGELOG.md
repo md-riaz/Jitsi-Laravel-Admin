@@ -14,7 +14,10 @@ All notable changes to this project will be documented in this file.
 - Added edit support for upcoming meetings with role-based authorization: org-admins can edit any upcoming meeting in their organization, while hosts can edit only the upcoming meetings they created.
 - Added dedicated dashboard edit/update routes, controller, and Blade view for upcoming meetings.
 - Expanded the create-meeting advanced options UI so it now exposes password, max participants, allowed IPs, lobby, and IP restriction settings consistently with the edit flow.
+- Added production-safe meeting deletion with soft deletes, role-based authorization, backend validation, audit logging, and dashboard delete actions across live, upcoming, and past meeting sections.
+- Blocked deletion of ongoing meetings by enforcing live-state and active-participant checks before delete operations are allowed.
 
 ### Notes
 - Jitsi Docker JWT settings were already aligned with Laravel. The main issue was Laravel organization JWT policy being disabled for org records.
 - A separate dashboard bug caused org-owned link-based meetings to lose `organization_id`, which hid valid upcoming meetings from org-admin views and blocked org-based edit access.
+- Meeting deletion now uses soft deletes so removed meetings disappear from normal queries and route model binding without hard-deleting related historical records.

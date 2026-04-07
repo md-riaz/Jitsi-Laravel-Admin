@@ -45,19 +45,44 @@ class MeetingPolicy
             return false;
         }
 
-        if ($this->isSuperAdmin($user)) {
+        if ($this->isDeleteOwner($user, $meeting)) {
             return true;
         }
 
-        if ($this->sharesOrganization($user, $meeting)
-            && method_exists($user, 'hasRole')
-            && $user->hasRole('org-admin')) {
+        return $this->isOrgAdminForMeeting($user, $meeting);
+    }
+
+    public function deleteVisible(User $user, Meeting $meeting): bool
+    {
+        return $this->isDeleteOwner($user, $meeting)
+            || $this->isOrgAdminForMeeting($user, $meeting);
+    }
+
+    public function delete(User $user, Meeting $meeting): bool
+    {
+        if (!$this->deleteVisible($user, $meeting)) {
+            return false;
+        }
+
+        return $meeting->canBeDeletedAt(now());
+    }
+
+    private function isDeleteOwner(User $user, Meeting $meeting): bool
+    {
+        if ($this->isSuperAdmin($user)) {
             return true;
         }
 
         return method_exists($user, 'hasRole')
             && $user->hasRole('host')
             && (string) $meeting->created_by === (string) $user->id;
+    }
+
+    private function isOrgAdminForMeeting(User $user, Meeting $meeting): bool
+    {
+        return $this->sharesOrganization($user, $meeting)
+            && method_exists($user, 'hasRole')
+            && $user->hasRole('org-admin');
     }
 
     private function isSuperAdmin(User $user): bool

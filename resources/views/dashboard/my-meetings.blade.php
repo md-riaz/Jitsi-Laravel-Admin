@@ -234,6 +234,15 @@
 .copy-btn.did-copy .copied-tip {
     opacity: 1;
 }
+
+.delete-inline-form {
+    display: inline-flex;
+}
+
+.btn-delete-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 </style>
 
 <div class="page-header">
@@ -299,6 +308,9 @@
                 <div class="meeting-card-footer">
                     <span class="muted-small">{{ $meeting->organization && $meeting->organization->name ? $meeting->organization->name : 'No organization' }}</span>
                     <div class="meeting-card-actions">
+                        @can('deleteVisible', $meeting)
+                            <button type="button" class="btn btn-sm btn-danger btn-delete-disabled" title="Live meetings cannot be deleted while ongoing" disabled>Delete</button>
+                        @endcan
                         <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost">Summary</a>
                         <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
                         <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-primary" target="_blank">Join Now</a>
@@ -378,6 +390,13 @@
                             @can('update', $meeting)
                                 <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Edit">Edit</a>
                             @endcan
+                            @can('delete', $meeting)
+                                <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form" onsubmit="return confirm('Delete this meeting? This will remove it from dashboards and disable join links.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">Delete</button>
+                                </form>
+                            @endcan
                             <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Summary">Summary</a>
                             <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
                             <button type="button" class="btn btn-sm btn-ghost copy-btn" title="Copy meeting link" onclick="copyMeetingLink(this, '{{ route('meeting.show', $meeting->id) }}')">
@@ -447,6 +466,13 @@
                                 @endif
                             </td>
                             <td class="table-cell-right">
+                                @can('delete', $meeting)
+                                    <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form" onsubmit="return confirm('Delete this meeting? This will remove it from dashboards and disable join links.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                @endcan
                                 <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost">Summary</a>
                                 <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
                             </td>

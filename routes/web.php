@@ -20,6 +20,7 @@ Route::get('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMe
 Route::post('dashboard/create-meeting', [\App\Http\Controllers\Dashboard\CreateMeetingController::class, 'store'])->middleware(['auth'])->name('dashboard.create-meeting.store');
 Route::get('dashboard/meetings/{meeting}/edit', [\App\Http\Controllers\Dashboard\EditMeetingController::class, 'edit'])->middleware(['auth'])->name('dashboard.meetings.edit');
 Route::put('dashboard/meetings/{meeting}', [\App\Http\Controllers\Dashboard\EditMeetingController::class, 'update'])->middleware(['auth'])->name('dashboard.meetings.update');
+Route::delete('dashboard/meetings/{meeting}', [\App\Http\Controllers\Dashboard\EditMeetingController::class, 'destroy'])->middleware(['auth'])->name('dashboard.meetings.destroy');
 
 // Team Management Routes (for organization admins)
 Route::middleware(['auth', 'org-admin-or-super-admin'])->group(function () {

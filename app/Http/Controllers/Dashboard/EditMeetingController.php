@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
+use App\Models\MeetingEvent;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
@@ -117,6 +119,37 @@ class EditMeetingController extends Controller
         return redirect()
             ->route('dashboard.my-meetings')
             ->with('success', 'Meeting updated successfully.');
+    }
+
+    public function destroy(Request $request, Meeting $meeting): RedirectResponse
+    {
+        $this->authorize('deleteVisible', $meeting);
+
+        if (! $meeting->canBeDeletedAt(now())) {
+            return redirect()
+                ->route('dashboard.my-meetings')
+                ->withErrors(['meeting' => 'This meeting cannot be deleted while it is live or still has active participants.']);
+        }
+
+        DB::transaction(function () use ($request, $meeting) {
+            MeetingEvent::create([
+                'meeting_id' => $meeting->id,
+                'type' => 'meeting_deleted',
+                'payload' => [
+                    'deleted_by_user_id' => $request->user()?->id,
+                    'deleted_by_name' => $request->user()?->name,
+                    'deleted_at' => now()->toIso8601String(),
+                    'meeting_status' => $meeting->status,
+                    'active_participant_count' => (int) $meeting->active_participant_count,
+                ],
+            ]);
+
+            $meeting->delete();
+        });
+
+        return redirect()
+            ->route('dashboard.my-meetings')
+            ->with('success', 'Meeting deleted successfully.');
     }
 
     private function availableOrganizations($user)

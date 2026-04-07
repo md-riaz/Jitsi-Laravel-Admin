@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -16,6 +17,7 @@ class Meeting extends Model
 {
     use HasFactory;
     use HasUuids;
+    use SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -188,6 +190,23 @@ class Meeting extends Model
     public function isInstantMeeting(): bool
     {
         return $this->start_at === null || $this->end_at === null;
+    }
+
+    public function canBeDeletedAt(CarbonInterface $now): bool
+    {
+        if ($this->isLiveNow($now)) {
+            return false;
+        }
+
+        if ($this->status === 'live') {
+            return false;
+        }
+
+        if ((int) $this->active_participant_count > 0) {
+            return false;
+        }
+
+        return true;
     }
 
     public function verifyPassword(?string $password): bool
