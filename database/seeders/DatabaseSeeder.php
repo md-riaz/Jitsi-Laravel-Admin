@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TyroRolesAndPrivilegesSeeder::class,
+            DefaultSubscriptionPlansSeeder::class,
         ]);
 
         if (env('ENABLE_DEMO_SEEDERS', false)) {

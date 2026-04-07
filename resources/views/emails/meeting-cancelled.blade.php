@@ -85,7 +85,7 @@
         </div>
         
         <div class="footer">
-            <p>Notification from Alora Admin</p>
+            <p>Notification from AloraMeet</p>
         </div>
     </div>
 </body>

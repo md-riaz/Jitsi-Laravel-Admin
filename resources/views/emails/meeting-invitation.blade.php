@@ -137,7 +137,7 @@
         </div>
         
         <div class="footer">
-            <p>This invitation was sent by Alora Admin</p>
+            <p>This invitation was sent by AloraMeet</p>
             <p>A calendar invitation (.ics file) is attached to this email</p>
         </div>
     </div>

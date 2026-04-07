@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $meeting->title }} - Alora Admin</title>
+    <title>{{ $meeting->title }} - AloraMeet</title>
     <link rel="preconnect" href="https://{{ config('services.jitsi.domain') }}">
     <script src="https://{{ config('services.jitsi.domain') }}/external_api.js" defer></script>
     <style>
@@ -607,7 +607,7 @@
         <div class="header-container">
             <a href="{{ url('/') }}" class="logo">
                 <div class="logo-icon">J</div>
-                <span>Alora Admin</span>
+                <span>AloraMeet</span>
             </a>
             <div class="header-actions">
                 @auth
@@ -811,7 +811,7 @@
 
             <!-- Footer -->
             <div class="meeting-footer">
-                <p>Powered by <strong>Alora Admin</strong></p>
+                <p>Powered by <strong>AloraMeet</strong></p>
                 <div class="footer-links">
                     <a href="{{ url('/') }}">Home</a>
                     @guest

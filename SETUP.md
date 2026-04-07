@@ -1,4 +1,4 @@
-# Jitsi Meeting Orchestration Platform - Setup Guide
+# AloraMeet Platform - Setup Guide
 
 This is a Laravel 12-based meeting scheduling and orchestration platform built on top of Jitsi Meet, providing Matrix-like meeting experience with access control, JWT authentication, and beautiful UI.
 
@@ -54,7 +54,7 @@ JITSI_JWT_SECRET=your-secret-key-here
 JITSI_JWT_SUB=meet.yourdomain.com
 
 TYRO_DASHBOARD_PREFIX=dashboard
-TYRO_DASHBOARD_APP_NAME="Jitsi Meeting Orchestration"
+TYRO_DASHBOARD_APP_NAME="AloraMeet"
 TYRO_DASHBOARD_LOGO=/images/logo.svg
 ```
 

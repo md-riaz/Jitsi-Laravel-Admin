@@ -1,4 +1,4 @@
-# Alora Admin - Professional Meeting Management Platform
+# AloraMeet - Professional Meeting Management Platform
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Laravel](https://img.shields.io/badge/Laravel-12-red.svg)](https://laravel.com)
@@ -454,7 +454,7 @@ cp .env.example .env
 Set at least these values:
 
 ```env
-APP_NAME="Alora Admin"
+APP_NAME="AloraMeet"
 APP_ENV=production
 APP_KEY=base64:GENERATE_A_FRESH_KEY
 APP_DEBUG=false
@@ -473,7 +473,7 @@ MAIL_PORT=[mail_port]
 MAIL_USERNAME=[mail_username]
 MAIL_PASSWORD=[mail_password]
 MAIL_FROM_ADDRESS=[email]
-MAIL_FROM_NAME="Alora Admin"
+MAIL_FROM_NAME="AloraMeet"
 
 JITSI_DOMAIN=meet.your-domain.com
 JITSI_JWT_SECRET=[secret]

@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying Alora Admin to production environments.
+This guide covers deploying AloraMeet to production environments.
 
 ## Pre-Deployment Checklist
 
@@ -60,7 +60,7 @@ Do not use `stack.env` as your production source of truth. It is intended as a s
 Minimum production env values:
 
 ```env
-APP_NAME="Alora Admin"
+APP_NAME="AloraMeet"
 APP_ENV=production
 APP_KEY=base64:GENERATE_A_FRESH_KEY
 APP_DEBUG=false
@@ -80,7 +80,7 @@ MAIL_PORT=[mail_port]
 MAIL_USERNAME=[mail_username]
 MAIL_PASSWORD=[mail_password]
 MAIL_FROM_ADDRESS=[email]
-MAIL_FROM_NAME="Alora Admin"
+MAIL_FROM_NAME="AloraMeet"
 
 JITSI_DOMAIN=meet.your-domain.com
 JITSI_JWT_SECRET=[secret]
@@ -379,7 +379,7 @@ Add this line:
 Example `.env` for production:
 
 ```env
-APP_NAME="Alora Admin"
+APP_NAME="AloraMeet"
 APP_ENV=production
 APP_KEY=base64:YOUR_GENERATED_KEY_HERE
 APP_DEBUG=false

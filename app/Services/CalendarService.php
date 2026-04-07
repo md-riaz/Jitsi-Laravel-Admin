@@ -37,7 +37,7 @@ class CalendarService
         // Build the iCalendar content
         $ics = "BEGIN:VCALENDAR\r\n";
         $ics .= "VERSION:2.0\r\n";
-        $ics .= "PRODID:-//Alora Admin//Meeting Scheduler//EN\r\n";
+        $ics .= "PRODID:-//AloraMeet//Meeting Scheduler//EN\r\n";
         $ics .= "CALSCALE:GREGORIAN\r\n";
         $ics .= "METHOD:REQUEST\r\n";
         $ics .= "BEGIN:VEVENT\r\n";
@@ -87,7 +87,7 @@ class CalendarService
             $description .= "- You can join " . $meeting->join_early_minutes . " minutes early\n";
         }
 
-        $description .= "\nPowered by Alora Admin";
+        $description .= "\nPowered by AloraMeet";
 
         return $description;
     }
