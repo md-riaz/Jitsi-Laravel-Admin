@@ -412,6 +412,8 @@ class TeamController extends Controller
             'name' => $name,
             'slug' => $slug,
             'is_active' => true,
+            'require_jwt' => true,
+            'jwt_expiry_minutes' => 120,
         ]);
     }
 

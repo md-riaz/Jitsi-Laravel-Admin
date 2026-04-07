@@ -41,7 +41,7 @@ class Organization extends Model
 
     protected $attributes = [
         'is_active' => true,
-        'require_jwt' => false,
+        'require_jwt' => true,
         'jwt_expiry_minutes' => 120,
         'subscription_status' => 'active',
         'billing_notification_days' => 5,
