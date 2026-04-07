@@ -47,14 +47,6 @@
             </a>
 
             @if(!auth()->user()?->hasRole('super-admin'))
-            <a href="{{ route('dashboard.subscription') }}" class="sidebar-link {{ request()->routeIs('dashboard.subscription') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                My Subscription
-            </a>
-            @endif
-            @if(!auth()->user()?->hasRole('super-admin'))
             <a href="{{ route('dashboard.create-meeting') }}" class="sidebar-link {{ request()->routeIs('dashboard.create-meeting') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v2a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2v2z" />
@@ -72,6 +64,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 Calendar
+            </a>
+            <a href="{{ route('dashboard.subscription') }}" class="sidebar-link {{ request()->routeIs('dashboard.subscription') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                My Subscription
             </a>
             @endif
 
@@ -92,6 +90,7 @@
 
             @if(!empty($userMenuItems))
                 @foreach($userMenuItems as $item)
+                    @continue(in_array($item['route'] ?? '', ['dashboard.profile', 'tyro-dashboard.profile']) || ($item['title'] ?? '') === 'My Profile')
                     <a href="{{ route($item['route'] ?? '#') }}" class="sidebar-link {{ request()->routeIs($item['route'] ?? '') ? 'active' : '' }}">
                         @if(isset($item['icon']))
                             {!! $item['icon'] !!}

@@ -86,6 +86,7 @@
 
             @if(!empty($userMenuItems))
                 @foreach($userMenuItems as $item)
+                    @continue(in_array($item['route'] ?? '', ['dashboard.profile', 'tyro-dashboard.profile']) || ($item['title'] ?? '') === 'My Profile')
                     <a href="{{ route($item['route'] ?? '#') }}" class="sidebar-link {{ request()->routeIs($item['route'] ?? '') ? 'active' : '' }}">
                         @if(isset($item['icon']))
                             {!! $item['icon'] !!}
