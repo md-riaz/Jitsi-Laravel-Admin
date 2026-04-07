@@ -1,11 +1,13 @@
 @extends('tyro-dashboard::layouts.app')
 
-@section('title', 'Create Meeting')
+@section('title', 'Edit Meeting')
 
 @section('breadcrumb')
 <a href="{{ route('tyro-dashboard.index') }}">Dashboard</a>
 <span class="breadcrumb-separator">/</span>
-<span>Create Meeting</span>
+<a href="{{ route('dashboard.my-meetings') }}">My Meetings</a>
+<span class="breadcrumb-separator">/</span>
+<span>Edit Meeting</span>
 @endsection
 
 @section('content')
@@ -65,10 +67,6 @@
 .form-group input[type="datetime-local"] {
     color-scheme: light;
 }
-.form-group input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    opacity: 0.85;
-    cursor: pointer;
-}
 .form-group .help-text { font-size: 0.8125rem; color: var(--muted-foreground); margin-top: 5px; }
 .form-actions {
     display: flex;
@@ -99,8 +97,8 @@
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1 class="page-title">Create Meeting</h1>
-            <p class="page-description" style="font-size: 1rem;">Start instantly or schedule for later.</p>
+            <h1 class="page-title">Edit Meeting</h1>
+            <p class="page-description" style="font-size: 1rem;">Update the details for this upcoming meeting.</p>
         </div>
     </div>
 </div>
@@ -124,19 +122,19 @@
 
 <div class="card">
     <div class="card-body" style="padding: 28px 32px;">
-        <form method="POST" action="{{ route('dashboard.create-meeting.store') }}">
+        <form method="POST" action="{{ route('dashboard.meetings.update', $meeting->id) }}">
             @csrf
+            @method('PUT')
 
-            <!-- Meeting Type Tabs -->
             <div class="meeting-type-tabs">
-                <button type="button" class="meeting-type-tab {{ old('meeting_type', request('type', 'instant')) !== 'scheduled' ? 'active' : '' }}"
+                <button type="button" class="meeting-type-tab {{ old('meeting_type', $meetingType) !== 'scheduled' ? 'active' : '' }}"
                     id="tab_instant" onclick="setMeetingType('instant')">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                     Instant Meeting
                 </button>
-                <button type="button" class="meeting-type-tab {{ old('meeting_type', request('type', 'instant')) === 'scheduled' ? 'active' : '' }}"
+                <button type="button" class="meeting-type-tab {{ old('meeting_type', $meetingType) === 'scheduled' ? 'active' : '' }}"
                     id="tab_scheduled" onclick="setMeetingType('scheduled')">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -146,31 +144,28 @@
             </div>
 
             <input type="hidden" name="meeting_type" id="meeting_type"
-                value="{{ old('meeting_type', request('type', 'instant') === 'scheduled' ? 'scheduled' : 'instant') }}">
+                value="{{ old('meeting_type', $meetingType) }}">
 
             <div class="form-grid">
-                <!-- Title -->
                 <div class="form-group">
                     <label for="title">Meeting Title *</label>
-                    <input type="text" id="title" name="title" value="{{ old('title') }}" required
+                    <input type="text" id="title" name="title" value="{{ old('title', $meeting->title) }}" required
                            placeholder="e.g. Weekly Team Standup" autofocus>
                 </div>
 
-                <!-- Scheduled Fields -->
-                <div id="scheduled_fields" style="{{ old('meeting_type', request('type', 'instant')) === 'scheduled' ? '' : 'display:none;' }}">
+                <div id="scheduled_fields" style="{{ old('meeting_type', $meetingType) === 'scheduled' ? '' : 'display:none;' }}">
                     <div class="form-row-2">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="start_at">Start Time *</label>
-                            <input type="datetime-local" id="start_at" name="start_at" value="{{ old('start_at') }}">
+                            <input type="datetime-local" id="start_at" name="start_at" value="{{ old('start_at', optional($meeting->start_at)->format('Y-m-d\TH:i')) }}">
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="end_at">End Time *</label>
-                            <input type="datetime-local" id="end_at" name="end_at" value="{{ old('end_at') }}">
+                            <input type="datetime-local" id="end_at" name="end_at" value="{{ old('end_at', optional($meeting->end_at)->format('Y-m-d\TH:i')) }}">
                         </div>
                     </div>
                 </div>
 
-                <!-- Timezone & Visibility row -->
                 <div class="form-row-2">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="timezone">Timezone *</label>
@@ -185,56 +180,51 @@
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="visibility">Visibility *</label>
                         <select id="visibility" name="visibility" required onchange="toggleOrganizationRequirement()">
-                            {{-- invite_only hidden for v1: not production-complete --}}
-                            {{-- <option value="invite_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'invite_only' ? 'selected' : '' }}>Invite Only</option> --}}
                             <option value="link_anyone" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'link_anyone' ? 'selected' : '' }}>Anyone with Link</option>
                             <option value="org_only" {{ old('visibility', $defaultVisibility ?? 'link_anyone') == 'org_only' ? 'selected' : '' }}>Organization Only</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Organization (hidden unless org_only) -->
-                <div class="form-group" id="org_field" style="{{ old('visibility') == 'org_only' ? '' : 'display:none;' }}">
+                <div class="form-group" id="org_field" style="{{ old('visibility', $defaultVisibility) == 'org_only' ? '' : 'display:none;' }}">
                     <label for="organization_id">
                         Organization <span style="color: #ef4444;">*</span>
                     </label>
                     <select id="organization_id" name="organization_id">
                         <option value="">— Select Organization —</option>
                         @foreach($organizations as $org)
-                            <option value="{{ $org->id }}" {{ old('organization_id') == $org->id ? 'selected' : '' }}>
+                            <option value="{{ $org->id }}" {{ old('organization_id', $meeting->organization_id) == $org->id ? 'selected' : '' }}>
                                 {{ $org->name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <!-- Description (collapsed by default) -->
                 <div class="form-group">
                     <label for="description">Description <span style="font-weight: 400; color: var(--muted-foreground);">(optional)</span></label>
                     <textarea id="description" name="description" rows="3"
-                              placeholder="Add agenda, notes, or other details…">{{ old('description') }}</textarea>
+                              placeholder="Add agenda, notes, or other details…">{{ old('description', $meeting->description) }}</textarea>
                 </div>
 
-                <!-- Advanced Options -->
                 <div>
-                    <div class="advanced-toggle" id="advancedToggle" onclick="toggleAdvanced()">
+                    <div class="advanced-toggle open" id="advancedToggle" onclick="toggleAdvanced()">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                         Advanced options
                     </div>
-                    <div id="advancedFields" style="display:none; margin-top: 16px;">
+                    <div id="advancedFields" style="margin-top: 16px;">
                         <div class="form-row-2">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label for="join_early_minutes">Join Early (minutes)</label>
                                 <input type="number" id="join_early_minutes" name="join_early_minutes"
-                                       value="{{ old('join_early_minutes', 10) }}" min="0" max="120">
+                                       value="{{ old('join_early_minutes', $meeting->join_early_minutes ?? 10) }}" min="0" max="120">
                                 <div class="help-text">Minutes before start time users can join</div>
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label for="join_late_minutes">Join Late (minutes)</label>
                                 <input type="number" id="join_late_minutes" name="join_late_minutes"
-                                       value="{{ old('join_late_minutes', 60) }}" min="0" max="240">
+                                       value="{{ old('join_late_minutes', $meeting->join_late_minutes ?? 60) }}" min="0" max="240">
                                 <div class="help-text">Minutes after end time users can still join</div>
                             </div>
                         </div>
@@ -242,44 +232,39 @@
                         <div class="form-row-2" style="margin-top:20px;">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label for="password">Meeting Password</label>
-                                <input type="password" id="password" name="password" value="" placeholder="Optional meeting password">
-                                <div class="help-text">Set a password if you want to require one before joining.</div>
+                                <input type="password" id="password" name="password" value="" placeholder="Leave blank to keep current password">
+                                <div class="help-text">Leave blank to keep the existing password unchanged.</div>
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label for="max_participants">Max Participants</label>
                                 <input type="number" id="max_participants" name="max_participants"
-                                       value="{{ old('max_participants') }}" min="2" max="1000">
+                                       value="{{ old('max_participants', $meeting->max_participants) }}" min="2" max="1000">
                             </div>
                         </div>
 
                         <div class="form-group" style="margin-top:20px;">
                             <label for="allowed_ips">Allowed IPs</label>
-                            <textarea id="allowed_ips" name="allowed_ips" rows="4" placeholder="One IP or CIDR per line">{{ old('allowed_ips') }}</textarea>
+                            <textarea id="allowed_ips" name="allowed_ips" rows="4" placeholder="One IP or CIDR per line">{{ old('allowed_ips', $meeting->allowed_ips) }}</textarea>
                             <div class="help-text">Leave blank to allow all IPs unless IP restriction is enabled.</div>
                         </div>
 
                         <div class="form-row-2" style="margin-top:20px; align-items:start;">
                             <label style="display:flex; gap:10px; align-items:center; font-weight:500;">
-                                <input type="checkbox" name="lobby_enabled" value="1" {{ old('lobby_enabled') ? 'checked' : '' }}>
+                                <input type="checkbox" name="lobby_enabled" value="1" {{ old('lobby_enabled', $meeting->lobby_enabled) ? 'checked' : '' }}>
                                 Enable lobby
                             </label>
                             <label style="display:flex; gap:10px; align-items:center; font-weight:500;">
-                                <input type="checkbox" name="ip_restriction_enabled" value="1" {{ old('ip_restriction_enabled') ? 'checked' : '' }}>
+                                <input type="checkbox" name="ip_restriction_enabled" value="1" {{ old('ip_restriction_enabled', $meeting->ip_restriction_enabled) ? 'checked' : '' }}>
                                 Enable IP restriction
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Actions -->
                 <div class="form-actions">
                     <a href="{{ route('dashboard.my-meetings') }}" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary" style="min-width: 160px;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" id="submit_icon_instant"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" id="submit_icon_scheduled" style="display:none;"/>
-                        </svg>
-                        <span id="submit_text">Start Instant Meeting</span>
+                        <span>Update Meeting</span>
                     </button>
                 </div>
             </div>
@@ -294,9 +279,6 @@ function setMeetingType(type) {
     const scheduledFields = document.getElementById('scheduled_fields');
     const startInput = document.getElementById('start_at');
     const endInput = document.getElementById('end_at');
-    const submitText = document.getElementById('submit_text');
-    const iconInstant = document.getElementById('submit_icon_instant');
-    const iconScheduled = document.getElementById('submit_icon_scheduled');
 
     document.getElementById('tab_instant').classList.toggle('active', type === 'instant');
     document.getElementById('tab_scheduled').classList.toggle('active', type === 'scheduled');
@@ -305,24 +287,10 @@ function setMeetingType(type) {
         scheduledFields.style.display = 'none';
         startInput.removeAttribute('required');
         endInput.removeAttribute('required');
-        submitText.textContent = 'Start Instant Meeting';
-        iconInstant.style.display = '';
-        iconScheduled.style.display = 'none';
     } else {
         scheduledFields.style.display = '';
         startInput.setAttribute('required', 'required');
         endInput.setAttribute('required', 'required');
-        submitText.textContent = 'Schedule Meeting';
-        iconInstant.style.display = 'none';
-        iconScheduled.style.display = '';
-        // Set default start time to next round hour if empty
-        if (!startInput.value) {
-            const d = new Date();
-            d.setHours(d.getHours() + 1, 0, 0, 0);
-            startInput.value = toLocalDatetimeString(d);
-            const e = new Date(d.getTime() + 60 * 60000);
-            endInput.value = toLocalDatetimeString(e);
-        }
     }
 }
 
@@ -347,53 +315,6 @@ function toggleAdvanced() {
     toggle.classList.toggle('open', open);
 }
 
-function applyBrowserTimezoneDefault() {
-    const timezoneSelect = document.getElementById('timezone');
-    const hasOldTimezone = @json(old('timezone')) !== null;
-
-    if (!timezoneSelect || hasOldTimezone || !window.Intl || !Intl.DateTimeFormat) {
-        return;
-    }
-
-    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    if (!browserTimezone) {
-        return;
-    }
-
-    const existingOption = Array.from(timezoneSelect.options).find(option => option.value === browserTimezone);
-
-    if (existingOption) {
-        timezoneSelect.value = browserTimezone;
-        return;
-    }
-
-    const fallbackOption = document.createElement('option');
-    fallbackOption.value = browserTimezone;
-    fallbackOption.textContent = `${browserTimezone} (Browser)`;
-    timezoneSelect.prepend(fallbackOption);
-    timezoneSelect.value = browserTimezone;
-}
-
-function toLocalDatetimeString(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    const h = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${d}T${h}:${min}`;
-}
-
-function enforceStartTimeMin() {
-    const startInput = document.getElementById('start_at');
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 10, 0, 0);
-    startInput.min = toLocalDatetimeString(now);
-}
-
-// Initialize
-applyBrowserTimezoneDefault();
-enforceStartTimeMin();
 setMeetingType(document.getElementById('meeting_type').value);
 toggleOrganizationRequirement();
 </script>

@@ -375,6 +375,9 @@
                             {{ $activeParticipants }} participant{{ $activeParticipants !== 1 ? 's' : '' }}
                         </span>
                         <div class="meeting-card-actions">
+                            @can('update', $meeting)
+                                <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Edit">Edit</a>
+                            @endcan
                             <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Summary">Summary</a>
                             <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
                             <button type="button" class="btn btn-sm btn-ghost copy-btn" title="Copy meeting link" onclick="copyMeetingLink(this, '{{ route('meeting.show', $meeting->id) }}')">

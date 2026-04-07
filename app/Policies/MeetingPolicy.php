@@ -39,6 +39,27 @@ class MeetingPolicy
             && $user->hasRole('org-admin');
     }
 
+    public function update(User $user, Meeting $meeting): bool
+    {
+        if (!$meeting->isUpcomingAt(now())) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin($user)) {
+            return true;
+        }
+
+        if ($this->sharesOrganization($user, $meeting)
+            && method_exists($user, 'hasRole')
+            && $user->hasRole('org-admin')) {
+            return true;
+        }
+
+        return method_exists($user, 'hasRole')
+            && $user->hasRole('host')
+            && (string) $meeting->created_by === (string) $user->id;
+    }
+
     private function isSuperAdmin(User $user): bool
     {
         return method_exists($user, 'hasRole') && $user->hasRole('super-admin');

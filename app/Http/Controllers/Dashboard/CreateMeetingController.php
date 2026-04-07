@@ -80,6 +80,10 @@ class CreateMeetingController extends Controller
 
         $data = $validator->validated();
 
+        if ($user?->isOrganizationUser() && $user->organization_id) {
+            $data['organization_id'] = $user->organization_id;
+        }
+
         // Clearer guidance for super admin users without org when selecting org-only visibility
         if (
             ($data['visibility'] ?? null) === 'org_only'
