@@ -95,12 +95,13 @@ class AppServiceProvider extends ServiceProvider
             ]);
         };
 
-        View::composer('vendor.tyro-dashboard.dashboard.user', $meetingComposer);
-        View::composer('vendor.tyro-dashboard.dashboard.index', $meetingComposer);
+        View::composer('tyro-dashboard::dashboard.user', $meetingComposer);
+        View::composer('tyro-dashboard::dashboard.index', $meetingComposer);
+        View::composer('tyro-dashboard::dashboard.admin', $meetingComposer);
 
         View::composer([
-            'vendor.tyro-dashboard.dashboard.admin',
-            'vendor.tyro-dashboard.dashboard.index',
+            'tyro-dashboard::dashboard.admin',
+            'tyro-dashboard::dashboard.index',
         ], function ($view) {
             $user = Auth::user();
 
@@ -115,12 +116,12 @@ class AppServiceProvider extends ServiceProvider
 
             $organizationUsersQuery = User::query()
                 ->where('organization_id', $user->organization_id)
-                ->whereDoesntHave('tyroRoles', function ($query) {
+                ->whereDoesntHave('roles', function ($query) {
                     $query->where('slug', 'super-admin');
                 });
 
             $organizationUsers = (clone $organizationUsersQuery)
-                ->with('tyroRoles')
+                ->with('roles')
                 ->latest()
                 ->get();
 
@@ -134,7 +135,7 @@ class AppServiceProvider extends ServiceProvider
 
             $roleDistribution = $organizationUsers
                 ->flatMap(function ($organizationUser) {
-                    return $organizationUser->tyroRoles
+                    return $organizationUser->roles
                         ->unique('id')
                         ->map(fn ($role) => [
                             'id' => $role->id,
@@ -175,7 +176,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Inject billing notification data for org admins (dashboard views only)
-        View::composer('vendor.tyro-dashboard.*', function ($view) {
+        View::composer('tyro-dashboard::*', function ($view) {
             $user = Auth::user();
             if (
                 $user

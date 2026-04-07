@@ -190,6 +190,30 @@
         </div>
     </a>
 
+    <a href="{{ route('dashboard.my-meetings') }}" class="stat-card" style="text-decoration:none; color:inherit;">
+        <div class="stat-icon stat-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Upcoming Meetings</div>
+            <div class="stat-value">{{ $upcomingMeetings->count() }}</div>
+        </div>
+    </a>
+
+    <a href="{{ route('dashboard.my-meetings') }}" class="stat-card" style="text-decoration:none; color:inherit;">
+        <div class="stat-icon stat-icon-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Live Meetings</div>
+            <div class="stat-value">{{ $liveMeetings->count() }}</div>
+        </div>
+    </a>
+
     <a href="{{ route('tyro-dashboard.users.index', ['status' => 'suspended']) }}" class="stat-card" style="text-decoration:none; color:inherit;">
         <div class="stat-icon stat-icon-danger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -206,68 +230,60 @@
 <div class="grid-2">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Recent Users</h3>
-            <a href="{{ route('tyro-dashboard.users.index') }}" class="btn btn-sm btn-ghost">View All</a>
+            <h3 class="card-title">Organization Overview</h3>
+            <a href="{{ route('dashboard.team.index') }}" class="btn btn-sm btn-ghost">Manage Team</a>
         </div>
-        <div class="card-body" style="padding: 0;">
-            @if(isset($stats['recent_users']) && $stats['recent_users']->count())
-            <div class="table-container">
-                <table class="table">
-                    <tbody>
-                        @foreach($stats['recent_users'] as $recentUser)
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-cell-avatar" style="{{ ($recentUser->profile_photo_path || $recentUser->use_gravatar) ? 'background: none; padding: 0;' : '' }}">
-                                        @if($recentUser->profile_photo_path || ($recentUser->use_gravatar && $recentUser->email))
-                                            <img src="{{ $recentUser->profile_photo_url }}" alt="{{ $recentUser->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                                        @else
-                                            {{ strtoupper(substr($recentUser->name, 0, 1)) }}
-                                        @endif
-                                    </div>
-                                    <div class="user-cell-info">
-                                        <div class="user-cell-name">{{ $recentUser->name }}</div>
-                                        <div class="user-cell-email">{{ $recentUser->email }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="text-align: right;">
-                                @if(method_exists($recentUser, 'isSuspended') && $recentUser->isSuspended())
-                                    <span class="badge badge-danger">Suspended</span>
-                                @else
-                                    <span class="badge badge-success">Active</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        <div class="card-body">
+            <div style="display:grid; gap: 14px;">
+                <div>
+                    <div style="font-size: 0.8125rem; color: var(--muted-foreground);">Organization</div>
+                    <div style="font-size: 1rem; font-weight: 600;">{{ $user->organization->name ?? 'Your Organization' }}</div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+                    <div>
+                        <div style="font-size: 0.8125rem; color: var(--muted-foreground);">Active Team Members</div>
+                        <div style="font-size: 1.125rem; font-weight: 700;">{{ max(($stats['total_users'] ?? 0) - ($stats['suspended_users'] ?? 0), 0) }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.8125rem; color: var(--muted-foreground);">Total Participants</div>
+                        <div style="font-size: 1.125rem; font-weight: 700;">{{ $totalParticipants }}</div>
+                    </div>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <a href="{{ route('dashboard.team.index') }}" class="btn btn-sm btn-primary">Manage Team</a>
+                    <a href="{{ route('dashboard.subscription') }}" class="btn btn-sm btn-secondary">Subscription</a>
+                    <a href="{{ route('dashboard.create-meeting') }}" class="btn btn-sm btn-ghost">Schedule Meeting</a>
+                </div>
             </div>
-            @else
-            <div class="empty-state">
-                <p class="empty-state-description">No users found.</p>
-            </div>
-            @endif
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Role Distribution</h3>
-            <a href="{{ route('tyro-dashboard.roles.index') }}" class="btn btn-sm btn-ghost">Manage Roles</a>
+            <h3 class="card-title">Upcoming Meetings</h3>
+            <a href="{{ route('dashboard.my-meetings') }}" class="btn btn-sm btn-ghost">View All</a>
         </div>
         <div class="card-body" style="padding: 0;">
-            @if(isset($stats['role_distribution']) && $stats['role_distribution']->count())
+            @if($upcomingMeetings->count())
             <div class="table-container">
                 <table class="table">
                     <tbody>
-                        @foreach($stats['role_distribution'] as $roleStat)
+                        @foreach($upcomingMeetings->take(5) as $meeting)
                         <tr>
                             <td>
-                                <span class="badge badge-primary">{{ $roleStat['name'] }}</span>
+                                <div>
+                                    <div style="font-size: 0.9375rem; font-weight: 600;">{{ $meeting->title }}</div>
+                                    <div style="font-size: 0.8125rem; color: var(--muted-foreground);">
+                                        @if($meeting->start_at)
+                                            {{ $meeting->start_at->format('M d, g:i A') }} · {{ $meeting->start_at->diffForHumans() }}
+                                        @else
+                                            Instant meeting
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
-                            <td style="text-align: right;">
-                                <strong>{{ $roleStat['count'] }}</strong> users
+                            <td style="text-align: right; white-space: nowrap;">
+                                <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-ghost" target="_blank">Details</a>
                             </td>
                         </tr>
                         @endforeach
@@ -276,7 +292,7 @@
             </div>
             @else
             <div class="empty-state">
-                <p class="empty-state-description">No roles found.</p>
+                <p class="empty-state-description">No upcoming meetings.</p>
             </div>
             @endif
         </div>
