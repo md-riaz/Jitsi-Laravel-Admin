@@ -12,7 +12,7 @@
 <style>
 .meeting-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1rem;
     margin-bottom: 0.25rem;
 }
@@ -24,8 +24,9 @@
     padding: 1.125rem 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
+    gap: 0.75rem;
     transition: box-shadow 0.15s, border-color 0.15s;
+    min-width: 0;
 }
 
 .meeting-card:hover {
@@ -41,7 +42,20 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 0.625rem;
+    gap: 0.75rem;
+}
+
+.meeting-card-title-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.meeting-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .meeting-card-title {
@@ -49,21 +63,27 @@
     font-size: 0.9375rem;
     color: var(--foreground);
     line-height: 1.3;
+    word-break: break-word;
 }
 
 .meeting-card-desc {
     font-size: 0.8125rem;
     color: var(--muted-foreground);
     margin-top: 2px;
+    word-break: break-word;
 }
 
 .meeting-card-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.625rem;
     font-size: 0.8125rem;
     color: var(--muted-foreground);
     align-items: center;
+}
+
+.meeting-card-meta span {
+    min-width: 0;
 }
 
 .meeting-card-meta svg {
@@ -74,19 +94,21 @@
     margin-right: 3px;
 }
 
-.meeting-inline-icon {
-    display: inline;
-    vertical-align: middle;
-    margin-right: 3px;
-}
-
 .meeting-card-footer {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: space-between;
-    padding-top: 0.625rem;
+    padding-top: 0.75rem;
     border-top: 1px solid var(--border);
-    gap: 0.5rem;
+    gap: 0.75rem;
+}
+
+.meeting-org-name {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .meeting-card-actions {
@@ -94,7 +116,17 @@
     gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
-    justify-content: flex-end;
+}
+
+.meeting-card-actions .btn,
+.meeting-card-actions .delete-inline-form {
+    flex: 1 1 auto;
+}
+
+.meeting-card-actions .btn,
+.meeting-card-actions .delete-inline-form button {
+    width: 100%;
+    justify-content: center;
 }
 
 .badge-live,
@@ -105,6 +137,7 @@
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .badge-live {
@@ -167,6 +200,7 @@
 .meetings-header-actions {
     display: flex;
     gap: 0.625rem;
+    flex-wrap: wrap;
 }
 
 .meeting-stats-grid {
@@ -197,14 +231,6 @@
 .muted-small {
     color: var(--muted-foreground);
     font-size: 0.875rem;
-}
-
-.table-cell-right {
-    text-align: right;
-}
-
-.no-padding {
-    padding: 0;
 }
 
 .card-spaced {
@@ -243,13 +269,85 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.section-pagination {
+    margin-top: 1rem;
+}
+
+.section-pagination nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.section-pagination nav > div:first-child {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.section-pagination nav > div:last-child {
+    margin-left: auto;
+}
+
+.section-pagination nav > div:last-child > span,
+.section-pagination nav > div:last-child > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-pagination svg {
+    width: 16px;
+    height: 16px;
+}
+
+@media (min-width: 768px) {
+    .meeting-card-footer {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .meeting-org-name {
+        max-width: 34%;
+    }
+
+    .meeting-card-actions {
+        justify-content: flex-end;
+    }
+
+    .meeting-card-actions .btn,
+    .meeting-card-actions .delete-inline-form {
+        flex: 0 1 auto;
+    }
+
+    .meeting-card-actions .btn,
+    .meeting-card-actions .delete-inline-form button {
+        width: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .meeting-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .meeting-card {
+        padding: 1rem;
+    }
+
+    .meeting-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
 </style>
 
 <div class="page-header">
     <div class="page-header-row">
         <div>
             <h1 class="page-title">My Meetings</h1>
-            <p class="page-description">Manage your upcoming and past meetings.</p>
+            <p class="page-description">Manage your live, upcoming, and past meetings.</p>
         </div>
         <div class="meetings-header-actions">
             <a href="{{ route('dashboard.calendar') }}" class="btn btn-secondary">
@@ -271,12 +369,11 @@
 <div class="meeting-stats-grid">
     <div class="card"><div class="card-body"><div class="meeting-stat-label">Total Meetings</div><div class="meeting-stat-value">{{ $analytics['total_meetings'] ?? 0 }}</div></div></div>
     <div class="card"><div class="card-body"><div class="meeting-stat-label">Live Now</div><div class="meeting-stat-value">{{ $analytics['live_now'] ?? 0 }}</div></div></div>
-    <div class="card"><div class="card-body"><div class="meeting-stat-label">Avg Participants</div><div class="meeting-stat-value">{{ $analytics['avg_participants'] ?? 0 }}</div></div></div>
-    <div class="card"><div class="card-body"><div class="meeting-stat-label">Avg Duration (min)</div><div class="meeting-stat-value">{{ $analytics['avg_duration_minutes'] ?? 0 }}</div></div></div>
-    <div class="card"><div class="card-body"><div class="meeting-stat-label">Join Events (30d)</div><div class="meeting-stat-value">{{ $analytics['join_events_30d'] ?? 0 }}</div></div></div>
+    <div class="card"><div class="card-body"><div class="meeting-stat-label">Upcoming Meetings</div><div class="meeting-stat-value">{{ $analytics['upcoming_meetings'] ?? 0 }}</div></div></div>
+    <div class="card"><div class="card-body"><div class="meeting-stat-label">Past Meetings</div><div class="meeting-stat-value">{{ $analytics['past_meetings'] ?? 0 }}</div></div></div>
 </div>
 
-@if($liveMeetings->count())
+@if($liveMeetings->isNotEmpty())
 <div class="card card-spaced" style="border: 2px solid color-mix(in srgb, var(--success), transparent 70%);">
     <div class="card-header" style="border-bottom: 1px solid color-mix(in srgb, var(--success), transparent 82%); background: color-mix(in srgb, var(--success), white 94%);">
         <h3 class="card-title" style="color: color-mix(in srgb, var(--success), black 22%);">Live Meetings</h3>
@@ -287,31 +384,30 @@
             @foreach($liveMeetings as $meeting)
             <div class="meeting-card live">
                 <div class="meeting-card-top">
-                    <div>
+                    <div class="meeting-card-title-wrap">
                         <div class="meeting-card-title">{{ $meeting->title }}</div>
                         @if($meeting->description)
                             <div class="meeting-card-desc">{{ Str::limit($meeting->description, 70) }}</div>
                         @endif
                     </div>
-                    <span class="badge-live">Live</span>
+                    <div class="meeting-card-badges">
+                        @if($meeting->organization && $meeting->organization->name)
+                            <span class="badge-instant">{{ $meeting->organization->name }}</span>
+                        @endif
+                        <span class="badge-live">Live</span>
+                    </div>
                 </div>
                 <div class="meeting-card-meta">
                     <span>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         {{ $meeting->actual_started_at ? 'Started ' . $meeting->actual_started_at->diffForHumans() : ($meeting->isInstantMeeting() ? 'Instant meeting' : 'Started ' . optional($meeting->start_at)->diffForHumans()) }}
                     </span>
-                    <span>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        {{ (int) $meeting->active_participant_count }} in room
-                    </span>
                 </div>
                 <div class="meeting-card-footer">
-                    <span class="muted-small">{{ $meeting->organization && $meeting->organization->name ? $meeting->organization->name : 'No organization' }}</span>
                     <div class="meeting-card-actions">
                         @can('deleteVisible', $meeting)
                             <button type="button" class="btn btn-sm btn-danger btn-delete-disabled" title="Live meetings cannot be deleted while ongoing" disabled>Delete</button>
                         @endcan
-                        <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost">Summary</a>
                         <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
                         <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-primary" target="_blank">Join Now</a>
                     </div>
@@ -319,6 +415,7 @@
             </div>
             @endforeach
         </div>
+        
     </div>
 </div>
 @endif
@@ -342,7 +439,7 @@
                 @foreach($upcomingMeetings as $meeting)
                 <div class="meeting-card">
                     <div class="meeting-card-top">
-                        <div>
+                        <div class="meeting-card-title-wrap">
                             <div class="meeting-card-title">{{ $meeting->title }}</div>
                             @if($meeting->description)
                                 <div class="meeting-card-desc">{{ Str::limit($meeting->description, 70) }}</div>
@@ -355,37 +452,29 @@
                         @endif
                     </div>
                     <div class="meeting-card-meta">
-                        @if($meeting->start_at)
-                            <span>
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                {{ $meeting->start_at->format('M d, Y · g:i A') }}
-                            </span>
-                            <span class="muted-small">{{ $meeting->start_at->diffForHumans() }}</span>
-                        @else
-                            <span>
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                Instant meeting
-                            </span>
-                        @endif
-                        @if($meeting->organization && $meeting->organization->name)
-                            <span>
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                {{ $meeting->organization->name }}
-                            </span>
-                        @endif
+                        <span>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            {{ $meeting->organization && $meeting->organization->name ? $meeting->organization->name : 'No organization' }}
+                        </span>
                         @if(auth()->user()?->hasRole('org-admin') || auth()->user()?->hasRole('super-admin'))
                             <span>
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 By {{ $meeting->creator?->name ?? 'Unknown' }}
                             </span>
                         @endif
+                        @if($meeting->start_at)
+                            <span>
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                {{ $meeting->start_at->format('M d, Y · g:i A') }}
+                            </span>
+                        @else
+                            <span>
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                Instant meeting
+                            </span>
+                        @endif
                     </div>
                     <div class="meeting-card-footer">
-                        @php($activeParticipants = (int) $meeting->active_participant_count)
-                        <span class="muted-small">
-                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="meeting-inline-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            {{ $activeParticipants }} participant{{ $activeParticipants !== 1 ? 's' : '' }}
-                        </span>
                         <div class="meeting-card-actions">
                             @can('update', $meeting)
                                 <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Edit">Edit</a>
@@ -397,21 +486,19 @@
                                     <button type="submit" class="btn btn-sm btn-danger" title="Delete">Delete</button>
                                 </form>
                             @endcan
-                            <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Summary">Summary</a>
-                            <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
+                                                        <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
                             <button type="button" class="btn btn-sm btn-ghost copy-btn" title="Copy meeting link" onclick="copyMeetingLink(this, '{{ route('meeting.show', $meeting->id) }}')">
                                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                 Copy Link
                                 <span class="copied-tip">Copied!</span>
                             </button>
-                            <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" target="_blank">
-                                View
-                            </a>
+                            <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" target="_blank">View</a>
                         </div>
                     </div>
                 </div>
                 @endforeach
             </div>
+            
         @endif
     </div>
 </div>
@@ -419,9 +506,9 @@
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Past Meetings</h3>
-        <span class="section-count">{{ $pastMeetings->count() }}</span>
+        <span class="section-count">{{ $pastMeetings->total() }}</span>
     </div>
-    <div class="card-body no-padding">
+    <div class="card-body">
         @if($pastMeetings->isEmpty())
             <div class="empty-meetings">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,57 +517,48 @@
                 <p>No past meetings yet.</p>
             </div>
         @else
-            <div class="table-container">
-                <table class="table">
-                    <thead>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Created By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($pastMeetings as $meeting)
                         <tr>
-                            <th>Meeting</th>
-                            <th>Date</th>
-                            <th>Participants</th>
-                            <th>Status</th>
-                            <th class="table-cell-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($pastMeetings as $meeting)
-                        <tr>
+                            <td>{{ $meeting->title }}</td>
+                            <td>{{ $meeting->description }}</td>
+                            <td>{{ optional($meeting->start_at)->format('M d, Y · g:i A') }}</td>
+                            <td>{{ optional($meeting->end_at)->format('M d, Y · g:i A') }}</td>
+                            <td>{{ $meeting->creator?->name ?? 'N/A' }}</td>
                             <td>
-                                <strong>{{ $meeting->title }}</strong>
-                                @if($meeting->description)
-                                    <br><small class="muted-small">{{ Str::limit($meeting->description, 60) }}</small>
-                                @endif
-                            </td>
-                            <td>
-                                @if($meeting->start_at)
-                                    {{ $meeting->start_at->format('M d, Y g:i A') }}<br>
-                                    <small class="muted-small">{{ $meeting->start_at->diffForHumans() }}</small>
-                                @else
-                                    <small class="muted-small">Instant</small>
-                                @endif
-                            </td>
-                            <td>{{ $meeting->active_participant_count }}</td>
-                            <td>
-                                <span class="badge-ended">Ended</span>
-                                @if(auth()->user()?->hasRole('org-admin') || auth()->user()?->hasRole('super-admin'))
-                                    <br><small class="muted-small">By {{ $meeting->creator?->name ?? 'Unknown' }}</small>
-                                @endif
-                            </td>
-                            <td class="table-cell-right">
-                                @can('delete', $meeting)
-                                    <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form" onsubmit="return confirm('Delete this meeting? This will remove it from dashboards and disable join links.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
-                                @endcan
-                                <a href="{{ route('dashboard.meetings.summary', $meeting->id) }}" class="btn btn-sm btn-ghost">Summary</a>
-                                <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
+                                <div class="meeting-card-actions">
+                                    @can('update', $meeting)
+                                        <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Edit">Edit</a>
+                                    @endcan
+                                    @can('delete', $meeting)
+                                        <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form" onsubmit="return confirm('Delete this meeting? This will remove it from dashboards and disable join links.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">Delete</button>
+                                        </form>
+                                    @endcan
+                                    <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
+                                    <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" target="_blank">View</a>
+                                </div>
                             </td>
                         </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                    @endforeach
+                </tbody>
+            </table>
+            @if($pastMeetings->hasPages())
+                <div class="section-pagination">{{ $pastMeetings->links() }}</div>
+            @endif
         @endif
     </div>
 </div>

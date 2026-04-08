@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Models\Meeting;
-use App\Models\MeetingEvent;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 
 class MyMeetingsController extends Controller
 {
@@ -13,8 +14,8 @@ class MyMeetingsController extends Controller
     {
         $user = $request->user();
 
-        $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
-        $isOrgAdmin = method_exists($user, 'hasRole') && $user->hasRole('org-admin') && !$isSuperAdmin;
+        $isSuperAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('super-admin');
+        $isOrgAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('org-admin') && !$isSuperAdmin;
 
         $baseQuery = Meeting::query();
 
@@ -23,6 +24,7 @@ class MyMeetingsController extends Controller
         } elseif ($isOrgAdmin && $user->organization_id) {
             $baseQuery->where('organization_id', $user->organization_id);
         } else {
+            info('Debug: User role or organization is missing.', ['user' => $user]);
             $baseQuery->where(function ($query) use ($user) {
                 $query->where('created_by', $user->id)
                     ->orWhereHas('participants', function ($q) use ($user) {
@@ -31,45 +33,72 @@ class MyMeetingsController extends Controller
             });
         }
 
+        info('Debug: Query before execution', [
+            'isSuperAdmin' => $isSuperAdmin,
+            'isOrgAdmin' => $isOrgAdmin,
+            'user' => $user,
+            'query' => $baseQuery->toSql(),
+            'bindings' => $baseQuery->getBindings(),
+            'request' => $request->all(),
+        ]);
+
         $allMeetings = (clone $baseQuery)
-            ->orderBy('start_at')
-            ->with(['organization', 'creator', 'participants'])
+            ->with(['organization', 'creator'])
+            ->orderByDesc('created_at')
             ->get();
 
         $now = now();
-        $liveMeetings = $allMeetings->filter(fn ($meeting) => $meeting->isLiveNow($now))->values();
-        $upcomingMeetings = $allMeetings->filter(fn ($meeting) => $meeting->isUpcomingAt($now))->values();
-        $pastMeetings = $allMeetings->filter(fn ($meeting) => $meeting->isPastAt($now))
-            ->sortByDesc('start_at')
-            ->take(10)
+
+        $liveCollection = $allMeetings
+            ->filter(fn ($meeting) => $meeting->isLiveNow($now))
+            ->sortByDesc(fn ($meeting) => $meeting->actual_started_at ?? $meeting->start_at ?? $meeting->created_at)
             ->values();
 
-        $meetingIds = $allMeetings->pluck('id');
+        $upcomingCollection = $allMeetings
+            ->filter(fn ($meeting) => $meeting->isUpcomingAt($now))
+            ->sortBy(fn ($meeting) => $meeting->start_at ?? $meeting->created_at)
+            ->values();
 
-        $events = MeetingEvent::whereIn('meeting_id', $meetingIds)->get();
-        $joinEvents = $events->where('type', 'participant_joined');
+        $pastCollection = $allMeetings
+            ->filter(fn ($meeting) => $meeting->isPastAt($now))
+            ->sortByDesc(fn ($meeting) => $meeting->end_at ?? $meeting->actual_ended_at ?? $meeting->created_at)
+            ->values();
 
-        $durations = $pastMeetings->map(function ($m) {
-            if ($m->start_at && $m->end_at) {
-                return $m->start_at->diffInMinutes($m->end_at);
-            }
-            return null;
-        })->filter();
-
-        $totalMeetings = $isSuperAdmin || $isOrgAdmin
-            ? $meetingIds->count()
-            : (clone $baseQuery)->where('created_by', $user->id)->count();
+        $pastMeetings = $this->paginateCollection($pastCollection, 15, 'past_page', $request);
 
         $analytics = [
-            'total_meetings' => $totalMeetings,
-            'live_now' => $liveMeetings->count(),
-            'avg_participants' => $pastMeetings->count() > 0
-                ? round($pastMeetings->avg(fn($m) => (int) $m->active_participant_count), 1)
-                : 0,
-            'avg_duration_minutes' => $durations->count() > 0 ? round($durations->avg(), 1) : 0,
-            'join_events_30d' => $joinEvents->filter(fn($e) => $e->created_at >= now()->subDays(30))->count(),
+            'total_meetings' => $allMeetings->count(),
+            'live_now' => $liveCollection->count(),
+            'upcoming_meetings' => $upcomingCollection->count(),
+            'past_meetings' => $pastCollection->count(),
+        ];
+
+        $liveMeetings = $liveCollection;
+        $upcomingMeetings = $upcomingCollection;
+        $analytics = $analytics ?? [
+            'total_meetings' => 0,
+            'live_now' => 0,
+            'upcoming_meetings' => 0,
+            'past_meetings' => 0,
         ];
 
         return view('dashboard.my-meetings', compact('liveMeetings', 'upcomingMeetings', 'pastMeetings', 'analytics'));
+    }
+
+    private function paginateCollection(Collection $items, int $perPage, string $pageName, Request $request): LengthAwarePaginator
+    {
+        $page = max(1, (int) $request->query($pageName, 1));
+        $results = $items->forPage($page, $perPage)->values();
+
+        return (new LengthAwarePaginator(
+            $results,
+            $items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'pageName' => $pageName,
+            ]
+        ))->appends($request->except($pageName));
     }
 }
