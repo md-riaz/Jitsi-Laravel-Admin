@@ -37,7 +37,9 @@
             <!-- Page Content -->
             <main class="page-content">
                 <!-- Flash Messages -->
-                @include('tyro-dashboard::partials.flash-messages')
+                <div class="alert-toast-stack" id="alertToastStack">
+                    @include('tyro-dashboard::partials.flash-messages')
+                </div>
 
                 @yield('content')
             </main>

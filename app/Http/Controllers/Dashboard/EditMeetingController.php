@@ -125,12 +125,6 @@ class EditMeetingController extends Controller
     {
         $this->authorize('deleteVisible', $meeting);
 
-        if (! $meeting->canBeDeletedAt(now())) {
-            return redirect()
-                ->route('dashboard.my-meetings')
-                ->withErrors(['meeting' => 'This meeting cannot be deleted while it is live or still has active participants.']);
-        }
-
         DB::transaction(function () use ($request, $meeting) {
             MeetingEvent::create([
                 'meeting_id' => $meeting->id,

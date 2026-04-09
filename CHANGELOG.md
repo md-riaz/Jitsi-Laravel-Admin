@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-09]
+
+### Changed
+- Reworked `/dashboard/my-meetings` to better separate instant, upcoming, and past meeting actions and layouts.
+- Converted the live meetings area into an **Instant Meetings** table with organization, meeting name, created date, and streamlined actions.
+- Simplified instant meeting actions to prioritize **Join** and support forced delete with dashboard-native confirmation.
+- Removed redundant actions and descriptions from meeting listings to reduce clutter and improve hierarchy.
+- Made past meetings table horizontally scrollable on smaller devices.
+- Replaced browser delete confirms in meeting dashboard flows with the dashboard's built-in confirmation modal.
+- Converted dashboard flash messages into floating top-right toast alerts that are dismissible and auto-dismiss after 10 seconds.
+- Adjusted toast positioning so alerts do not cover the profile area in the top bar.
+- Updated the application default timezone to `Asia/Dhaka`.
+
+### Fixed
+- Fixed `/dashboard/my-meetings` 500 errors caused by broken Blade structure during iterative UI changes.
+- Fixed meeting dashboard delete flow so instant meetings can be force-deleted after an explicit warning.
+- Fixed toast rendering on layouts using `tyro-dashboard::layouts.app` and `tyro-dashboard::layouts.user` by adding the required toast stack wrapper.
+- Fixed dashboard live/instant meeting classification logic to rely on local meeting status instead of the removed `isLiveNow()` time-window behavior.
+
 ## [2026-04-07]
 
 ### Fixed

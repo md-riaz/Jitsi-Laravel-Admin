@@ -162,7 +162,7 @@ class Meeting extends Model
 
     public function isLiveNow(CarbonInterface $now): bool
     {
-        return $this->canJoinAt($now);
+        return $this->status === 'live';
     }
 
     public function isUpcomingAt(CarbonInterface $now): bool

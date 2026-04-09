@@ -50,7 +50,7 @@ class MyMeetingsController extends Controller
         $now = now();
 
         $liveCollection = $allMeetings
-            ->filter(fn ($meeting) => $meeting->isLiveNow($now))
+            ->filter(fn ($meeting) => $meeting->status === 'live')
             ->sortByDesc(fn ($meeting) => $meeting->actual_started_at ?? $meeting->start_at ?? $meeting->created_at)
             ->values();
 

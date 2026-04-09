@@ -97,10 +97,10 @@
         }
     });
 
-    // Auto-dismiss flash messages (default 10s) + manual dismiss button
+    // Auto-dismiss toast alerts (default 10s) + manual dismiss button
     document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.alert');
-        const dismissTime = {{ config('tyro-dashboard.notifications.auto_dismiss_seconds', 10) * 1000 }};
+        const alerts = document.querySelectorAll('.alert-toast-stack .alert');
+        const defaultDismissTime = {{ config('tyro-dashboard.notifications.auto_dismiss_seconds', 10) * 1000 }};
 
         function dismissAlert(alert) {
             alert.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
@@ -121,6 +121,7 @@
                 alert.appendChild(dismissBtn);
             }
 
+            const dismissTime = parseInt(alert.getAttribute('data-auto-dismiss') || defaultDismissTime, 10);
             setTimeout(() => {
                 if (!document.body.contains(alert)) {
                     return;

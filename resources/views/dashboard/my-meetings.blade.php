@@ -20,22 +20,29 @@
 .meeting-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 14px;
     padding: 1.125rem 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    transition: box-shadow 0.15s, border-color 0.15s;
+    gap: 0.875rem;
+    transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
     min-width: 0;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
 .meeting-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.09);
-    border-color: color-mix(in srgb, var(--primary), transparent 75%);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+    border-color: color-mix(in srgb, var(--primary), transparent 72%);
+    transform: translateY(-1px);
 }
 
 .meeting-card.live {
     border-left: 3px solid var(--success);
+}
+
+.meeting-card.upcoming {
+    border: 1px solid color-mix(in srgb, var(--primary), transparent 86%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--primary), white 97%) 0%, var(--card) 100%);
 }
 
 .meeting-card-top {
@@ -94,6 +101,51 @@
     margin-right: 3px;
 }
 
+.meeting-card-meta-stack {
+    display: grid;
+    gap: 0.625rem;
+}
+
+.meeting-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    width: 100%;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid color-mix(in srgb, var(--border), transparent 8%);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--card), var(--muted) 18%);
+}
+
+.meeting-meta-pill svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    margin-right: 0;
+    color: var(--primary);
+}
+
+.meeting-meta-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.meeting-meta-label {
+    font-size: 0.72rem;
+    line-height: 1.1;
+    color: var(--muted-foreground);
+}
+
+.meeting-meta-value {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    color: var(--foreground);
+    font-weight: 600;
+    word-break: break-word;
+}
+
 .meeting-card-footer {
     display: flex;
     flex-direction: column;
@@ -127,6 +179,27 @@
 .meeting-card-actions .delete-inline-form button {
     width: 100%;
     justify-content: center;
+}
+
+.meeting-card-actions.serial-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+    width: 100%;
+}
+
+.meeting-card-actions.serial-actions .btn,
+.meeting-card-actions.serial-actions .delete-inline-form {
+    flex: unset;
+    width: 100%;
+}
+
+.meeting-card-actions.serial-actions .btn,
+.meeting-card-actions.serial-actions .delete-inline-form button {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 10px;
+    font-weight: 600;
 }
 
 .badge-live,
@@ -316,13 +389,13 @@
         justify-content: flex-end;
     }
 
-    .meeting-card-actions .btn,
-    .meeting-card-actions .delete-inline-form {
+    .meeting-card-actions:not(.serial-actions) .btn,
+    .meeting-card-actions:not(.serial-actions) .delete-inline-form {
         flex: 0 1 auto;
     }
 
-    .meeting-card-actions .btn,
-    .meeting-card-actions .delete-inline-form button {
+    .meeting-card-actions:not(.serial-actions) .btn,
+    .meeting-card-actions:not(.serial-actions) .delete-inline-form button {
         width: auto;
     }
 }
@@ -374,48 +447,45 @@
 </div>
 
 @if($liveMeetings->isNotEmpty())
-<div class="card card-spaced" style="border: 2px solid color-mix(in srgb, var(--success), transparent 70%);">
-    <div class="card-header" style="border-bottom: 1px solid color-mix(in srgb, var(--success), transparent 82%); background: color-mix(in srgb, var(--success), white 94%);">
-        <h3 class="card-title" style="color: color-mix(in srgb, var(--success), black 22%);">Live Meetings</h3>
+<div class="card card-spaced">
+    <div class="card-header">
+        <h3 class="card-title">Instant Meetings</h3>
         <span class="section-count">{{ $liveMeetings->count() }}</span>
     </div>
     <div class="card-body">
-        <div class="meeting-cards-grid">
-            @foreach($liveMeetings as $meeting)
-            <div class="meeting-card live">
-                <div class="meeting-card-top">
-                    <div class="meeting-card-title-wrap">
-                        <div class="meeting-card-title">{{ $meeting->title }}</div>
-                        @if($meeting->description)
-                            <div class="meeting-card-desc">{{ Str::limit($meeting->description, 70) }}</div>
-                        @endif
-                    </div>
-                    <div class="meeting-card-badges">
-                        @if($meeting->organization && $meeting->organization->name)
-                            <span class="badge-instant">{{ $meeting->organization->name }}</span>
-                        @endif
-                        <span class="badge-live">Live</span>
-                    </div>
-                </div>
-                <div class="meeting-card-meta">
-                    <span>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        {{ $meeting->actual_started_at ? 'Started ' . $meeting->actual_started_at->diffForHumans() : ($meeting->isInstantMeeting() ? 'Instant meeting' : 'Started ' . optional($meeting->start_at)->diffForHumans()) }}
-                    </span>
-                </div>
-                <div class="meeting-card-footer">
-                    <div class="meeting-card-actions">
-                        @can('deleteVisible', $meeting)
-                            <button type="button" class="btn btn-sm btn-danger btn-delete-disabled" title="Live meetings cannot be deleted while ongoing" disabled>Delete</button>
-                        @endcan
-                        <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost">Diagnostics</a>
-                        <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-primary" target="_blank">Join Now</a>
-                    </div>
-                </div>
-            </div>
-            @endforeach
+        <div style="overflow-x: auto;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>SL</th>
+                        <th>Org Name</th>
+                        <th>Meeting Name</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($liveMeetings as $index => $meeting)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $meeting->organization->name ?? 'N/A' }}</td>
+                            <td>{{ $meeting->title }}</td>
+                            <td>{{ optional($meeting->created_at)->format('M d, Y · g:i A') }}</td>
+                            <td>
+                                <div class="meeting-card-actions">
+                                    <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-primary" target="_blank">Join</a>
+                                    <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form force-delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="confirmForceDelete(this.form)">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-        
     </div>
 </div>
 @endif
@@ -437,62 +507,63 @@
         @else
             <div class="meeting-cards-grid">
                 @foreach($upcomingMeetings as $meeting)
-                <div class="meeting-card">
+                <div class="meeting-card upcoming">
                     <div class="meeting-card-top">
                         <div class="meeting-card-title-wrap">
                             <div class="meeting-card-title">{{ $meeting->title }}</div>
-                            @if($meeting->description)
-                                <div class="meeting-card-desc">{{ Str::limit($meeting->description, 70) }}</div>
+
+                        </div>
+                        <div class="meeting-card-badges">
+                            @if($meeting->isInstantMeeting())
+                                <span class="badge-instant">Instant</span>
+                            @else
+                                <span class="badge-upcoming">Upcoming</span>
                             @endif
                         </div>
-                        @if($meeting->isInstantMeeting())
-                            <span class="badge-instant">Instant</span>
-                        @else
-                            <span class="badge-upcoming">Upcoming</span>
-                        @endif
                     </div>
-                    <div class="meeting-card-meta">
-                        <span>
+                    <div class="meeting-card-meta-stack">
+                        <div class="meeting-meta-pill">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            {{ $meeting->organization && $meeting->organization->name ? $meeting->organization->name : 'No organization' }}
-                        </span>
+                            <div class="meeting-meta-content">
+                                <span class="meeting-meta-label">Organization</span>
+                                <span class="meeting-meta-value">{{ $meeting->organization && $meeting->organization->name ? $meeting->organization->name : 'No organization' }}</span>
+                            </div>
+                        </div>
                         @if(auth()->user()?->hasRole('org-admin') || auth()->user()?->hasRole('super-admin'))
-                            <span>
+                            <div class="meeting-meta-pill">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                By {{ $meeting->creator?->name ?? 'Unknown' }}
-                            </span>
+                                <div class="meeting-meta-content">
+                                    <span class="meeting-meta-label">Host</span>
+                                    <span class="meeting-meta-value">{{ $meeting->creator?->name ?? 'Unknown' }}</span>
+                                </div>
+                            </div>
                         @endif
-                        @if($meeting->start_at)
-                            <span>
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                {{ $meeting->start_at->format('M d, Y · g:i A') }}
-                            </span>
-                        @else
-                            <span>
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                Instant meeting
-                            </span>
-                        @endif
+                        <div class="meeting-meta-pill">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <div class="meeting-meta-content">
+                                <span class="meeting-meta-label">Meeting Time</span>
+                                <span class="meeting-meta-value">{{ $meeting->start_at ? $meeting->start_at->format('M d, Y · g:i A') : 'Instant meeting' }}</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="meeting-card-footer">
-                        <div class="meeting-card-actions">
-                            @can('update', $meeting)
-                                <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Edit">Edit</a>
-                            @endcan
-                            @can('delete', $meeting)
-                                <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form" onsubmit="return confirm('Delete this meeting? This will remove it from dashboards and disable join links.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">Delete</button>
-                                </form>
-                            @endcan
-                                                        <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
+                        <div class="meeting-card-actions serial-actions">
                             <button type="button" class="btn btn-sm btn-ghost copy-btn" title="Copy meeting link" onclick="copyMeetingLink(this, '{{ route('meeting.show', $meeting->id) }}')">
                                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                 Copy Link
                                 <span class="copied-tip">Copied!</span>
                             </button>
                             <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" target="_blank">View</a>
+                            @can('update', $meeting)
+                                <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-secondary" title="Edit">Edit</a>
+                            @endcan
+                            @can('delete', $meeting)
+                                <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="confirmMeetingDelete(this.form)">Delete</button>
+                                </form>
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -517,11 +588,10 @@
                 <p>No past meetings yet.</p>
             </div>
         @else
-            <table class="table">
+            <div style="overflow-x: auto;"><table class="table">
                 <thead>
                     <tr>
                         <th>Title</th>
-                        <th>Description</th>
                         <th>Start Time</th>
                         <th>End Time</th>
                         <th>Created By</th>
@@ -532,30 +602,25 @@
                     @foreach($pastMeetings as $meeting)
                         <tr>
                             <td>{{ $meeting->title }}</td>
-                            <td>{{ $meeting->description }}</td>
-                            <td>{{ optional($meeting->start_at)->format('M d, Y · g:i A') }}</td>
+                                <td>{{ optional($meeting->start_at)->format('M d, Y · g:i A') }}</td>
                             <td>{{ optional($meeting->end_at)->format('M d, Y · g:i A') }}</td>
                             <td>{{ $meeting->creator?->name ?? 'N/A' }}</td>
                             <td>
                                 <div class="meeting-card-actions">
-                                    @can('update', $meeting)
-                                        <a href="{{ route('dashboard.meetings.edit', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Edit">Edit</a>
-                                    @endcan
+                                    <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" title="View">View</a>
                                     @can('delete', $meeting)
-                                        <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form" onsubmit="return confirm('Delete this meeting? This will remove it from dashboards and disable join links.');">
+                                        <form method="POST" action="{{ route('dashboard.meetings.destroy', $meeting->id) }}" class="delete-inline-form">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">Delete</button>
+                                            <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="confirmMeetingDelete(this.form)">Delete</button>
                                         </form>
                                     @endcan
-                                    <a href="{{ route('dashboard.meetings.diagnostics', $meeting->id) }}" class="btn btn-sm btn-ghost" title="Diagnostics">Diagnostics</a>
-                                    <a href="{{ route('meeting.show', $meeting->id) }}" class="btn btn-sm btn-secondary" target="_blank">View</a>
                                 </div>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
             @if($pastMeetings->hasPages())
                 <div class="section-pagination">{{ $pastMeetings->links() }}</div>
             @endif
@@ -580,6 +645,40 @@ function copyMeetingLink(btn, url) {
         btn.classList.add('did-copy');
         setTimeout(() => btn.classList.remove('did-copy'), 1800);
     });
+}
+
+function confirmForceDelete(form) {
+    if (typeof showDanger === 'function') {
+        showDanger(
+            'Force delete meeting?',
+            'This will delete the meeting even if it appears live or still has active participants.',
+            { confirmText: 'Delete' }
+        ).then(function(confirmed) {
+            if (confirmed) {
+                form.submit();
+            }
+        });
+        return;
+    }
+
+    form.submit();
+}
+
+function confirmMeetingDelete(form) {
+    if (typeof showDanger === 'function') {
+        showDanger(
+            'Delete meeting?',
+            'This will remove the meeting from dashboards and disable join links.',
+            { confirmText: 'Delete' }
+        ).then(function(confirmed) {
+            if (confirmed) {
+                form.submit();
+            }
+        });
+        return;
+    }
+
+    form.submit();
 }
 </script>
 @endsection

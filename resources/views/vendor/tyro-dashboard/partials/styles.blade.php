@@ -1135,102 +1135,125 @@
     /* Alert toasts */
     .alert-toast-stack {
         position: fixed;
-        top: 1.5rem;
-        right: 1.5rem;
+        top: 4.5rem;
+        right: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
-        width: min(420px, calc(100vw - 2rem));
+        gap: 0.625rem;
+        width: min(360px, calc(100vw - 2rem));
         z-index: 10000;
         pointer-events: none;
     }
 
     .alert {
         position: relative;
-        padding: 1rem 3rem 1rem 1.25rem;
+        padding: 0.75rem 2.5rem 0.75rem 0.85rem;
         border-radius: 10px;
-        border: 1px solid;
+        border: 1px solid rgba(15, 23, 42, 0.08);
         display: flex;
-        align-items: flex-start;
-        gap: 0.875rem;
-        box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
-        background-color: var(--background);
+        align-items: center;
+        gap: 0.65rem;
+        box-shadow: 0 8px 20px rgb(15 23 42 / 0.10);
+        background: #ffffff;
+        color: #111827;
         pointer-events: auto;
+        animation: alert-toast-in 0.2s ease-out;
+    }
+
+    @keyframes alert-toast-in {
+        from {
+            opacity: 0;
+            transform: translateY(-8px) translateX(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) translateX(0);
+        }
     }
 
     .alert svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         flex-shrink: 0;
-        margin-top: 0.125rem;
+        margin-top: 0.1rem;
     }
 
     .alert-content {
         flex: 1;
-    }
-
-    .alert-title {
-        font-weight: 600;
-        font-size: 0.9375rem;
-        margin-bottom: 0.25rem;
+        min-width: 0;
     }
 
     .alert-message {
-        font-size: 0.9375rem;
+        font-size: 0.875rem;
+        line-height: 1.35;
+        color: #111827;
+        word-break: break-word;
+        margin: 0;
     }
 
     .alert-success {
-        background-color: color-mix(in srgb, var(--success), transparent 90%);
-        border-color: var(--success);
-        color: var(--success);
+        border-left: 4px solid #22c55e;
+    }
+
+    .alert-success svg {
+        color: #22c55e;
     }
 
     .alert-error {
-        background-color: color-mix(in srgb, var(--destructive), transparent 90%);
-        border-color: var(--destructive);
-        color: var(--destructive);
+        border-left: 4px solid #ef4444;
+    }
+
+    .alert-error svg {
+        color: #ef4444;
     }
 
     .alert-warning {
-        background-color: color-mix(in srgb, var(--warning), transparent 90%);
-        border-color: var(--warning);
-        color: var(--warning);
+        border-left: 4px solid #f59e0b;
+    }
+
+    .alert-warning svg {
+        color: #f59e0b;
     }
 
     .alert-info {
-        background-color: color-mix(in srgb, var(--info), transparent 90%);
-        border-color: var(--info);
-        color: var(--info);
+        border-left: 4px solid #3b82f6;
+    }
+
+    .alert-info svg {
+        color: #3b82f6;
     }
 
     .alert-dismiss {
         position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        width: 1.75rem;
-        height: 1.75rem;
+        top: 0.6rem;
+        right: 0.6rem;
+        width: 1.5rem;
+        height: 1.5rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: transparent;
         border: 0;
         border-radius: 9999px;
-        color: currentColor;
+        color: var(--muted-foreground);
         cursor: pointer;
         opacity: 0.8;
-        transition: background-color 0.15s ease, opacity 0.15s ease;
+        transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+        font-size: 1rem;
+        line-height: 1;
     }
 
     .alert-dismiss:hover {
-        background-color: rgb(255 255 255 / 0.35);
+        background-color: var(--muted);
+        color: var(--foreground);
         opacity: 1;
     }
 
     @media (max-width: 640px) {
         .alert-toast-stack {
-            top: 1rem;
-            right: 1rem;
-            left: 1rem;
+            top: 4rem;
+            right: 0.75rem;
+            left: 0.75rem;
             width: auto;
         }
     }
